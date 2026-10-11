@@ -1,0 +1,3982 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Completion tracker for RuneScape: Dragonwilds: every quest, special recipe and Sanguine Urn, with save-file import.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Ashenfall Quest Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap">
+<style>
+/* Layout: Dragonwilds journal — translucent slate panels with gold trim over a dusk-to-ember sky; diamond quest markers (gold = primary, silver = secondary, violet = tertiary). Deliberately single dark theme, like the game UI. */
+:root {
+  color-scheme: dark;
+  --sky-top: #0d141d;
+  --sky-mid: #142233;
+  --ember: #b8521f;
+  --panel: rgba(17, 25, 35, 0.86);
+  --panel-solid: #111923;
+  --panel-raised: #1a2533;
+  --line: rgba(222, 179, 98, 0.22);
+  --line-strong: rgba(222, 179, 98, 0.55);
+  --cream: #ece3cf;
+  --cream-dim: #a9a291;
+  --gold: #e2b25c;
+  --gold-hi: #f6d58e;
+  --silver: #b9c6d4;
+  --violet: #b68ce0;
+  --flame: #f07a2c;
+  --done: #8fcf7a;
+  --font-display: "Cinzel", "Trajan Pro", Georgia, serif;
+  --font-body: "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--sky-top); }
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(240, 122, 44, 0.16), transparent 60%),
+    radial-gradient(80% 40% at 85% 8%, rgba(184, 82, 31, 0.18), transparent 70%),
+    linear-gradient(180deg, var(--sky-mid) 0%, var(--sky-top) 45%, #0a0f15 100%);
+  background-attachment: fixed;
+  background-color: var(--sky-top);
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.wrap { max-width: 780px; margin: 0 auto; padding-inline: 16px; padding-block: 32px 110px; }
+
+/* ---------- header ---------- */
+.masthead { text-align: center; padding-block: 8px 4px; }
+.eyebrow { font-family: var(--font-display); font-weight: 700; letter-spacing: .32em; font-size: .78rem; color: var(--gold); text-transform: uppercase; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 {
+  font-family: var(--font-display); font-weight: 800; font-size: clamp(2.1rem, 7vw, 3.3rem); line-height: 1.02; letter-spacing: .03em;
+  background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 48%, #a8702a 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(0,0,0,.6)) drop-shadow(0 0 18px rgba(240,122,44,.25));
+  margin-top: 6px;
+}
+.sub { color: var(--cream-dim); margin: 10px auto 0; max-width: 54ch; }
+.ornament { display: flex; align-items: center; gap: 12px; margin: 18px auto 0; max-width: 420px; }
+.ornament::before, .ornament::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line-strong)); }
+.ornament::after { background: linear-gradient(90deg, var(--line-strong), transparent); }
+.ornament i { width: 9px; height: 9px; transform: rotate(45deg); background: var(--gold); box-shadow: 0 0 10px rgba(226,178,92,.6); }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 30px rgba(0,0,0,.35);
+  backdrop-filter: blur(4px);
+}
+
+.summary { margin-top: 22px; padding: 16px 18px; display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: center; }
+.summary .big { font-family: var(--font-display); font-weight: 700; font-size: 2rem; color: var(--gold-hi); font-variant-numeric: tabular-nums; line-height: 1; grid-row: span 2; }
+.summary .big small { font-size: 1rem; color: var(--cream-dim); }
+.summary .lbl { font-size: .82rem; letter-spacing: .14em; text-transform: uppercase; color: var(--cream-dim); }
+.bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.07); border: 1px solid var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--flame), var(--gold-hi)); box-shadow: 0 0 12px rgba(240,122,44,.5); transition: width .5s ease; }
+.summary .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: .85rem; color: var(--cream-dim); border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px; }
+.meta .k { display: inline-flex; align-items: center; gap: 6px; }
+.sync b { color: var(--gold); font-weight: 600; }
+
+/* ---------- filter bar ---------- */
+.filters { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-top: 14px; padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: rgba(13, 20, 29, 0.94); }
+.chip {
+  font: inherit; font-size: .85rem; font-weight: 600; color: var(--cream); background: var(--panel-raised);
+  border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; cursor: pointer; text-decoration: none; white-space: nowrap;
+  font-variant-numeric: tabular-nums; transition: border-color .15s, background .15s;
+}
+.chip:hover { border-color: var(--line-strong); }
+.chip[aria-pressed="true"] { background: linear-gradient(180deg, #e8bf6e, #b8842f); color: #1a1205; border-color: var(--gold-hi); }
+.chip span { color: var(--cream-dim); font-weight: 400; }
+.chip.full span { color: var(--done); }
+.sep { width: 1px; align-self: stretch; background: var(--line); margin-inline: 2px; }
+
+/* ---------- sections ---------- */
+section.panel { margin-top: 18px; padding: 18px 18px 8px; scroll-margin-top: 80px; }
+.sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.sec-head h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.45rem; color: var(--gold-hi); letter-spacing: .04em; }
+.sec-head .count { font-variant-numeric: tabular-nums; color: var(--cream-dim); font-size: .9rem; }
+.rule { height: 1px; margin: 10px 0 0; background: linear-gradient(90deg, var(--line-strong), transparent); }
+.unlock { font-size: .88rem; color: var(--cream-dim); margin: 10px 0 2px; }
+.unlock strong { color: var(--gold); font-weight: 600; }
+
+ol.path, ul.list { list-style: none; margin: 0; padding: 0; }
+.q { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(222,179,98,.1); }
+.q:last-child { border-bottom: 0; }
+.q > div { min-width: 0; }
+
+/* diamond quest marker */
+.mark {
+  --c: var(--silver);
+  width: 34px; height: 34px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; margin-top: -2px;
+}
+.mark .d {
+  width: 20px; height: 20px; transform: rotate(45deg); border: 2px solid var(--c); border-radius: 3px;
+  background: rgba(0,0,0,.35); display: grid; place-items: center; transition: background .2s, box-shadow .2s;
+}
+.mark .d svg { transform: rotate(-45deg); width: 13px; height: 13px; opacity: 0; color: #12100a; }
+.mark:hover .d { box-shadow: 0 0 10px color-mix(in srgb, var(--c) 60%, transparent); }
+.q.primary .mark { --c: var(--gold); }
+.q.tertiary-q .mark { --c: var(--violet); }
+.q.activity .mark { --c: var(--flame); }
+.q.started .mark .d { background: linear-gradient(135deg, var(--c) 0 50%, rgba(0,0,0,.35) 50% 100%); }
+.q.done .mark .d { background: var(--c); box-shadow: 0 0 12px color-mix(in srgb, var(--c) 55%, transparent); }
+.q.done .mark .d svg { opacity: 1; }
+.mark[disabled] { cursor: default; }
+
+.title-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.step { font-family: var(--font-display); font-weight: 700; color: var(--gold); font-size: .9rem; font-variant-numeric: tabular-nums; }
+.name { font-weight: 700; font-size: 1.07rem; color: var(--cream); }
+.q.done .name { color: var(--cream-dim); }
+.status { font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 1px 7px; border-radius: 3px; }
+.q.started .status { color: var(--flame); border: 1px solid rgba(240,122,44,.5); }
+.q.done .status { color: var(--done); border: 1px solid rgba(143,207,122,.4); }
+.boss { font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #ffd9bf; background: rgba(184,82,31,.35); border: 1px solid rgba(240,122,44,.45); border-radius: 3px; padding: 1px 7px; }
+.wiki { font-size: .8rem; color: var(--cream-dim); text-decoration: none; border-bottom: 1px dotted var(--cream-dim); }
+.wiki:hover { color: var(--gold-hi); border-color: var(--gold-hi); }
+.start { color: var(--cream-dim); font-size: .93rem; margin-top: 2px; }
+.start strong { color: var(--cream); font-weight: 600; }
+.rewards { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.rewards span { font-size: .78rem; color: var(--gold-hi); background: rgba(226,178,92,.08); border: 1px solid var(--line); border-radius: 4px; padding: 1px 7px; }
+.who { font-size: .8rem; color: var(--gold); margin-top: 4px; }
+.q.done .start, .q.done .rewards { opacity: .65; }
+
+.tertiary { margin: 4px 0 10px 46px; padding: 12px 14px 4px; border-radius: 8px; background: rgba(182,140,224,.06); border: 1px solid rgba(182,140,224,.25); }
+.tertiary h3 { font-family: var(--font-display); font-size: .98rem; font-weight: 700; color: var(--violet); letter-spacing: .03em; }
+.tertiary .clan { font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--cream-dim); margin-top: 12px; }
+.tertiary .q { padding: 8px 0; }
+.tertiary .name { font-size: 1rem; }
+
+.note { font-size: .88rem; color: var(--cream-dim); border: 1px dashed var(--line); border-radius: 6px; padding: 9px 12px; margin-top: 10px; }
+.hide-done .q.done { display: none; }
+.empty { display: none; color: var(--done); padding: 10px 0 8px; }
+.hide-done section.all-done, .hide-done .chip.full { display: none; }
+
+footer { margin-top: 22px; padding: 14px 18px; font-size: .84rem; color: var(--cream-dim); }
+footer a { color: var(--gold); }
+.confirm-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+
+/* tabs */
+.tabs { display: flex; justify-content: center; gap: 4px; margin-top: 20px; border-bottom: 1px solid var(--line); }
+.tab { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: .08em; color: var(--cream-dim); background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 18px 10px; cursor: pointer; margin-bottom: -1px; }
+.tab:hover { color: var(--cream); }
+.tab[aria-selected="true"] { color: var(--gold-hi); border-bottom-color: var(--gold); text-shadow: 0 0 12px rgba(240,122,44,.35); }
+
+/* boss rows */
+.pl { font-family: var(--font-display); font-weight: 700; font-size: .78rem; color: var(--gold-hi); border: 1px solid var(--line-strong); border-radius: 3px; padding: 0 6px; letter-spacing: .04em; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin-top: 5px; font-size: .88rem; color: var(--cream-dim); font-variant-numeric: tabular-nums; }
+.stats .hp { color: var(--cream); font-weight: 600; }
+.weak { font-size: .74rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-radius: 3px; padding: 1px 7px; border: 1px solid var(--line); color: var(--cream-dim); }
+.weak.crush { color: #f0c27a; border-color: rgba(240,194,122,.5); }
+.weak.slash { color: #ff9a8a; border-color: rgba(255,154,138,.45); }
+.weak.stab { color: #e7a6ff; border-color: rgba(231,166,255,.45); }
+.weak.water { color: #8fd3ff; border-color: rgba(143,211,255,.5); }
+.tip { font-size: .86rem; color: var(--cream-dim); margin-top: 5px; font-style: italic; }
+.q.world .mark { --c: var(--flame); }
+.q.mini .mark { --c: var(--gold); }
+.q.vault .mark { --c: var(--silver); }
+
+/* farming guide */
+.goal-panel { margin-top: 22px; padding: 16px 18px; }
+.goal-panel .lbl { font-size: .82rem; letter-spacing: .14em; text-transform: uppercase; color: var(--cream-dim); }
+.goals { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+#goalGuide:empty { display: none; }
+.guide { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.guide h3 { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; color: var(--gold-hi); letter-spacing: .03em; }
+.guide > p { color: var(--cream-dim); font-size: .92rem; margin: 4px 0 6px; max-width: 62ch; }
+.grow { display: grid; grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); gap: 4px 16px; padding: 10px 0; border-bottom: 1px solid rgba(222,179,98,.1); }
+.grow:last-child { border-bottom: 0; }
+.grow .it { font-weight: 700; color: var(--cream); }
+.grow .src { color: var(--gold-hi); font-size: .92rem; }
+.grow .src span { color: var(--cream-dim); }
+.grow .use { color: var(--cream-dim); font-size: .9rem; margin-top: 2px; }
+@media (max-width: 560px) { .grow { grid-template-columns: 1fr; } }
+
+.bcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; margin-top: 16px; }
+.bcard { padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.bcard .top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.bcard h3 { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; color: var(--gold-hi); letter-spacing: .02em; }
+.bcard .where { color: var(--cream-dim); font-size: .9rem; }
+.respawn { display: flex; gap: 8px; align-items: baseline; font-size: .88rem; color: var(--cream); }
+.respawn b { font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--flame); flex: none; }
+.drops { list-style: none; margin: 4px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.drops li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 10px; padding: 6px 0; border-bottom: 1px solid rgba(222,179,98,.08); }
+.drops li:last-child { border-bottom: 0; }
+.drops .it { font-weight: 600; font-size: .94rem; }
+.drops .amt { font-size: .85rem; color: var(--gold-hi); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.drops .use { grid-column: 1 / -1; font-size: .84rem; color: var(--cream-dim); }
+.drops li.dim { opacity: .38; }
+.drops li.hit .it { color: var(--gold-hi); }
+.vault-note { margin-top: 16px; padding: 12px 16px; font-size: .9rem; color: var(--cream-dim); }
+.vault-note strong { color: var(--cream); }
+
+/* gear planner */
+.gearpick-group { display: contents; }
+.gp-head { width: 100%; font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--cream-dim); margin-top: 8px; }
+.gp-head:first-child { margin-top: 0; }
+.gear { margin-top: 16px; padding: 18px; }
+.gear .top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.gear h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; color: var(--gold-hi); letter-spacing: .02em; }
+.gear .kind { color: var(--cream-dim); font-size: .92rem; margin-top: 2px; }
+.gear .effect { margin-top: 6px; font-size: .93rem; max-width: 62ch; }
+.step-block { margin-top: 16px; }
+.step-block h3 { font-size: .74rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--flame); margin-bottom: 6px; }
+.unlock-box { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: rgba(226,178,92,.05); font-size: .94rem; }
+.unlock-box strong { color: var(--gold-hi); }
+.station { font-size: .9rem; color: var(--cream-dim); margin-bottom: 6px; }
+.station strong { color: var(--cream); font-weight: 600; }
+.ing { list-style: none; margin: 0; padding: 0; }
+.ing .ing { margin: 4px 0 2px 10px; padding-left: 12px; border-left: 1px solid var(--line); }
+.ing li { padding: 5px 0; }
+.ing details > summary { list-style: none; cursor: pointer; }
+.ing details > summary::-webkit-details-marker { display: none; }
+.row { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; }
+.row .qty { font-family: var(--font-display); font-weight: 700; color: var(--gold); min-width: 2.6em; font-variant-numeric: tabular-nums; }
+.row .nm { font-weight: 700; color: var(--cream); }
+.row .how { color: var(--cream-dim); font-size: .88rem; flex-basis: 100%; padding-left: calc(2.6em + 8px); }
+.row .craft-tag { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--violet); border: 1px solid rgba(182,140,224,.4); border-radius: 3px; padding: 0 6px; }
+details[open] > summary .craft-tag::after { content: " ▾"; }
+details:not([open]) > summary .craft-tag::after { content: " ▸"; }
+.gnote { margin-top: 14px; font-size: .86rem; color: var(--cream-dim); font-style: italic; }
+.prev-link { background: none; border: 0; padding: 0; font: inherit; color: var(--gold-hi); text-decoration: underline; cursor: pointer; }
+
+.unl { font-size: .88rem; color: var(--cream); margin-top: 1px; }
+.unl span { color: var(--cream-dim); font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-right: 4px; }
+.q.recipe .mark { --c: var(--gold); }
+details.craft { margin-top: 6px; }
+details.craft > summary { cursor: pointer; font-size: .82rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--violet); list-style: none; }
+details.craft > summary::-webkit-details-marker { display: none; }
+details.craft > summary::before { content: "▸ "; }
+details.craft[open] > summary::before { content: "▾ "; }
+.craft-body { margin-top: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: rgba(0,0,0,.18); }
+.craft-body .unlock-box { margin-bottom: 10px; }
+
+.searchbar { margin-top: 10px; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.searchbar label { font-size: .74rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--cream-dim); }
+.searchbar input { flex: 1 1 14rem; min-width: 0; font: inherit; color: var(--cream); background: rgba(0,0,0,.25); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; }
+.searchbar input:focus { outline: 2px solid var(--gold); outline-offset: 0; border-color: transparent; }
+.searchbar .nores { flex-basis: 100%; margin: 0; font-size: .88rem; color: var(--cream-dim); }
+.q.nomatch, section.nomatch { display: none; }
+
+.freecraft { margin-top: 5px; font-size: .84rem; color: var(--cream-dim); }
+
+.hpbonus { color: var(--done); font-family: var(--font-display); font-size: 1.05rem; }
+.tips { margin-top: 12px; padding: 14px 18px; }
+.tips h3 { font-family: var(--font-display); font-size: 1rem; color: var(--gold-hi); margin-bottom: 6px; }
+.tips ul { margin: 0; padding-left: 1.1rem; color: var(--cream-dim); font-size: .9rem; display: grid; gap: 4px; }
+.urn-area { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(222,179,98,.1); }
+.urn-area:last-child { border-bottom: 0; }
+.urn-area .an { font-weight: 700; font-size: 1.02rem; }
+.urn-area .ac { font-size: .84rem; color: var(--cream-dim); font-variant-numeric: tabular-nums; }
+.urn-area.all-done .an { color: var(--cream-dim); }
+.umarks { display: flex; gap: 2px; flex: none; }
+.umark { --c: #d2463a; }
+.umark.on .d { background: var(--c); box-shadow: 0 0 12px color-mix(in srgb, var(--c) 55%, transparent); }
+.umark.on .d svg { opacity: 1; }
+.hide-done .urn-area.all-done { display: none; }
+
+.importer { margin-top: 14px; padding: 0; }
+.importer > summary { cursor: pointer; list-style: none; padding: 12px 18px; font-weight: 700; color: var(--gold-hi); display: flex; align-items: center; gap: 10px; }
+.importer > summary::-webkit-details-marker { display: none; }
+.importer > summary::before { content: "▸"; color: var(--gold); }
+.importer[open] > summary::before { content: "▾"; }
+.importer > summary span { font-size: .68rem; letter-spacing: .12em; color: var(--cream-dim); border: 1px solid var(--line); border-radius: 3px; padding: 0 6px; }
+.imp-body { padding: 0 18px 16px; font-size: .92rem; color: var(--cream-dim); }
+.imp-body p { margin: 0 0 8px; }
+.imp-body ol { margin: 0 0 12px; padding-left: 1.2rem; display: grid; gap: 6px; }
+.imp-body code { font-size: .82rem; color: var(--cream); background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; word-break: break-all; }
+.imp-body kbd { font: inherit; font-size: .8rem; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: var(--cream); }
+.pathrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
+#saveFile { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.filebtn { display: inline-block; cursor: pointer; font-weight: 700; color: #1a1205; background: linear-gradient(180deg, #e8bf6e, #b8842f); border-radius: 999px; padding: 6px 16px; }
+#saveFile:focus-visible + .filebtn, .filebtn:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+#impResult:empty { display: none; }
+#impResult { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: rgba(0,0,0,.2); color: var(--cream); }
+#impResult .who { font-family: var(--font-display); color: var(--gold-hi); font-size: 1.05rem; }
+#impResult ul { margin: 6px 0 10px; padding-left: 1.1rem; color: var(--cream-dim); }
+#impResult .err { color: #ff9a8a; }
+#impResult .row2 { display: flex; flex-wrap: wrap; gap: 8px; }
+.imp-note { margin-top: 10px !important; font-size: .82rem; }
+.impbtns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filebtn { border: 0; font: inherit; font-weight: 700; }
+.filebtn.alt { background: var(--panel-raised); color: var(--cream); border: 1px solid var(--line); }
+body.dragging::after { content: "Drop your character file to import"; position: fixed; inset: 12px; z-index: 30; display: grid; place-items: center; border: 2px dashed var(--gold); border-radius: 14px; background: rgba(13,20,29,.85); color: var(--gold-hi); font-family: var(--font-display); font-size: 1.3rem; pointer-events: none; }
+
+.backup { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+.backup > summary { cursor: pointer; color: var(--gold); font-weight: 600; }
+.backup p { margin: 8px 0; max-width: 62ch; }
+.backup textarea { width: 100%; margin-top: 8px; font: .8rem/1.4 ui-monospace, Consolas, monospace; color: var(--cream); background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 6px; padding: 8px; resize: vertical; }
+.bklbl { display: block; margin-top: 12px; font-size: .74rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+#bkMsg { font-size: .85rem; }
+
+/* quest complete banner */
+.banner {
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 20;
+  width: min(400px, calc(100% - 32px)); transform: translateX(-50%);
+  text-align: center; padding: 14px 18px 14px;
+  background: linear-gradient(180deg, rgba(26,37,51,.97), rgba(13,20,29,.97));
+  border: 1px solid var(--line-strong); border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 0 40px rgba(240,122,44,.3), 0 12px 30px rgba(0,0,0,.5);
+  animation: rise .45s cubic-bezier(.2,.8,.2,1);
+}
+.banner .t { font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-hi); text-shadow: 0 0 14px rgba(240,122,44,.5); }
+.banner .qn { margin-top: 2px; font-weight: 700; }
+.banner .rw { margin-top: 6px; font-size: .82rem; color: var(--cream-dim); }
+@keyframes rise { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+@media (max-width: 520px) { .filters { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; } .filters::-webkit-scrollbar { display: none; } .filters .chip { flex: none; } .tertiary { margin-left: 0; } .sep { display: none; } .summary { grid-template-columns: 1fr; } .summary .big { grid-row: auto; } }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">RuneScape · Dragonwilds 1.0</div>
+    <h1>Ashenfall Quest Log</h1>
+    <p class="sub">Every quest, special recipe and Sanguine Urn in Ashenfall. Tap a marker to track your progress.</p>
+    <div class="ornament" aria-hidden="true"><i></i></div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" type="button" id="tabQuests" aria-selected="true" aria-controls="view-quests">Quests</button>
+    <button class="tab" role="tab" type="button" id="tabBosses" aria-selected="false" aria-controls="view-bosses">Recipes</button>
+    <button class="tab" role="tab" type="button" id="tabUrns" aria-selected="false" aria-controls="view-urns">Urns</button>
+  </nav>
+
+  <details class="panel importer" id="importer">
+    <summary>Import progress from your save file <span>PC</span></summary>
+    <div class="imp-body">
+      <p>Tick your quests and recipes automatically from your character save. The file is read in your browser and never uploaded.</p>
+      <ol>
+        <li>Close the game, then press <kbd>Win</kbd> + <kbd>R</kbd> and paste:
+          <div class="pathrow"><code id="savePath">%LOCALAPPDATA%\RSDragonwilds\Saved\SaveCharacters</code><button type="button" class="chip" id="copyPath">Copy</button></div></li>
+        <li>Pick the file named after your character, ending in <code>.json</code> (not <code>.backup</code>).</li>
+      </ol>
+      <div class="impbtns">
+        <button type="button" class="filebtn" id="syncBtn" hidden>Sync from save</button>
+        <button type="button" class="chip" id="linkBtn" hidden>Link my save file</button>
+        <input type="file" id="saveFile" accept=".json,application/json">
+        <label class="filebtn alt" for="saveFile">Choose character file</label>
+      </div>
+      <p class="imp-note" id="linkNote" hidden></p>
+      <p class="imp-note">Quickest way: keep the SaveCharacters folder open in Explorer and drag your character file anywhere onto this page.</p>
+      <div id="impResult" aria-live="polite"></div>
+      <p class="imp-note">Covers quests and recipes. Urns and mounts aren't readable from the save, so tick those yourself. Imports only add ticks; they never remove any.</p>
+    </div>
+  </details>
+
+  <div id="view-quests" role="tabpanel" aria-labelledby="tabQuests">
+  <div class="panel summary">
+    <div class="big"><span id="qpDone">0</span><small>/<span id="qpTotal">0</span></small></div>
+    <div class="lbl">Quests completed</div>
+    <div class="bar"><i id="overallBar"></i></div>
+    <div class="meta">
+      <span class="k"><span id="qpStarted">0</span>&nbsp;in progress</span>
+      <span class="sync" id="sync">Loading progress…</span>
+    </div>
+  </div>
+
+  <nav class="filters panel" aria-label="Filters">
+    <button type="button" class="chip f-all" id="fAll" aria-pressed="true">All</button>
+    <button type="button" class="chip f-todo" id="fTodo" aria-pressed="false">Hide completed</button>
+    <span class="sep" aria-hidden="true"></span>
+    <span id="jump" style="display:contents"></span>
+  </nav>
+
+  <main id="main"></main>
+  </div>
+
+  <div id="view-bosses" role="tabpanel" aria-labelledby="tabBosses" hidden>
+    <div class="panel summary">
+      <div class="big"><span id="rDone">0</span><small>/<span id="rTotal">0</span></small></div>
+      <div class="lbl">Recipes unlocked</div>
+      <div class="bar"><i id="rBar"></i></div>
+      <div class="meta"><span>Names match your crafting journal. Most recipes are unlocked by studying a vestige (a rare drop, chest find, shop purchase or quest reward); the rest are found inside the Dragonkin vaults.</span></div>
+    </div>
+    <nav class="filters panel" aria-label="Recipe filters">
+      <button type="button" class="chip f-all" aria-pressed="true">All</button>
+      <button type="button" class="chip f-todo" aria-pressed="false">Hide unlocked</button>
+      <span class="sep" aria-hidden="true"></span>
+      <span id="rJump" style="display:contents"></span>
+    </nav>
+    <div class="panel searchbar"><label for="rSearch">Find a recipe</label><input type="search" id="rSearch" placeholder="Type an item or vestige name, e.g. Ranger Hat" autocomplete="off"><p class="nores" id="rNo" hidden>No recipe matches that name.</p></div>
+    <div id="recMain"></div>
+  </div>
+
+  <div id="view-urns" role="tabpanel" aria-labelledby="tabUrns" hidden>
+    <div class="panel summary">
+      <div class="big"><span id="uDone">0</span><small>/<span id="uTotal">0</span></small></div>
+      <div class="lbl">Sanguine Urns absorbed</div>
+      <div class="bar"><i id="uBar"></i></div>
+      <div class="meta"><span class="k">Max health bonus&nbsp;<strong class="hpbonus" id="uHp">+0</strong></span><span>Each urn permanently adds 10 max health to your character, across every world.</span></div>
+    </div>
+    <div class="panel tips">
+      <h3>Finding them</h3>
+      <ul>
+        <li>Urns show on your in-game map (a red potion in a spiked frame) once you've discovered that area.</li>
+        <li>Your compass picks one up from about 50–60 metres away.</li>
+        <li>Some are in caves or underground. None are inside the Dragonkin vaults.</li>
+        <li>The Whispering Swamp has one inside the cave by the Goblin Diplomacy area, not on the cliff above it.</li>
+      </ul>
+    </div>
+    <nav class="filters panel" aria-label="Urn filters">
+      <button type="button" class="chip f-all" aria-pressed="true">All</button>
+      <button type="button" class="chip f-todo" aria-pressed="false">Hide absorbed</button>
+    </nav>
+    <div id="urnMain"></div>
+  </div>
+
+  <footer class="panel">
+    Quest, recipe and urn data from the RuneScape: Dragonwilds Wiki, checked 11 October 2026 against patch 1.0.0.6.
+    <a href="https://dragonwilds.runescape.wiki/w/Quests" target="_blank" rel="noopener">Quests</a> ·
+    <a href="https://dragonwilds.runescape.wiki/w/Vestige" target="_blank" rel="noopener">Vestiges</a> on the wiki.
+    <div class="confirm-row" id="resetBox"></div>
+    <details class="backup" id="backup">
+      <summary>Back up or move your progress</summary>
+      <p>Copy this code to keep a backup or move your ticks to another browser. Quests and recipes can always be re-imported from your save, but urns and mounts only live here.</p>
+      <div class="confirm-row"><button type="button" class="chip" id="bkMake">Create backup code</button><button type="button" class="chip" id="bkCopy" hidden>Copy</button></div>
+      <textarea id="bkOut" rows="3" readonly hidden aria-label="Backup code"></textarea>
+      <label for="bkIn" class="bklbl">Restore from a code</label>
+      <textarea id="bkIn" rows="3" placeholder="Paste a backup code here"></textarea>
+      <div class="confirm-row"><button type="button" class="chip" id="bkApply">Restore</button><span id="bkMsg" aria-live="polite"></span></div>
+    </details>
+  </footer>
+</div>
+<div id="bannerHost"></div>
+
+<script>
+const WIKI = "https://dragonwilds.runescape.wiki/w/";
+const w = (t) => WIKI + encodeURIComponent(t.replace(/ /g, "_")).replace(/%2C/g, ",");
+
+const MAIN = [
+  { id: "first-steps", n: "First Steps", where: "Temple Woods", start: "Starts automatically on a new character.", rw: ["Tome of Runecrafting"] },
+  { id: "getting-started", n: "Getting Started", where: "Temple Woods", start: "Doric, just outside the temple.", rw: ["Vegetable Soup"] },
+  { id: "ratcatcher", n: "Ratcatcher", where: "Temple Woods", start: "Vannaka, near the old windmill.", rw: [] },
+  { id: "rune-mysteries", n: "Rune Mysteries", where: "Temple Woods", start: "Zanik, on the path to Bramblemead Valley.", rw: [] },
+  { id: "dragon-slayer", n: "Dragon Slayer", where: "Brynmoor & Ghornfell", boss: "Velgar", start: "Wise Old Man in Bramblemead Village.", rw: ["Anti-Dragon Shield", "Noxious Draconic Visage"] },
+  { id: "withering-heights", n: "Withering Heights", where: "Fellhollow", boss: "Imaru", start: "Wise Old Man near Ashien's Watch.", rw: ["Dragoncurse Shield", "Undead Draconic Visage"] },
+  { id: "black-knights-fortress", n: "Black Knight's Fortress", wiki: "Black Knight's Fortress (Quest)", where: "Dowdun Reach", boss: "Black Knight Titan", start: "Death, in the Forgotten Temple.", rw: ["Titan's Wrath", "Maple Toastie"] },
+  { id: "icthlarins-little-helper", n: "Icthlarin's Little Helper", where: "Umbral Sands", boss: "Fuzan", start: "Door to the Umbral Sands in The Bastion, then Shangruuh on arrival.", rw: ["Dragonfire Shield", "Smouldering Draconic Visage", "Tome of Volcano", "Magic Carpet mount", "Fight Caves access"] },
+  { id: "regicide", n: "Regicide", where: "Scorned Wilderness", boss: "Kuldra", start: "Dragon Gate north-west of Velgar's Rise.", rw: ["Dragonslayer's Cape", "Dragon Kiteshield", "Lougrim Memorial Shrine"] },
+];
+
+const TERT = [
+  { clan: "Alcarrid clan · Alcarrid Oasis", items: [
+    { id: "t-rogue-trader", n: "Rogue Trader", start: "Domri the Merchant. Find three moonstones under gypsum nodes in the west.", rw: ["200 garou chit", "Domri's shop"] },
+    { id: "t-mirror-crackd", n: "The Mirror Crack'd", start: "Valas the Blacksmith. Bring 3 adamant bars.", rw: ["200 garou chit"] },
+    { id: "t-rag-and-bone", n: "Rag and Bone Garou", start: "Lagra the Butcher. 3 raw farm meat, 3 kalphite shell fragments, 3 cactus steaks.", rw: ["200 garou chit"] },
+  ]},
+  { clan: "Manafem clan · Manafem Plains", items: [
+    { id: "t-song-ancients", n: "Song of the Ancients", start: "Laguna the Bard. Transcribe the garou statues in the vault south of camp.", rw: [] },
+    { id: "t-scaling", n: "Scaling Difficulties", start: "Hedric the Hunter. Find the scouts to the east and kill the red dragon.", rw: ["200 garou chit"] },
+    { id: "t-beast-sand", n: "Beast in the Sand", start: "Manathep the Bereaved. Bring 1 clean water; track the Dearg Due.", rw: ["200 garou chit"] },
+  ]},
+  { clan: "Uzzer clan · Dunes of Uzzer", items: [
+    { id: "t-dig-site", n: "The Dig Site", start: "Lehran the Archaeologist. Dig up four Forbidden Scrolls in the southern ruins.", rw: ["200 garou chit"] },
+    { id: "t-saga", n: "Saga of the Adventurer", start: "Laguna the Bard. Read the statues on the spires around the pyramid.", rw: ["Crucible Engram of Humiliation"] },
+    { id: "t-mark-day", n: "Mark Day", start: "Shangruuh. Convince the three councillors to abandon Mark Day.", rw: [] },
+  ]},
+  { clan: "Finale", items: [
+    { id: "t-fuzan-trials", n: "Trials of Fuzan", start: "Repair the mirrors with Icthlarin, then survive 10 waves in the Fight Caves at The Burning Spire.", rw: ["Path to Fuzan's Lair"] },
+  ]},
+];
+
+const SIDE = [
+  { key: "brynmoor", region: "Brynmoor", unlock: "Open from the start", items: [
+    { id: "growing-pains", n: "Growing Pains", start: "Wise Old Man in Bramblemead Village. Farming basics.", rw: [] },
+    { id: "shrimp-catcher", n: "Shrimp Catcher", start: "Wise Old Man in Bramblemead Village. Fishing basics.", rw: [] },
+    { id: "restless-ghosts", n: "Restless Ghosts", start: "Crumbling well in Bramblemead Village.", rw: [] },
+    { id: "goblin-diplomacy", n: "Goblin Diplomacy", start: "Zanik in Bramblemead Valley.", rw: ["Goblin War Banner"] },
+    { id: "highlighting-the-problem", n: "Highlighting the Problem", start: "Wizard statue in the Runecrafting Guild, Bramblemead Valley.", rw: ["Staff of Light"] },
+  ]},
+  { key: "ghornfell", region: "Ghornfell", unlock: "Reached during <strong>Dragon Slayer</strong>", items: [
+    { id: "granite-mauled", n: "Granite Mauled", start: "Doric in the Fractured Plains.", rw: ["Granite Maul"] },
+    { id: "heartstrings", n: "Heartstrings", start: "Memorial on top of the hill in the Fractured Plains.", rw: ["Crystal Bow"] },
+    { id: "a-room-with-a-garou", n: "A Room With A Garou", start: "Caratacus in the Fractured Plains.", rw: ["Hanging Tools", "Pots on a Bench", "Sawhorse"] },
+    { id: "dog-days", n: "Dog Days", start: "Vannaka at the centre of the Stormtouched Highlands.", rw: ["Garou Highborn's Cloak"] },
+    { id: "cooks-assistant", n: "Cook's Assistant", start: "Slopfinger, on the southern border between the Stormtouched Highlands and the Fractured Plains.", rw: ["Victoria Sponge Cake"] },
+    { id: "animal-magnetism", n: "Animal Magnetism", start: "Manktongue, on the same border as Slopfinger.", rw: ["Ava's Accumulator"] },
+    { id: "a-melody-remembered", n: "A Melody Remembered", start: "Repair the broken music box in a desk in the Stormtouched Highlands.", rw: ["Ravanna's Ring"] },
+    { id: "the-great-body-robbery", n: "The Great Body Robbery", start: "Doctor Fenkenstrain in the Bloodblight Swamp.", rw: ["Zombie Arm", "Lightning Rod"] },
+  ]},
+  { key: "fellhollow", region: "Fellhollow", unlock: "Opens after <strong>Dragon Slayer</strong>", items: [
+    { id: "even-more-restless-ghosts", n: "Even More Restless Ghosts", start: "Zanik in Fellhollow.", rw: ["Dorgeshuun Crossbow"] },
+    { id: "the-wild-hunt", n: "The Wild Hunt", start: "Vannaka in Bleaksfield Valley.", rw: [] },
+    { id: "things-that-go-boom", n: "Things That Go Boom In The Night", start: "Vannaka in Bleaksfield Valley.", rw: ["Spectral Chinchompa Cape"] },
+    { id: "seeking-salvation", n: "Seeking Salvation", start: "Doric, in a cave east of the Lake of Lost Souls.", rw: ["Salve Amulet"] },
+    { id: "dorics-quest", n: "Doric's Quest", start: "Doric, in the same cave east of the Lake of Lost Souls.", rw: ["Zombie Axe"] },
+    { id: "letters-for-the-dead", n: "Letters for the Dead", start: "Postie Pete in the Forgotten Temple.", rw: [] },
+    { id: "what-remains-is-written", n: "What Remains is Written", start: "Abraxus The Eternal in Coalridge Pass.", rw: [] },
+    { id: "mirror-mirror", n: "Mirror, Mirror", start: "The mirror west of the Guthix shrine near Emberwood.", rw: ["Ulv's Longbow"] },
+  ]},
+  { key: "dowdun", region: "Dowdun Reach", unlock: "Opens after <strong>Withering Heights</strong>", items: [
+    { id: "biohazard", n: "Biohazard", start: "Kill the corrupted raven in The Courtyard and pick up its drop.", rw: ["Zamorak Cape"] },
+    { id: "wanted", n: "Wanted!", start: "Vannaka in The Courtyard.", rw: ["Unholy Symbol"] },
+    { id: "whats-theirs-is-mine", n: "What's Theirs is Mine!", start: "Doric next to the Dreaming Stone in The Nexus.", rw: ["Zamorak Staff"] },
+  ]},
+  { key: "umbral", region: "Umbral Sands", unlock: "Opens after <strong>Black Knight's Fortress</strong>", items: [
+    { id: "contact", n: "Contact!", start: "Avisk's crystal in the Dunes of Uzzer.", rw: ["Pharaoh's Sceptre"] },
+    { id: "brink-of-extinction", n: "Brink of Extinction", start: "Zi at The Burning Spire, south of the Sinking Pyramid.", rw: ["Obsidian Cape"] },
+    { id: "mapping-the-sands-i", n: "Mapping The Sands I", start: "Anamcara in Alcarrid Camp. Find Moon Sprites on high points.", rw: [] },
+    { id: "mapping-the-sands-ii", n: "Mapping The Sands II", start: "Anamcara again, after part I. Moon Sprites across all of the Umbral Sands.", rw: ["Bow of Elidinis"] },
+  ]},
+];
+
+const EXTRA = [
+  { id: "statues-of-saradomin", n: "Statues of Saradomin", nowiki: false, start: "Statue in Bramblemead Valley, east of Crasorak Kara. Put an opal, a jade and a sapphire in the three Saradomin statues (Whispering Swamp, Fractured Plains, Stormtouched Highlands), then return.", rw: ["Saradominist cloak"] },
+  { id: "x-marks-the-spot", n: "Buried treasure", nowiki: true, start: "Fellhollow. Repeatable treasure digs (listed in the game data as \u201cX Marks the Spot\u201d).", rw: [] },
+  { id: "fight-caves-full", n: "Fight Caves", wiki: "Fight Cave", start: "Full access after Icthlarin's Little Helper. Clear it for a chance at the fire cape.", rw: ["Fire cape"] },
+  { id: "nightmare-crucible", n: "Nightmare Crucible", start: "Full access after Icthlarin's Little Helper. Upgrades weapons to max Power Level.", rw: [] },
+  { id: "scorned-raid", n: "Scorned Wilderness raid runs", wiki: "Scorned Wilderness", start: "Start or resume a run with Commander Zilyana at Rasthin's Rest. Repeat runs to earn the Dragon armour and weapons.", rw: ["Dragon armour set", "Dragon Scimitar", "Dragon Crossbow"] },
+];
+
+
+/* ---------- gear planner data ---------- */
+// Where a material comes from. `craft` = recipe; `src` = gather/drop sources.
+const MATS = {
+  "Abyssal Spine": { src: "Abyssal demon, 45% per kill (Whispering Swamp, Fractured Plains, Bloodblight Swamp)." },
+  "Abyssal Remains": { src: "Abyssal demon, every kill." },
+  "Shrapnel": { src: "Terrorbirds and garou hunters in the Fractured Plains; aggressive terrorbirds drop 2–4. Also chests in Dowdun Reach and the Umbral Sands." },
+  "Swamp Thread": { craft: { at: "Spinning Wheel", lvl: "Artisan 40", out: 1, in: [[1, "Swamp Weed"]] } },
+  "Swamp Weed": { src: "Swamp weed plants in the Bloodblight Swamp and inside Kletterbuja Kara. Can also be farmed." },
+  "Adhesive": { craft: { at: "Kiln", lvl: "Artisan 20", out: 1, in: [[1, "Swamp Tar"]] } },
+  "Swamp Tar": { src: "On the ground in the Whispering Swamp. Plague King drops 3, putrid rats 1." },
+  "Vault Shard": { src: "Vault guardians and vault bosses inside the Dragonkin vaults (the “Kara” dungeons)." },
+  "Demonic Oil": { craft: { at: "Brewing Cauldron", out: 1, in: [[6, "Necrotic Bonemeal"], [3, "Vile Ashes"], [1, "Glass Vessel"]] } },
+  "Necrotic Bonemeal": { craft: { at: "Grindstone", out: 1, in: [[1, "Undead Bone"]] } },
+  "Undead Bone": { src: "Undead in Fellhollow: zogres drop 4–8, skeletons and rotsworn 1–3." },
+  "Vile Ashes": { src: "Ash piles left by demons (Dowdun Reach): 2–3 per ash pile." },
+  "Glass Vessel": { src: "Basic crafted material." },
+  "Scorch Leather": { craft: { at: "Advanced Tannery", lvl: "Artisan 40", out: 1, in: [[1, "Draconic Leather"], [2, "Kalphite Shell"], [1, "Acrid Adhesive"]] } },
+  "Draconic Leather": { craft: { at: "Tannery", out: 1, in: [[1, "Dragon Blood"], [3, "Hard Leather"]] } },
+  "Dragon Blood": { src: "Every dragon: 8 from green, blue and red dragons, 6–12 from black dragons." },
+  "Hard Leather": { src: "Abyssal demon (5+) and zogres (4–8). Or tan 2 Leather + 1 Adhesive at a Tannery." },
+  "Kalphite Shell": { src: "Kalphite Queen drops 5–8 (Umbral Sands)." },
+  "Acrid Adhesive": { craft: { at: "Kiln", out: 1, in: [[3, "Kalphite Ichor"]] } },
+  "Kalphite Ichor": { src: "Kalphite Queen 6–12; kalphite guardians, soldiers and workers in the Umbral Sands; kalphite eggs 6–9." },
+  "Cursed Essence": { src: "Ash piles from demons in Dowdun Reach (2–3), and stormpact demons (1–2)." },
+  "Dragonstone": { src: "1 in 20 from adamantite and runite ore nodes. Needs the Gem Prospector perk (Mining 16)." },
+  "Soul Fragment": { src: "Green dragons 40–50, zogres 20, Spectral Chests 50–100, Soul Stones 31–35 (Fellhollow)." },
+  "Fine Thread": { craft: { at: "Spinning Wheel", lvl: "Artisan 20", out: 1, in: [[4, "Corpse Cotton"]] } },
+  "Corpse Cotton": { src: "Zogres drop 4–8 (Fellhollow)." },
+  "Infernal Fragment": { src: "Blue dragons 40–50; demons, Black Knights and Zamorakians in Dowdun Reach; Dowdun Reach chests." },
+  "Black Metal Bar": { craft: { at: "Blast Furnace", lvl: "Artisan 20", out: 1, in: [[6, "Black Metal Scraps"], [3, "Coal"]] }, src: "Also dropped by Blazing Black Knights and Black Knight Crusaders (1–2)." },
+  "Black Metal Scraps": { src: "Salvage in Dowdun Reach." },
+  "Coal": { src: "Coal ore nodes." },
+  "Blue Dragon Leather": { craft: { at: "Tannery", lvl: "Artisan 40", out: 2, in: [[1, "Blue Dragonhide"]] } },
+  "Blue Dragonhide": { src: "Blue dragons drop 6–8 (Dowdun Reach)." },
+  "Mystic Cloth": { craft: { at: "Loom", lvl: "Artisan 40", out: 1, in: [[3, "Mystic Thread"]] }, src: "Also from textile salvage and Umbral Sands chests." },
+  "Mystic Thread": { craft: { at: "Spinning Wheel", out: 1, in: [[12, "Mystic Fibres"]] } },
+  "Mystic Fibres": { src: "Gathered material." },
+  "Broken Titan's Wrath": { src: "Black Knight Titan, every kill. Re-summon him from the symbol in his room." },
+  "Adamant Bar": { src: "Smelted from adamantite ore." },
+  "Dragon Tooth": { src: "Every dragon: 3–5 from green, blue and red dragons, 6–12 from black dragons." },
+  "Desert Thread": { craft: { at: "Spinning Wheel", lvl: "Artisan 20", out: 1, in: [[3, "Desert Weed"]] } },
+  "Desert Weed": { src: "Desert weed plants in the Umbral Sands. Grows best in a Yew farming plot." },
+  "Gypsum Wax": { craft: { at: "Brewing Cauldron", out: 1, in: [[1, "Dihydrogen Monoxide"], [3, "Ground Gypsum"], [1, "Acrid Adhesive"]] } },
+  "Dihydrogen Monoxide": { src: "Water, by its game name." },
+  "Ground Gypsum": { craft: { at: "Grindstone", out: 1, in: [[3, "Gypsum"]] } },
+  "Gypsum": { src: "Gypsum nodes across the Umbral Sands." },
+  "Refined Obsidian": { craft: { at: "Blast Furnace", out: 1, in: [[9, "Ground Obsidian"]] }, src: "Also found in Umbral Sands chests." },
+  "Ground Obsidian": { craft: { at: "Grindstone", out: 1, in: [[9, "Elder Curiosity"]] } },
+  "Elder Curiosity": { src: "Umbral Sands material." },
+  "Clay Mould": { src: "Basic crafted material." },
+  "Gold Bar": { src: "Smelted from gold ore." },
+  "Silver Bar": { src: "Smelted from silver ore." },
+  "Sapphire": { src: "Gem from ore nodes." },
+  "Opal": { src: "Gem from ore nodes." },
+  "Bronze Bar": { src: "Smelted from copper and tin." },
+  "Bloodwood Sap": { src: "Gathered material." },
+  "Fine Cloth": { craft: { at: "Loom", lvl: "Artisan 40", out: 1, in: [[3, "Fine Thread"], [1, "Gold Bar"]] }, src: "Also from textile salvage and Zamorakian mage packs." },
+  "Sacred Oil": { craft: { at: "Brewing Cauldron", lvl: "Artisan 20", out: 1, in: [[3, "Ectoplasm"], [3, "Necrotic Bonemeal"], [1, "Clay Vessel"]] } },
+  "Ectoplasm": { craft: { at: "Kiln", lvl: "Artisan 20", out: 3, in: [[1, "Withered Heart"]] }, src: "Also dropped by spirits such as Lost Souls (Fellhollow)." },
+  "Withered Heart": { src: "Fellhollow material." },
+  "Clay Vessel": { src: "Basic crafted material." },
+  "Cursed Leather": { craft: { at: "Tannery", lvl: "Artisan 40", out: 1, in: [[2, "Draconic Leather"], [1, "Cursed Essence"]] } },
+  "Garou Weave": { src: "Bought from Iasadair, Beartach or Domri for 150 Garou Chit each, or found in Umbral Sands chests." },
+  "Infinity Cloth": { craft: { at: "Loom", lvl: "Artisan 40", out: 1, in: [[1, "Desert Cloth"], [9, "Shimmerscale Powder"]] } },
+  "Desert Cloth": { src: "Umbral Sands material." },
+  "Shimmerscale Powder": { craft: { at: "Grindstone", lvl: "Artisan 40", out: 3, in: [[1, "Greater Kalphite Wing"]] }, src: "Regular kalphite wings grind into 2." },
+  "Greater Kalphite Wing": { src: "Kalphite Queen drops 2–4 (Umbral Sands)." },
+  "Garou Artefact": { src: "Umbral Sands material." },
+  "Vault Core": { src: "Pedestals inside the Dragonkin vaults; respawns every 3 in-game days." },
+  "Undead Draconic Visage": { src: "Reward from Withering Heights." },
+  "Gold Leaf": { craft: { at: "Jeweler's Bench", lvl: "Artisan 10", out: 10, in: [[1, "Gold Bar"]] } },
+  "Goblin Pack": { src: "Dropped by goblins (Brynmoor)." },
+  "Zombie Pack": { src: "Dropped by zombies and rotsworn zombies (Fellhollow)." },
+  "Green Dragonhide Leather": { src: "Tan Green Dragon Hide (green dragons, Fellhollow) at a Tannery." },
+  "Red Dragonhide Leather": { src: "Tan Red Dragon Hide (red dragons, Umbral Sands) at a Tannery." },
+  "Blurite Crossbow Limbs": { craft: { at: "Blacksmith's Bench", out: 1, in: [[2, "Blurite Bar"], [1, "Blurite Ore"]] } },
+  "Padded Cloth": { craft: { at: "Loom", lvl: "Artisan 40", out: 1, in: [[1, "Rough Cloth"], [1, "Wool Cloth"]] } },
+  "Abysmal Whip": { gear: "abysmal-whip" },
+};
+
+const GEAR = [
+  { group: "Weapons", id: "abysmal-whip", n: "Abysmal Whip", kind: "One-handed whip · Slash", pl: 4,
+    unlock: "Pick up <strong>Abyssal Remains</strong>, which every Abyssal demon drops.",
+    at: "Blacksmith's Bench", in: [[1, "Abyssal Spine"], [3, "Shrapnel"], [3, "Swamp Thread"], [3, "Adhesive"], [4, "Vault Shard"]],
+    note: "The Abyssal Spine wiki page instead says to bring a spine to the Dragonkin effigy in Kletterbuja Kara. If the remains don't unlock it, try the effigy." },
+  { group: "Weapons", id: "abyssal-whip", n: "Abyssal Whip", kind: "One-handed masterwork whip · Slash · builds Bleed", pl: 7,
+    unlock: "Wield an <strong>Abysmal Whip</strong> and interact with the Dragonkin statue in the lava, directly north of the Fight Cave entrance (Umbral Sands).",
+    at: "Blacksmith's Bench", in: [[1, "Abysmal Whip"], [6, "Demonic Oil"], [6, "Scorch Leather"], [6, "Cursed Essence"], [4, "Dragonstone"]],
+    note: "Repairs cost 1 Abyssal Spine, so keep a few. Upgrades to PL 8 with an Ascension Core at the Mystic Forge." },
+  { group: "Weapons", id: "shadow-sword", n: "Shadow Sword", kind: "Greatsword · Slash · extra damage to spectral enemies", pl: 5,
+    unlock: "Use a <strong>Shard of Smoky Glass</strong>: 1 in 10 from zogres in Fellhollow.",
+    at: "Blacksmith's Bench", in: [[64, "Soul Fragment"], [5, "Draconic Leather"], [4, "Fine Thread"], [6, "Vault Shard"]],
+    note: "Upgrades up to PL 8 with Ascension Cores." },
+  { group: "Weapons", id: "titans-wrath", n: "Titan's Wrath", kind: "Black Knight Titan's weapon",
+    unlock: "Reward from the <strong>Black Knight's Fortress</strong> quest.",
+    at: "Blacksmith's Bench", in: [[1, "Broken Titan's Wrath"], [12, "Black Metal Bar"], [5, "Blue Dragon Leather"], [4, "Mystic Cloth"], [64, "Infernal Fragment"]] },
+  { group: "Weapons", id: "keris", n: "Keris", kind: "Dagger · Stab · extra damage to kalphites", pl: 7,
+    unlock: "Take the <strong>Corroded Curved Blade</strong> from the chest after the Kalphite Queen, in the vault in south-west Umbral Sands.",
+    at: "Blacksmith's Bench", in: [[8, "Adamant Bar"], [6, "Dragon Tooth"], [3, "Desert Thread"], [2, "Gypsum Wax"]] },
+  { group: "Shields", id: "toktz-ket-xil", n: "TokTz-Ket-Xil", kind: "Shield · parrying boosts melee damage", pl: 7,
+    unlock: "Study the <strong>Unyielding Obsidian Construct</strong>: 1 in 20 from Tok-Xil, which respawns daily.",
+    at: "Blacksmith's Bench", in: [[10, "Refined Obsidian"], [4, "Scorch Leather"]] },
+  { group: "Trinkets", id: "ring-of-recoil", n: "Ring of Recoil", kind: "Ring · reflects 50% of damage taken",
+    unlock: "Pick up <strong>A Cracked Bronze Vanity Mirror</strong>: 1 in 40 from green dragons.",
+    at: "Jeweler's Bench", in: [[1, "Clay Mould"], [2, "Gold Bar"], [2, "Sapphire"], [3, "Vault Shard"]] },
+  { group: "Trinkets", id: "ring-of-pursuit", n: "Ring of Pursuit", kind: "Ring · animals notice you 80% later",
+    unlock: "Pick up the <strong>Carved Bone Animal Lure</strong>: 1 in 40 from green dragons.",
+    at: "Jeweler's Bench", in: [[1, "Clay Mould"], [2, "Silver Bar"], [2, "Opal"], [3, "Vault Shard"]] },
+  { group: "Utility", id: "challenge-horn", n: "Challenge Horn", kind: "Summons Velgar for a rematch (30–40 PL 4 Ascension Shards per kill)",
+    unlock: "Learned during <strong>Dragon Slayer</strong>.",
+    at: "Blacksmith's Bench", in: [[1, "Dragon Tooth"], [1, "Bloodwood Sap"], [5, "Bronze Bar"]] },
+];
+const GEAR_BY = Object.fromEntries(GEAR.map(g => [g.id, g]));
+const RECIPES = [
+{
+"key": "pl1",
+"title": "Power Level 1",
+"items": [
+{
+"id": "r-suspiciously-light-tattered-boots",
+"n": "Suspiciously Light Tattered Boots",
+"src": "The windmill in Temple Woods.",
+"unl": "Leggings of Lightness",
+"rc": {
+"at": "Crafting Table",
+"in": [
+[
+6,
+"Coarse Animal Fur"
+],
+[
+6,
+"Rune Essence"
+]
+]
+}
+},
+{
+"id": "r-a-simple-broken-bow",
+"n": "A Simple Broken Bow",
+"src": "South of Bramblemead Valley.",
+"unl": "Adventurer's Longbow",
+"rc": {
+"at": "Fletching Bench",
+"in": [
+[
+16,
+"Ash Logs"
+],
+[
+6,
+"Coarse Thread"
+]
+]
+}
+},
+{
+"id": "r-a-threadbare-grain-sack",
+"n": "A Threadbare Grain Sack",
+"src": "Abandoned house in Bramblemead Village.",
+"unl": "Bag of Noggin'",
+"rc": {
+"at": "Crafting Table",
+"in": [
+[
+1,
+"Goblin Pack"
+]
+]
+}
+},
+{
+"id": "r-scratchy-sackcloth",
+"n": "Scratchy Sackcloth",
+"src": "Buried treasure (“X Marks the Spot”).",
+"unl": "Shroud of Noggin",
+"rc": {
+"at": "Crafting Table",
+"in": [
+[
+1,
+"Zombie Pack"
+],
+[
+8,
+"Ectoplasm"
+],
+[
+3,
+"Fine Thread"
+]
+]
+}
+}
+]
+},
+{
+"key": "pl2",
+"title": "Power Level 2",
+"items": [
+{
+"id": "r-an-educational-blade",
+"n": "An Educational Blade",
+"src": "East side of the Temple of Saradomin roof.",
+"unl": "Wooden Training Sword",
+"rc": {
+"at": "Crafting Table",
+"in": [
+[
+14,
+"Ash Logs"
+]
+]
+}
+},
+{
+"id": "r-a-cruel-goblin-blade",
+"n": "A Cruel Goblin Blade",
+"src": "Rare drop from goblin warriors and goblin bruisers.",
+"unl": "Goblin “Swingslash”",
+"rc": {
+"at": "Crafting Table",
+"in": [
+[
+10,
+"Animal Bone"
+],
+[
+6,
+"Ash Logs"
+],
+[
+2,
+"Leather"
+]
+]
+}
+}
+]
+},
+{
+"key": "pl3",
+"title": "Power Level 3",
+"items": [
+{
+"id": "r-remnants-of-a-shattered-skull",
+"n": "Remnants of a Shattered Skull",
+"src": "Rare drop from garou berserkers.",
+"unl": "The Skullsplitter",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+6,
+"Bronze Bar"
+],
+[
+4,
+"Antler"
+],
+[
+4,
+"Oak Logs"
+],
+[
+2,
+"Hard Leather"
+]
+]
+}
+},
+{
+"id": "r-a-mysterious-crescent-carving",
+"n": "A Mysterious Crescent Carving",
+"src": "Rare drop from garou druids.",
+"unl": "Grieving Moon Staff",
+"rc": {
+"at": "Mystic Forge",
+"in": [
+[
+8,
+"Oak Logs"
+],
+[
+6,
+"Antler"
+],
+[
+2,
+"Animal Bone"
+]
+]
+}
+},
+{
+"id": "r-a-corroded-serrated-blade",
+"n": "A Corroded Serrated Blade",
+"src": "Chest near the tree where Heartstrings starts.",
+"unl": "Chieftain's Blade",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+10,
+"Bronze Bar"
+],
+[
+2,
+"Antler"
+],
+[
+2,
+"Animal Bone"
+]
+]
+}
+}
+]
+},
+{
+"key": "pl4",
+"title": "Power Level 4",
+"items": [
+{
+"id": "r-a-brutal-bladehead",
+"n": "A Brutal Bladehead",
+"src": "1 in 20 from the Garou King; also garou thanes.",
+"unl": "Thane's Authority",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+10,
+"Iron Bar"
+],
+[
+8,
+"Bronze Bar"
+],
+[
+4,
+"Oak Logs"
+],
+[
+4,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-a-string-of-sinew",
+"n": "A String of Sinew",
+"src": "Uncommon drop from garou hunters.",
+"unl": "Hunter Stagbow",
+"rc": {
+"at": "Fletching Bench",
+"in": [
+[
+18,
+"Antler"
+],
+[
+6,
+"Ram Horn"
+],
+[
+4,
+"Swamp Thread"
+],
+[
+4,
+"Jade"
+],
+[
+4,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-parts-of-a-sinister-looking-staff",
+"n": "Parts of a Sinister-Looking Staff",
+"src": "Chest north-west of the Skeklac Kara vault.",
+"unl": "Draconic Staff",
+"rc": {
+"at": "Mystic Forge",
+"in": [
+[
+10,
+"Iron Bar"
+],
+[
+6,
+"Granite"
+],
+[
+4,
+"Jade"
+],
+[
+4,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-azure-metal-contraption",
+"n": "Azure Metal Contraption",
+"src": "Chest below the ridge west of the main river, Fractured Plains.",
+"unl": "Blurite Crossbow (plus limbs and bolts)",
+"rc": {
+"at": "Fletching Bench",
+"in": [
+[
+12,
+"Blightwood"
+],
+[
+6,
+"Swamp Thread"
+],
+[
+1,
+"Blurite Crossbow Limbs"
+],
+[
+1,
+"Jade"
+],
+[
+4,
+"Vault Shard"
+]
+],
+"note": "The same vestige also unlocks Blurite Crossbow Limbs and Blurite Bolts."
+}
+},
+{
+"id": "r-abyssal-remains",
+"n": "Abyssal Remains",
+"src": "Every Abyssal demon kill.",
+"unl": "Abysmal Whip",
+"gear": "abysmal-whip"
+}
+]
+},
+{
+"key": "pl5",
+"title": "Power Level 5",
+"items": [
+{
+"id": "r-corroded-white-visor",
+"n": "Corroded White Visor",
+"src": "Death's Exchange, 200 Soul Fragments",
+"unl": "White Full Helm",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+4,
+"Steel Bar"
+],
+[
+2,
+"Silver Bar"
+],
+[
+4,
+"Draconic Leather"
+],
+[
+1,
+"Fine Cloth"
+],
+[
+1,
+"Sacred Oil"
+],
+[
+2,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-dented-white-pauldron",
+"n": "Dented White Pauldron",
+"src": "Death's Exchange, 400 Soul Fragments",
+"unl": "White Platebody",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+10,
+"Steel Bar"
+],
+[
+2,
+"Silver Bar"
+],
+[
+6,
+"Draconic Leather"
+],
+[
+2,
+"Fine Cloth"
+],
+[
+3,
+"Sacred Oil"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-crushed-white-cuisse",
+"n": "Crushed White Cuisse",
+"src": "Death's Exchange, 300 Soul Fragments",
+"unl": "White Platelegs",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+6,
+"Steel Bar"
+],
+[
+2,
+"Silver Bar"
+],
+[
+4,
+"Draconic Leather"
+],
+[
+3,
+"Fine Cloth"
+],
+[
+2,
+"Sacred Oil"
+],
+[
+4,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-simply-splendid-feather",
+"n": "Simply Splendid Feather",
+"src": "Death's Exchange, 200 Soul Fragments",
+"unl": "Ranger Hat",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+4,
+"Fine Cloth"
+],
+[
+2,
+"Green Dragonhide Leather"
+],
+[
+1,
+"Draconic Leather"
+],
+[
+1,
+"Sacred Oil"
+],
+[
+2,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-slightly-chaffing-chestguard",
+"n": "Slightly Chaffing Chestguard",
+"src": "Death's Exchange, 400 Soul Fragments",
+"unl": "Ranger Tunic",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+12,
+"Fine Cloth"
+],
+[
+4,
+"Green Dragonhide Leather"
+],
+[
+4,
+"Draconic Leather"
+],
+[
+3,
+"Sacred Oil"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-tastefully-torn-tights",
+"n": "Tastefully Torn Tights",
+"src": "Death's Exchange, 300 Soul Fragments",
+"unl": "Ranger Tights",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+6,
+"Fine Cloth"
+],
+[
+4,
+"Green Dragonhide Leather"
+],
+[
+2,
+"Draconic Leather"
+],
+[
+2,
+"Sacred Oil"
+],
+[
+4,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-curse-carrying-crown",
+"n": "Curse Carrying Crown",
+"src": "Death's Exchange, 200 Soul Fragments",
+"unl": "Necromancer's Crown",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+6,
+"Undead Bone"
+],
+[
+2,
+"Fine Cloth"
+],
+[
+1,
+"Draconic Leather"
+],
+[
+1,
+"Sacred Oil"
+],
+[
+2,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-remnants-of-a-rotting-robe",
+"n": "Remnants of a Rotting Robe",
+"src": "Death's Exchange, 400 Soul Fragments",
+"unl": "Necromancer's Robe Top",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+16,
+"Undead Bone"
+],
+[
+8,
+"Fine Cloth"
+],
+[
+4,
+"Draconic Leather"
+],
+[
+3,
+"Sacred Oil"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-burnished-belt-buckle",
+"n": "Burnished Belt Buckle",
+"src": "Death's Exchange, 300 Soul Fragments",
+"unl": "Necromancer's Robe Bottom",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+12,
+"Undead Bone"
+],
+[
+4,
+"Fine Cloth"
+],
+[
+2,
+"Draconic Leather"
+],
+[
+2,
+"Sacred Oil"
+],
+[
+4,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-cloying-damp-cowl",
+"n": "Cloying Damp Cowl",
+"src": "1 in 100 from skeletal archers.",
+"unl": "Shadowscale Hood",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+4,
+"Draconic Leather"
+],
+[
+6,
+"Undead Bone"
+],
+[
+2,
+"Fine Cloth"
+],
+[
+1,
+"Sacred Oil"
+],
+[
+2,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-serrated-claw",
+"n": "Serrated Claw",
+"src": "1 in 10 from Imaru.",
+"unl": "Imaru's Talon",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+1,
+"Undead Draconic Visage"
+],
+[
+1,
+"Steel Scimitar"
+],
+[
+12,
+"Vault Shard"
+],
+[
+1,
+"Vault Core"
+]
+],
+"note": "The Undead Draconic Visage is a Withering Heights reward, so you can only make one per visage."
+}
+},
+{
+"id": "r-shard-of-smoky-glass",
+"n": "Shard of Smoky Glass",
+"src": "1 in 10 from zogres in Fellhollow.",
+"unl": "Shadow Sword",
+"gear": "shadow-sword"
+},
+{
+"id": "r-sundering-spiked-slab",
+"n": "Sundering Spiked Slab",
+"src": "1 in 20 from skeletal hoplites.",
+"unl": "Fallen Hoplite's Aspis",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+10,
+"Steel Bar"
+],
+[
+12,
+"Undead Bone"
+],
+[
+4,
+"Draconic Leather"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+}
+],
+"intro": "Most of these are bought from Death in Fellhollow."
+},
+{
+"key": "pl6",
+"title": "Power Level 6",
+"items": [
+{
+"id": "r-bloodstained-black-visor",
+"n": "Bloodstained Black Visor",
+"src": "Postie Pete's Evil Emporium, 200 Infernal Fragments",
+"unl": "Black Knight Helmet",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+4,
+"Black Metal Bar"
+],
+[
+2,
+"Mithril Bar"
+],
+[
+4,
+"Cursed Leather"
+],
+[
+1,
+"Mystic Cloth"
+],
+[
+1,
+"Demonic Oil"
+]
+]
+}
+},
+{
+"id": "r-shard-of-black-pauldron",
+"n": "Shard of Black Pauldron",
+"src": "Postie Pete's Evil Emporium, 400 Infernal Fragments",
+"unl": "Black Knight Platebody",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+10,
+"Black Metal Bar"
+],
+[
+2,
+"Mithril Bar"
+],
+[
+6,
+"Cursed Leather"
+],
+[
+4,
+"Mystic Cloth"
+],
+[
+3,
+"Demonic Oil"
+]
+]
+}
+},
+{
+"id": "r-grim-black-codpiece",
+"n": "Grim Black Codpiece",
+"src": "Postie Pete's Evil Emporium, 300 Infernal Fragments",
+"unl": "Black Knight Platelegs",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+6,
+"Black Metal Bar"
+],
+[
+2,
+"Mithril Bar"
+],
+[
+4,
+"Cursed Leather"
+],
+[
+2,
+"Mystic Cloth"
+],
+[
+2,
+"Demonic Oil"
+]
+]
+}
+},
+{
+"id": "r-sodden-black-leather",
+"n": "Sodden Black Leather",
+"src": "Postie Pete's Evil Emporium, 200 Infernal Fragments",
+"unl": "Shadow Cowl",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+4,
+"Black Metal Bar"
+],
+[
+1,
+"Cursed Leather"
+],
+[
+2,
+"Blue Dragon Leather"
+],
+[
+1,
+"Demonic Oil"
+]
+]
+}
+},
+{
+"id": "r-limp-black-lining",
+"n": "Limp Black Lining",
+"src": "Postie Pete's Evil Emporium, 400 Infernal Fragments",
+"unl": "Shadow Body",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+12,
+"Cursed Leather"
+],
+[
+4,
+"Black Metal Bar"
+],
+[
+4,
+"Blue Dragon Leather"
+],
+[
+3,
+"Demonic Oil"
+]
+]
+}
+},
+{
+"id": "r-dusty-black-pocket",
+"n": "Dusty Black Pocket",
+"src": "Postie Pete's Evil Emporium, 300 Infernal Fragments",
+"unl": "Shadow Chaps",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+8,
+"Black Metal Bar"
+],
+[
+4,
+"Cursed Leather"
+],
+[
+4,
+"Blue Dragon Leather"
+],
+[
+2,
+"Demonic Oil"
+]
+]
+}
+},
+{
+"id": "r-fabric-that-hums-with-you",
+"n": "Fabric That Hums With You",
+"src": "Postie Pete's Evil Emporium, 200 Infernal Fragments",
+"unl": "Zamorak Hood",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+2,
+"Mystic Cloth"
+],
+[
+2,
+"Black Metal Bar"
+],
+[
+1,
+"Demonic Oil"
+],
+[
+12,
+"Infernal Fragment"
+]
+]
+}
+},
+{
+"id": "r-whispering-elbow-pad",
+"n": "Whispering Elbow Pad",
+"src": "Postie Pete's Evil Emporium, 400 Infernal Fragments",
+"unl": "Zamorak Robes",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+8,
+"Mystic Cloth"
+],
+[
+6,
+"Black Metal Bar"
+],
+[
+3,
+"Demonic Oil"
+],
+[
+32,
+"Infernal Fragment"
+]
+]
+}
+},
+{
+"id": "r-wizard-s-kneecap",
+"n": "Wizard's Kneecap",
+"src": "Postie Pete's Evil Emporium, 300 Infernal Fragments",
+"unl": "Zamorak Robe Legs",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+6,
+"Mystic Cloth"
+],
+[
+4,
+"Black Metal Bar"
+],
+[
+2,
+"Demonic Oil"
+],
+[
+24,
+"Infernal Fragment"
+]
+]
+}
+},
+{
+"id": "r-sinister-mechanism",
+"n": "Sinister Mechanism",
+"src": "Postie Pete's Evil Emporium, 300 Infernal Fragments, or vestige chests in Dowdun Reach.",
+"unl": "Shadow Crossbow",
+"rc": {
+"at": "Fletching Bench",
+"in": [
+[
+1,
+"Black Crossbow Limbs"
+],
+[
+6,
+"Mystic Thread"
+],
+[
+16,
+"Maple Logs"
+],
+[
+2,
+"Demonic Oil"
+]
+]
+}
+},
+{
+"id": "r-bloodstained-hilt",
+"n": "Bloodstained Hilt",
+"src": "Postie Pete's Evil Emporium, 300 Infernal Fragments, or vestige chests in Dowdun Reach.",
+"unl": "Black Greataxe",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+16,
+"Black Metal Bar"
+],
+[
+5,
+"Maple Logs"
+],
+[
+6,
+"Cursed Leather"
+],
+[
+32,
+"Infernal Fragment"
+]
+]
+}
+},
+{
+"id": "r-demonic-metal-rod",
+"n": "Demonic Metal Rod",
+"src": "Postie Pete's Evil Emporium, 300 Infernal Fragments, or vestige chests in Dowdun Reach.",
+"unl": "Subjugation Staff",
+"rc": {
+"at": "Mystic Forge",
+"in": [
+[
+16,
+"Maple Logs"
+],
+[
+6,
+"Mithril Bar"
+],
+[
+4,
+"Glass Vessel"
+],
+[
+18,
+"Infernal Fragment"
+]
+]
+}
+},
+{
+"id": "r-shattered-black-blade",
+"n": "Shattered Black Blade",
+"src": "Postie Pete's Evil Emporium, 300 Infernal Fragments, or vestige chests in Dowdun Reach.",
+"unl": "Black Sword",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+10,
+"Black Metal Bar"
+],
+[
+5,
+"Cursed Leather"
+],
+[
+4,
+"Mystic Thread"
+],
+[
+2,
+"Demonic Oil"
+]
+]
+}
+},
+{
+"id": "r-battle-scarred-black-metal",
+"n": "Battle-Scarred Black Metal",
+"src": "Postie Pete's Evil Emporium, 300 Infernal Fragments",
+"unl": "Black Shield",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+10,
+"Black Metal Bar"
+],
+[
+4,
+"Cursed Leather"
+],
+[
+2,
+"Demonic Oil"
+]
+]
+}
+}
+],
+"intro": "Most of these are bought with Infernal Fragments in Dowdun Reach."
+},
+{
+"key": "pl7",
+"title": "Power Level 7",
+"items": [
+{
+"id": "r-chipped-obsidian-construct",
+"n": "Chipped Obsidian Construct",
+"src": "Beartach (Moon Garou merchant), 2,500 Garou Chit",
+"unl": "Obsidian Helmet",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+10,
+"Refined Obsidian"
+],
+[
+6,
+"Scorch Leather"
+]
+]
+}
+},
+{
+"id": "r-crushed-obsidian-construct",
+"n": "Crushed Obsidian Construct",
+"src": "Beartach (Moon Garou merchant), 5,000 Garou Chit",
+"unl": "Obsidian Legs",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+14,
+"Refined Obsidian"
+],
+[
+10,
+"Scorch Leather"
+]
+]
+}
+},
+{
+"id": "r-fractured-obsidian-construct",
+"n": "Fractured Obsidian Construct",
+"src": "Beartach (Moon Garou merchant), 7,500 Garou Chit",
+"unl": "Obsidian Chest",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+18,
+"Refined Obsidian"
+],
+[
+14,
+"Scorch Leather"
+]
+]
+}
+},
+{
+"id": "r-selenic-veil",
+"n": "Selenic Veil",
+"src": "Domri (Moon Garou merchant), 2,500 Garou Chit",
+"unl": "Lunar Garou Hat",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+3,
+"Garou Weave"
+],
+[
+2,
+"Infinity Cloth"
+],
+[
+1,
+"Garou Artefact"
+],
+[
+1,
+"Refined Obsidian"
+],
+[
+1,
+"Gypsum Wax"
+]
+]
+}
+},
+{
+"id": "r-lunular-wrappings",
+"n": "Lunular Wrappings",
+"src": "Domri (Moon Garou merchant), 5,000 Garou Chit",
+"unl": "Lunar Garou Robe Legs",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+6,
+"Garou Weave"
+],
+[
+4,
+"Infinity Cloth"
+],
+[
+2,
+"Garou Artefact"
+],
+[
+2,
+"Refined Obsidian"
+],
+[
+2,
+"Gypsum Wax"
+]
+]
+}
+},
+{
+"id": "r-lunate-shawl",
+"n": "Lunate Shawl",
+"src": "Domri (Moon Garou merchant), 7,500 Garou Chit",
+"unl": "Lunar Garou Robes",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+9,
+"Garou Weave"
+],
+[
+6,
+"Infinity Cloth"
+],
+[
+3,
+"Garou Artefact"
+],
+[
+3,
+"Refined Obsidian"
+],
+[
+3,
+"Gypsum Wax"
+]
+]
+}
+},
+{
+"id": "r-twitching-antenna",
+"n": "Twitching Antenna",
+"src": "Iasadair (Moon Garou merchant), 2,500 Garou Chit",
+"unl": "Kalphite Carapace Helmet",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+6,
+"Kalphite Shell"
+],
+[
+2,
+"Scorch Leather"
+],
+[
+1,
+"Gypsum Wax"
+],
+[
+2,
+"Garou Weave"
+]
+]
+}
+},
+{
+"id": "r-barbed-appendage",
+"n": "Barbed Appendage",
+"src": "Iasadair (Moon Garou merchant), 5,000 Garou Chit",
+"unl": "Kalphite Carapace Legs",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+10,
+"Kalphite Shell"
+],
+[
+4,
+"Scorch Leather"
+],
+[
+2,
+"Gypsum Wax"
+],
+[
+4,
+"Garou Weave"
+]
+]
+}
+},
+{
+"id": "r-chitinous-carapace",
+"n": "Chitinous Carapace",
+"src": "Iasadair (Moon Garou merchant), 7,500 Garou Chit",
+"unl": "Kalphite Carapace Chest",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+15,
+"Kalphite Shell"
+],
+[
+8,
+"Scorch Leather"
+],
+[
+3,
+"Gypsum Wax"
+],
+[
+6,
+"Garou Weave"
+]
+]
+}
+},
+{
+"id": "r-sun-bleached-head-wrap",
+"n": "Sun-Bleached Head Wrap",
+"src": "Domri (Moon Garou merchant), 2,500 Garou Chit",
+"unl": "Desert Hood",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+4,
+"Garou Weave"
+],
+[
+1,
+"Scorch Leather"
+],
+[
+1,
+"Refined Obsidian"
+],
+[
+1,
+"Gypsum Wax"
+]
+]
+}
+},
+{
+"id": "r-sun-bleached-leggings",
+"n": "Sun-Bleached Leggings",
+"src": "Iasadair (Moon Garou merchant), 5,000 Garou Chit",
+"unl": "Desert Robe Legs",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+8,
+"Garou Weave"
+],
+[
+2,
+"Scorch Leather"
+],
+[
+2,
+"Refined Obsidian"
+],
+[
+2,
+"Gypsum Wax"
+]
+]
+}
+},
+{
+"id": "r-sun-bleached-vest",
+"n": "Sun-Bleached Vest",
+"src": "Beartach (Moon Garou merchant), 7,500 Garou Chit",
+"unl": "Desert Robes",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+12,
+"Garou Weave"
+],
+[
+3,
+"Scorch Leather"
+],
+[
+3,
+"Refined Obsidian"
+],
+[
+3,
+"Gypsum Wax"
+]
+]
+}
+},
+{
+"id": "r-unyielding-obsidian-construct",
+"n": "Unyielding Obsidian Construct",
+"src": "1 in 20 from Tok-Xil.",
+"unl": "TokTz-Ket-Xil",
+"gear": "toktz-ket-xil"
+},
+{
+"id": "r-elongated-obsidian-construct",
+"n": "Elongated Obsidian Construct",
+"src": "2 in 100 from KotHaar-Hur.",
+"unl": "Toktz-Mej-Tal",
+"rc": {
+"at": "Mystic Forge",
+"in": [
+[
+22,
+"Refined Obsidian"
+],
+[
+4,
+"Dragonstone"
+]
+]
+}
+},
+{
+"id": "r-bludgeoning-obsidian-construct",
+"n": "Bludgeoning Obsidian Construct",
+"src": "2 in 100 from KotHaar-Ket.",
+"unl": "TzHaar-Ket-Om",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+16,
+"Refined Obsidian"
+],
+[
+3,
+"Red Dragonhide Leather"
+]
+]
+}
+},
+{
+"id": "r-shattered-black-blade-umbral-sands",
+"n": "Shattered Black Blade (Umbral Sands)",
+"src": "2 in 100 from KotHaar-Kal.",
+"unl": "Toktz-Xil-Ak",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+10,
+"Refined Obsidian"
+],
+[
+5,
+"Scorch Leather"
+],
+[
+3,
+"Desert Thread"
+]
+]
+}
+},
+{
+"id": "r-corroded-curved-blade",
+"n": "Corroded Curved Blade",
+"src": "Chest after the Kalphite Queen, in the vault in south-west Umbral Sands.",
+"unl": "Keris",
+"gear": "keris"
+},
+{
+"id": "r-icthlarian-fetish",
+"n": "Icthlarian Fetish",
+"src": "Reward from the quest Contact!",
+"unl": "Pharaoh's Sceptre",
+"rc": {
+"at": "Mystic Forge",
+"in": [
+[
+10,
+"Gold Bar"
+],
+[
+10,
+"Scorch Leather"
+],
+[
+32,
+"Shimmerscale Powder"
+],
+[
+4,
+"Dragonstone"
+],
+[
+4,
+"Gypsum Wax"
+]
+]
+}
+},
+{
+"id": "r-plate-of-pure-obsidian",
+"n": "Plate of Pure Obsidian",
+"src": "Reward from the quest Brink of Extinction.",
+"unl": "Obsidian Cape",
+"free": "Armour Bench"
+}
+],
+"intro": "Most of these are bought with Garou Chit from the merchants in the Umbral Sands."
+},
+{
+"key": "vaults",
+"title": "Vault Recipes",
+"intro": "Learned by exploring the Dragonkin vaults, not from vestiges. Each vault's recipes are inside it.",
+"items": [
+{
+"id": "r-vault-wild-scout-s-shortbow",
+"n": "Takla Kara",
+"via": "Vault",
+"unl": "Wild Scout's Shortbow",
+"src": "Recipe found inside Takla Kara (Fractured Plains). PL 3.",
+"rc": {
+"at": "Fletching Bench",
+"in": [
+[
+10,
+"Oak Logs"
+],
+[
+2,
+"Antler"
+],
+[
+2,
+"Wool Thread"
+],
+[
+2,
+"Dwellberries"
+]
+]
+}
+},
+{
+"id": "r-vault-anti-dragon-shield",
+"n": "Vertentis Kara",
+"via": "Vault",
+"unl": "Anti-Dragon Shield",
+"src": "Recipe found inside Vertentis Kara (Whispering Swamp). PL 3.",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+12,
+"Blightwood"
+],
+[
+4,
+"Wild Anima"
+],
+[
+4,
+"Hard Leather"
+],
+[
+4,
+"Opal"
+],
+[
+8,
+"Vault Shard"
+],
+[
+1,
+"Vault Core"
+]
+],
+"note": "Also a Dragon Slayer reward."
+}
+},
+{
+"id": "r-vault-granite-maul",
+"n": "Skeklac Kara",
+"via": "Vault",
+"unl": "Granite Maul",
+"src": "Recipe found inside Skeklac Kara (Fractured Plains, at Ashien's Watch). PL 3.",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+1,
+"Imbued Granite Maul Head"
+],
+[
+1,
+"Ornate Maul Handle"
+],
+[
+1,
+"Imbued Leather Wrappings"
+],
+[
+8,
+"Vault Shard"
+],
+[
+1,
+"Vault Core"
+]
+],
+"note": "Fully unlocks once you finish the Granite Mauled quest; the maul parts come from that quest."
+}
+},
+{
+"id": "r-vault-paladin-helmet",
+"n": "Takla Kara",
+"via": "Vault",
+"unl": "Paladin Helmet",
+"src": "Recipe found inside Takla Kara (Fractured Plains). PL 4.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+6,
+"Iron Bar"
+],
+[
+2,
+"Hard Leather"
+],
+[
+1,
+"Padded Cloth"
+],
+[
+1,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-paladin-platebody",
+"n": "Takla Kara",
+"via": "Vault",
+"unl": "Paladin Platebody",
+"src": "Recipe found inside Takla Kara (Fractured Plains). PL 4.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+12,
+"Iron Bar"
+],
+[
+8,
+"Hard Leather"
+],
+[
+2,
+"Padded Cloth"
+],
+[
+3,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-paladin-platelegs",
+"n": "Takla Kara",
+"via": "Vault",
+"unl": "Paladin Platelegs",
+"src": "Recipe found inside Takla Kara (Fractured Plains). PL 4.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+6,
+"Iron Bar"
+],
+[
+6,
+"Hard Leather"
+],
+[
+2,
+"Padded Cloth"
+],
+[
+2,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-wild-archer-cowl",
+"n": "Kletterbuja Kara",
+"via": "Vault",
+"unl": "Wild Archer Cowl",
+"src": "Recipe found inside Kletterbuja Kara (Bloodblight Swamp). PL 4.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+4,
+"Hard Leather"
+],
+[
+2,
+"Gold Bar"
+],
+[
+2,
+"Padded Cloth"
+],
+[
+1,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-wild-archer-body",
+"n": "Kletterbuja Kara",
+"via": "Vault",
+"unl": "Wild Archer Body",
+"src": "Recipe found inside Kletterbuja Kara (Bloodblight Swamp). PL 4.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+12,
+"Hard Leather"
+],
+[
+4,
+"Gold Bar"
+],
+[
+4,
+"Padded Cloth"
+],
+[
+3,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-wild-archer-chaps",
+"n": "Kletterbuja Kara",
+"via": "Vault",
+"unl": "Wild Archer Chaps",
+"src": "Recipe found inside Kletterbuja Kara (Bloodblight Swamp). PL 4.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+8,
+"Hard Leather"
+],
+[
+4,
+"Gold Bar"
+],
+[
+3,
+"Padded Cloth"
+],
+[
+2,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-dragonbone-dagger",
+"n": "Chaktan Kara",
+"via": "Vault",
+"unl": "Dragonbone Dagger",
+"src": "Recipe found inside Chaktan Kara (Stormtouched Highlands). PL 4.",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+6,
+"Ram Horn"
+],
+[
+3,
+"Antler"
+],
+[
+1,
+"Hard Leather"
+],
+[
+4,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-dragonkin-mage-hood",
+"n": "Chaktan Kara",
+"via": "Vault",
+"unl": "Dragonkin Mage Hood",
+"src": "Recipe found inside Chaktan Kara (Stormtouched Highlands). PL 4.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+3,
+"Hard Leather"
+],
+[
+2,
+"Padded Cloth"
+],
+[
+1,
+"Gold Bar"
+],
+[
+1,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-dragonkin-mage-robes",
+"n": "Chaktan Kara",
+"via": "Vault",
+"unl": "Dragonkin Mage Robes",
+"src": "Recipe found inside Chaktan Kara (Stormtouched Highlands). PL 4.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+10,
+"Hard Leather"
+],
+[
+6,
+"Padded Cloth"
+],
+[
+4,
+"Gold Bar"
+],
+[
+3,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-dragonkin-mage-robe-legs",
+"n": "Chaktan Kara",
+"via": "Vault",
+"unl": "Dragonkin Mage Robe Legs",
+"src": "Recipe found inside Chaktan Kara (Stormtouched Highlands). PL 4.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+6,
+"Hard Leather"
+],
+[
+4,
+"Padded Cloth"
+],
+[
+2,
+"Gold Bar"
+],
+[
+2,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-fallen-hoplite-s-helm",
+"n": "Vekchenven Kara",
+"via": "Vault",
+"unl": "Fallen Hoplite's Helm",
+"src": "Recipe found inside Vekchenven Kara (west of the Lake of Lost Souls). PL 5.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+4,
+"Steel Bar"
+],
+[
+8,
+"Undead Bone"
+],
+[
+2,
+"Draconic Leather"
+],
+[
+1,
+"Sacred Oil"
+],
+[
+2,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-fallen-hoplite-s-chest",
+"n": "Kalistrakthen Kara",
+"via": "Vault",
+"unl": "Fallen Hoplite's Chest",
+"src": "Recipe found inside Kalistrakthen Kara (Emberwood). PL 5.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+10,
+"Steel Bar"
+],
+[
+12,
+"Undead Bone"
+],
+[
+8,
+"Draconic Leather"
+],
+[
+3,
+"Sacred Oil"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-fallen-hoplite-s-tassets",
+"n": "Skekven Kara",
+"via": "Vault",
+"unl": "Fallen Hoplite's Tassets",
+"src": "Recipe found inside Skekven Kara (east of the Lake of Lost Souls). PL 5.",
+"rc": {
+"at": "Armour Bench",
+"in": [
+[
+6,
+"Steel Bar"
+],
+[
+8,
+"Undead Bone"
+],
+[
+6,
+"Draconic Leather"
+],
+[
+2,
+"Sacred Oil"
+],
+[
+4,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-undead-ranger-s-bow",
+"n": "Skekven Kara",
+"via": "Vault",
+"unl": "Undead Ranger's Bow",
+"src": "Recipe found inside Skekven Kara (east of the Lake of Lost Souls). PL 5.",
+"rc": {
+"at": "Fletching Bench",
+"in": [
+[
+16,
+"Undead Bone"
+],
+[
+4,
+"Fine Thread"
+],
+[
+2,
+"Steel Bar"
+],
+[
+2,
+"Sapphire"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-wolfbane-dagger",
+"n": "Vekchenven Kara",
+"via": "Vault",
+"unl": "Wolfbane Dagger",
+"src": "Recipe found inside Vekchenven Kara (west of the Lake of Lost Souls). PL 5.",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+6,
+"Steel Bar"
+],
+[
+3,
+"Silver Bar"
+],
+[
+1,
+"Draconic Leather"
+],
+[
+4,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-vault-necromancer-s-staff",
+"n": "Vekchenven Kara",
+"via": "Vault",
+"unl": "Necromancer's Staff",
+"src": "Recipe found inside Vekchenven Kara (west of the Lake of Lost Souls). PL 5.",
+"rc": {
+"at": "Mystic Forge",
+"in": [
+[
+24,
+"Undead Bone"
+],
+[
+6,
+"Sacred Oil"
+],
+[
+4,
+"Fine Thread"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+}
+]
+},
+{
+"key": "trinkets",
+"title": "Rings, Amulets & Tools",
+"items": [
+{
+"id": "r-sigil-of-a-phoenix",
+"n": "Sigil of a Phoenix",
+"src": "Death's Exchange, 800 Soul Fragments",
+"unl": "Ring of Life",
+"rc": {
+"at": "Jeweler's Bench",
+"in": [
+[
+1,
+"Clay Mould"
+],
+[
+2,
+"Gold Bar"
+],
+[
+2,
+"Diamond"
+],
+[
+3,
+"Vault Shard"
+]
+],
+"note": "Teleports you to your bed when you drop to 10% health."
+}
+},
+{
+"id": "r-weighted-training-band",
+"n": "Weighted Training Band",
+"src": "Death's Exchange, 350 Soul Fragments",
+"unl": "Amulet of Strength",
+"rc": {
+"at": "Jeweler's Bench",
+"in": [
+[
+1,
+"Clay Mould"
+],
+[
+2,
+"Gold Bar"
+],
+[
+2,
+"Silver Bar"
+],
+[
+4,
+"Red Topaz"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-hardy-weathered-shell",
+"n": "Hardy Weathered Shell",
+"src": "Death's Exchange, 350 Soul Fragments",
+"unl": "Amulet of Defence",
+"rc": {
+"at": "Jeweler's Bench",
+"in": [
+[
+1,
+"Clay Mould"
+],
+[
+2,
+"Gold Bar"
+],
+[
+2,
+"Silver Bar"
+],
+[
+4,
+"Jade"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-arrowhead-of-ancient-origin",
+"n": "Arrowhead of Ancient Origin",
+"src": "Death's Exchange, 350 Soul Fragments",
+"unl": "Amulet of Accuracy",
+"rc": {
+"at": "Jeweler's Bench",
+"in": [
+[
+1,
+"Clay Mould"
+],
+[
+2,
+"Gold Bar"
+],
+[
+2,
+"Silver Bar"
+],
+[
+4,
+"Opal"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-softly-vibrating-orb",
+"n": "Softly Vibrating Orb",
+"src": "Death's Exchange, 350 Soul Fragments",
+"unl": "Amulet of Magic",
+"rc": {
+"at": "Jeweler's Bench",
+"in": [
+[
+1,
+"Clay Mould"
+],
+[
+2,
+"Gold Bar"
+],
+[
+2,
+"Silver Bar"
+],
+[
+4,
+"Sapphire"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-a-cracked-bronze-vanity-mirror",
+"n": "A Cracked Bronze Vanity Mirror",
+"src": "1 in 40 from green dragons.",
+"unl": "Ring of Recoil",
+"gear": "ring-of-recoil"
+},
+{
+"id": "r-carved-bone-animal-lure",
+"n": "Carved Bone Animal Lure",
+"src": "1 in 40 from green dragons.",
+"unl": "Ring of Pursuit",
+"gear": "ring-of-pursuit"
+},
+{
+"id": "r-rotten-farming-tool",
+"n": "Rotten Farming Tool",
+"src": "1 in 20 from buried chests in Fellhollow.",
+"unl": "Undead Spade",
+"rc": {
+"at": "Blacksmith's Bench",
+"in": [
+[
+4,
+"Steel Bar"
+],
+[
+4,
+"Undead Bone"
+],
+[
+2,
+"Willow Logs"
+],
+[
+2,
+"Draconic Leather"
+]
+]
+}
+},
+{
+"id": "r-commemorative-coin",
+"n": "Commemorative Coin",
+"src": "1 in 40 from red dragons.",
+"unl": "Amulet of Glory",
+"rc": {
+"at": "Jeweler's Bench",
+"in": [
+[
+1,
+"Clay Mould"
+],
+[
+4,
+"Gold Bar"
+],
+[
+4,
+"Dragonstone"
+],
+[
+6,
+"Vault Shard"
+]
+]
+}
+},
+{
+"id": "r-inspiring-insignia",
+"n": "Inspiring Insignia",
+"src": "1 in 40 from red dragons.",
+"unl": "Skills Necklace",
+"rc": {
+"at": "Jeweler's Bench",
+"in": [
+[
+1,
+"Clay Mould"
+],
+[
+4,
+"Gold Bar"
+],
+[
+4,
+"Dragonstone"
+],
+[
+6,
+"Vault Shard"
+]
+],
+"note": "The wiki lists the same recipe as the Amulet of Glory; double-check in game."
+}
+}
+]
+},
+{
+"key": "cosmetic",
+"title": "Capes & Cosmetics",
+"items": [
+{
+"id": "r-tattered-time-lost-cloth",
+"n": "Tattered Time-Lost Cloth",
+"src": "1 in 100 from skeletal and rotsworn marauders.",
+"unl": "Shadowscale Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-torn-tapestry",
+"n": "Torn Tapestry",
+"src": "Buried chest in Dowdun Reach.",
+"unl": "Dowdun Reach cape",
+"free": "Armour Bench",
+"extra": "A gilded version takes the cape plus 5 Gold Leaf."
+},
+{
+"id": "r-shred-of-sunbleached-weave",
+"n": "Shred of Sunbleached Weave",
+"src": "Chest in the Umbral Sands.",
+"unl": "Umbral Sands cape",
+"free": "Armour Bench",
+"extra": "A gilded version takes the cape plus 5 Gold Leaf."
+},
+{
+"id": "r-moth-eaten-yellow-cloth",
+"n": "Moth Eaten Yellow Cloth",
+"src": "Death's Exchange, 150 Soul Fragments",
+"unl": "Yellow Adventurer's Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-moth-eaten-blue-cloth",
+"n": "Moth Eaten Blue Cloth",
+"src": "Death's Exchange, 150 Soul Fragments",
+"unl": "Blue Adventurer's Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-moth-eaten-red-cloth",
+"n": "Moth Eaten Red Cloth",
+"src": "Death's Exchange, 150 Soul Fragments",
+"unl": "Red Adventurer's Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-moth-eaten-purple-cloth",
+"n": "Moth Eaten Purple Cloth",
+"src": "Death's Exchange, 150 Soul Fragments",
+"unl": "Purple Adventurer's Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-moth-eaten-green-cloth",
+"n": "Moth Eaten Green Cloth",
+"src": "Death's Exchange, 150 Soul Fragments",
+"unl": "Green Adventurer's Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-moth-eaten-black-cloth",
+"n": "Moth Eaten Black Cloth",
+"src": "Death's Exchange, 150 Soul Fragments",
+"unl": "Black Adventurer's Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-moth-eaten-orange-cloth",
+"n": "Moth Eaten Orange Cloth",
+"src": "Death's Exchange, 150 Soul Fragments",
+"unl": "Orange Adventurer's Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-moth-eaten-pink-cloth",
+"n": "Moth Eaten Pink Cloth",
+"src": "Death's Exchange, 150 Soul Fragments",
+"unl": "Pink Adventurer's Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-moth-eaten-white-cloth",
+"n": "Moth Eaten White Cloth",
+"src": "Death's Exchange, 150 Soul Fragments",
+"unl": "White Adventurer's Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-chewed-pink-cloth",
+"n": "Chewed Pink Cloth",
+"src": "Postie Pete's Evil Emporium, 150 Infernal Fragments",
+"unl": "Pink Dyad Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-chewed-yellow-cloth",
+"n": "Chewed Yellow Cloth",
+"src": "Postie Pete's Evil Emporium, 150 Infernal Fragments",
+"unl": "Yellow Dyad Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-chewed-blue-cloth",
+"n": "Chewed Blue Cloth",
+"src": "Postie Pete's Evil Emporium, 150 Infernal Fragments",
+"unl": "Blue Dyad Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-chewed-green-cloth",
+"n": "Chewed Green Cloth",
+"src": "Postie Pete's Evil Emporium, 150 Infernal Fragments",
+"unl": "Green Dyad Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-chewed-red-cloth",
+"n": "Chewed Red Cloth",
+"src": "Postie Pete's Evil Emporium, 150 Infernal Fragments",
+"unl": "Red Dyad Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-soiled-pink-cloth",
+"n": "Soiled Pink Cloth",
+"src": "Postie Pete's Evil Emporium, 150 Infernal Fragments",
+"unl": "Pink Hex Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-soiled-yellow-cloth",
+"n": "Soiled Yellow Cloth",
+"src": "Postie Pete's Evil Emporium, 150 Infernal Fragments",
+"unl": "Yellow Hex Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-soiled-blue-cloth",
+"n": "Soiled Blue Cloth",
+"src": "Postie Pete's Evil Emporium, 150 Infernal Fragments",
+"unl": "Blue Hex Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-soiled-green-cloth",
+"n": "Soiled Green Cloth",
+"src": "Postie Pete's Evil Emporium, 150 Infernal Fragments",
+"unl": "Green Hex Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-soiled-red-cloth",
+"n": "Soiled Red Cloth",
+"src": "Postie Pete's Evil Emporium, 150 Infernal Fragments",
+"unl": "Red Hex Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-black-memory-of-menaphos",
+"n": "Black Memory of Menaphos",
+"src": "Chests in the Umbral Sands.",
+"unl": "Black Desert Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-blue-memory-of-menaphos",
+"n": "Blue Memory of Menaphos",
+"src": "Chests in the Umbral Sands.",
+"unl": "Blue Desert Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-green-memory-of-menaphos",
+"n": "Green Memory of Menaphos",
+"src": "Chests in the Umbral Sands.",
+"unl": "Green Desert Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-orange-memory-of-menaphos",
+"n": "Orange Memory of Menaphos",
+"src": "Chests in the Umbral Sands.",
+"unl": "Orange Desert Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-pink-memory-of-menaphos",
+"n": "Pink Memory of Menaphos",
+"src": "Chests in the Umbral Sands.",
+"unl": "Pink Desert Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-purple-memory-of-menaphos",
+"n": "Purple Memory of Menaphos",
+"src": "Chests in the Umbral Sands.",
+"unl": "Purple Desert Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-red-memory-of-menaphos",
+"n": "Red Memory of Menaphos",
+"src": "Chests in the Umbral Sands.",
+"unl": "Red Desert Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-white-memory-of-menaphos",
+"n": "White Memory of Menaphos",
+"src": "Chests in the Umbral Sands.",
+"unl": "White Desert Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-yellow-memory-of-menaphos",
+"n": "Yellow Memory of Menaphos",
+"src": "Chests in the Umbral Sands.",
+"unl": "Yellow Desert Cape",
+"free": "Armour Bench"
+},
+{
+"id": "r-extinguished-blue-remnants",
+"n": "Extinguished Blue Remnants",
+"src": "2% from buried chests in Brynmoor and Ghornfell.",
+"unl": "Blue Torch",
+"rc": {
+"at": "Crafting Table",
+"in": [
+[
+1,
+"Ash Logs"
+],
+[
+1,
+"Coarse Animal Fur"
+]
+]
+}
+},
+{
+"id": "r-extinguished-yellow-remnants",
+"n": "Extinguished Yellow Remnants",
+"src": "2% from buried chests in Brynmoor and Ghornfell.",
+"unl": "Yellow Torch",
+"rc": {
+"at": "Crafting Table",
+"in": [
+[
+1,
+"Ash Logs"
+],
+[
+1,
+"Coarse Animal Fur"
+]
+],
+"note": "Recipe taken from the blue torch; the other colours should match."
+}
+},
+{
+"id": "r-extinguished-green-remnants",
+"n": "Extinguished Green Remnants",
+"src": "2% from buried chests in Brynmoor and Ghornfell.",
+"unl": "Green Torch",
+"rc": {
+"at": "Crafting Table",
+"in": [
+[
+1,
+"Ash Logs"
+],
+[
+1,
+"Coarse Animal Fur"
+]
+],
+"note": "Recipe taken from the blue torch; the other colours should match."
+}
+},
+{
+"id": "r-extinguished-purple-remnants",
+"n": "Extinguished Purple Remnants",
+"src": "2% from buried chests in Brynmoor and Ghornfell.",
+"unl": "Purple Torch",
+"rc": {
+"at": "Crafting Table",
+"in": [
+[
+1,
+"Ash Logs"
+],
+[
+1,
+"Coarse Animal Fur"
+]
+],
+"note": "Recipe taken from the blue torch; the other colours should match."
+}
+},
+{
+"id": "r-extinguished-red-remnants",
+"n": "Extinguished Red Remnants",
+"src": "2% from buried chests in Brynmoor and Ghornfell.",
+"unl": "Red Torch",
+"rc": {
+"at": "Crafting Table",
+"in": [
+[
+1,
+"Ash Logs"
+],
+[
+1,
+"Coarse Animal Fur"
+]
+],
+"note": "Recipe taken from the blue torch; the other colours should match."
+}
+}
+]
+},
+{
+"key": "mounts",
+"title": "Mounts",
+"items": [
+{
+"id": "r-springdown-runner",
+"n": "MOUNT: Springdown Runner",
+"src": "Green dragons, zogres and soulstone sentinels (1 in 100); Fellhollow chests.",
+"unl": "Springdown Runner"
+},
+{
+"id": "r-grassfoot-screecher",
+"n": "MOUNT: Grassfoot Screecher",
+"src": "Green dragons, zogres and soulstone sentinels (1 in 100); Fellhollow chests.",
+"unl": "Grassfoot Screecher"
+},
+{
+"id": "r-leafwood-strider",
+"n": "MOUNT: Leafwood Strider",
+"src": "Green dragons, zogres and soulstone sentinels (1 in 100); Fellhollow chests.",
+"unl": "Leafwood Strider"
+},
+{
+"id": "r-summerbellied-wagtail",
+"n": "MOUNT: Summerbellied Wagtail",
+"src": "Blue dragons (1 in 100), lesser demons and elite Black Knights; Dowdun Reach chests.",
+"unl": "Summerbellied Wagtail"
+},
+{
+"id": "r-eclipseborn-sharpbeak",
+"n": "MOUNT: Eclipseborn Sharpbeak",
+"src": "Blue dragons (1 in 100), lesser demons and elite Black Knights; Dowdun Reach chests.",
+"unl": "Eclipseborn Sharpbeak"
+},
+{
+"id": "r-sunkissed-clawfoot",
+"n": "MOUNT: Sunkissed Clawfoot",
+"src": "Blue dragons (1 in 100), lesser demons and elite Black Knights; Dowdun Reach chests.",
+"unl": "Sunkissed Clawfoot"
+},
+{
+"id": "r-crimson-crybaby",
+"n": "MOUNT: Crimson Crybaby",
+"src": "Red dragons (1 in 100), KotHaar-Kal and kalphite guardians; Umbral Sands chests.",
+"unl": "Crimson Crybaby"
+},
+{
+"id": "r-scorchsummer-ashbeak",
+"n": "MOUNT: Scorchsummer Ashbeak",
+"src": "Red dragons (1 in 100), KotHaar-Kal and kalphite guardians; Umbral Sands chests.",
+"unl": "Scorchsummer Ashbeak"
+},
+{
+"id": "r-applefeather-mosstail",
+"n": "MOUNT: Applefeather Mosstail",
+"src": "Red dragons (1 in 100), KotHaar-Kal and kalphite guardians; Umbral Sands chests.",
+"unl": "Applefeather Mosstail"
+},
+{
+"id": "r-mossbeak-hunter",
+"n": "MOUNT: Mossbeak Hunter",
+"src": "Death's Exchange, 2,000 Soul Fragments",
+"unl": "Mossbeak Hunter"
+},
+{
+"id": "r-oakfeather-raptor",
+"n": "MOUNT: Oakfeather Raptor",
+"src": "Death's Exchange, 2,000 Soul Fragments",
+"unl": "Oakfeather Raptor"
+},
+{
+"id": "r-coastal-sunbeak",
+"n": "MOUNT: Coastal Sunbeak",
+"src": "Postie Pete's Evil Emporium, 2,000 Infernal Fragments",
+"unl": "Coastal Sunbeak"
+},
+{
+"id": "r-astralbeak-warbler",
+"n": "MOUNT: Astralbeak Warbler",
+"src": "Postie Pete's Evil Emporium, 2,000 Infernal Fragments",
+"unl": "Astralbeak Warbler"
+},
+{
+"id": "r-infernal-blightbeak",
+"n": "MOUNT: Infernal Blightbeak",
+"src": "Domri (Moon Garou merchant), 9,999 Garou Chit",
+"unl": "Infernal Blightbeak"
+},
+{
+"id": "r-zamorakian-pledgesaddle",
+"n": "MOUNT: Zamorakian Pledgesaddle",
+"src": "Domri (Moon Garou merchant), 9,999 Garou Chit",
+"unl": "Zamorakian Pledgesaddle"
+},
+{
+"id": "r-uzzerian-umber",
+"n": "MOUNT: Uzzerian Umber",
+"src": "1 in 20 from Tok-Xil.",
+"unl": "Uzzerian Umber"
+},
+{
+"id": "r-moonsilk-weave",
+"n": "MOUNT: Moonsilk Weave",
+"src": "5% from the Kalphite Queen.",
+"unl": "Moonsilk Weave (magic carpet)"
+}
+],
+"intro": "Terrorbird mounts need The Wild Hunt completed first."
+}
+];
+const ALL_REC = RECIPES.flatMap(g => g.items);
+const REC_IDS = ALL_REC.map(r => r.id);
+
+
+
+const ALL_Q = [...MAIN, ...TERT.flatMap(c => c.items), ...SIDE.flatMap(s => s.items)];
+const ALL_IDS = ALL_Q.map(q => q.id);
+const ROMAN = ["I","II","III","IV","V","VI","VII","VIII","IX"];
+const LABEL = { none: "Not started", started: "In progress", done: "Complete" };
+
+let progress = {};
+let db = null, user = null, uid = null, canWrite = true, mode = "local";
+const pending = new Set();
+const names = {};
+const LS_KEY = "dw-quest-progress";
+const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+const stateOf = (id) => { const p = progress[id]; if (!p) return "none"; return p.state || (p.done ? "done" : "none"); };
+try { progress = JSON.parse(lsGet(LS_KEY) || "{}") || {}; } catch { progress = {}; }
+
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+
+function itemHTML(q, kind, step) {
+  const rewards = q.rw.length ? `<div class="rewards">${q.rw.map(r => `<span>${esc(r)}</span>`).join("")}</div>` : "";
+  const link = q.nowiki ? "" : `<a class="wiki" href="${w(q.wiki || q.n)}" target="_blank" rel="noopener">Wiki</a>`;
+  return `<li class="q ${kind}" data-id="${q.id}">
+    <button class="mark" type="button" id="m-${q.id}"><span class="d">${CHECK}</span></button>
+    <div>
+      <div class="title-row">${step ? `<span class="step">${step}</span>` : ""}<span class="name">${esc(q.n)}</span><span class="status" hidden></span>${q.boss ? `<span class="boss">${esc(q.boss)}</span>` : ""}${link}</div>
+      <div class="start">${q.where ? `<strong>${esc(q.where)}</strong> · ` : ""}${esc(q.start)}</div>
+      ${rewards}
+      <div class="who" hidden></div>
+    </div>
+  </li>`;
+}
+
+function build() {
+  let html = `<section class="panel" id="main-story"><div class="sec-head"><h2>Main Story</h2><span class="count"></span></div><div class="rule"></div>
+    <p class="unlock">Strictly in order: each quest needs the one before it, and each opens the next region.</p><ol class="path">`;
+  MAIN.forEach((q, i) => {
+    html += itemHTML(q, "primary", ROMAN[i]);
+    if (q.id === "icthlarins-little-helper") {
+      html += `<li class="tertiary"><h3>Tertiary quests in Icthlarin's Little Helper</h3>`;
+      TERT.forEach(c => { html += `<div class="clan">${esc(c.clan)}</div><ul class="list">${c.items.map(t => itemHTML(t, "tertiary-q")).join("")}</ul>`; });
+      html += `</li>`;
+    }
+  });
+  html += `</ol><p class="empty">Main story complete. Kuldra has fallen.</p></section>`;
+
+  SIDE.forEach(s => {
+    html += `<section class="panel" id="${s.key}"><div class="sec-head"><h2>${esc(s.region)}</h2><span class="count"></span></div><div class="rule"></div>
+      <p class="unlock">${s.unlock}</p><ul class="list">${s.items.map(q => itemHTML(q, "secondary")).join("")}</ul><p class="empty">Every quest here is complete.</p></section>`;
+  });
+
+  html += `<section class="panel" id="extra"><div class="sec-head"><h2>Beyond the Quests</h2><span class="count"></span></div><div class="rule"></div>
+    <p class="unlock">Activities, bosses and repeatable content that aren't quests. Not counted in the quest total.</p>
+    <ul class="list">${EXTRA.map(q => itemHTML(q, "activity")).join("")}</ul></section>`;
+  const main = document.getElementById("main");
+  main.innerHTML = html;
+
+  const groups = [["main-story", "Main story", MAIN.map(q => q.id).concat(TERT.flatMap(c => c.items.map(t => t.id)))], ...SIDE.map(s => [s.key, s.region, s.items.map(q => q.id)])];
+  document.getElementById("jump").innerHTML = groups.map(([k, label]) => `<a class="chip" href="#${k}" data-jump="${k}">${esc(label)} <span></span></a>`).join("") + `<a class="chip" href="#extra">Extras <span id="exChip"></span></a>`;
+  window.__groups = groups;
+
+  main.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
+}
+
+function ingHTML(list, depth, seen) {
+  return `<ul class="ing">${list.map(([q, name]) => {
+    const m = MATS[name] || {};
+    if (m.gear) {
+      return `<li><div class="row"><span class="qty">${q}×</span><span class="nm">${esc(name)}</span><span class="how">Craft this first (shown above).</span></div></li>`;
+    }
+    const src = m.src ? `<span class="how">${esc(m.src)}</span>` : "";
+    if (m.craft && depth < 4 && !seen.has(name)) {
+      const c = m.craft, s2 = new Set(seen).add(name);
+      const makes = c.out > 1 ? ` (makes ${c.out})` : "";
+      return `<li><details${depth === 0 ? "" : ""}><summary><div class="row"><span class="qty">${q}×</span><span class="nm">${esc(name)}</span><span class="craft-tag">Craft</span><span class="how">${esc(c.at)}${c.lvl ? ` · ${esc(c.lvl)}` : ""}${esc(makes)}${m.src ? ". " + esc(m.src) : ""}</span></div></summary>${ingHTML(c.in, depth + 1, s2)}</details></li>`;
+    }
+    return `<li><div class="row"><span class="qty">${q}×</span><span class="nm">${esc(name)}</span>${src}</div></li>`;
+  }).join("")}</ul>`;
+}
+function craftHTML(gid) {
+  const g = GEAR_BY[gid]; if (!g) return "";
+  return `<details class="craft"><summary>What it takes to craft</summary><div class="craft-body">
+    <div class="station">${g.pl ? `<span class="pl">PL ${g.pl}</span> ` : ""}${esc(g.kind)}</div>
+    ${g.id === "abysmal-whip" ? "" : `<div class="unlock-box">${g.unlock}</div>`}
+    <div class="station">Craft at the <strong>${esc(g.at)}</strong> using:</div>${ingHTML(g.in, 0, new Set())}
+    ${g.note ? `<p class="gnote">${esc(g.note)}</p>` : ""}
+    ${gid === "abysmal-whip" ? craftHTML("abyssal-whip").replace("What it takes to craft", "Then upgrade it: Abyssal Whip") : ""}
+  </div></details>`;
+}
+const URNS = [
+  { region: "Brynmoor", areas: [["Bramblemead Valley", 3], ["Whispering Swamp", 3]] },
+  { region: "Ghornfell", areas: [["Fractured Plains", 1], ["Stormtouched Highlands", 1], ["Bloodblight Swamp", 1]] },
+  { region: "Fellhollow", areas: [["Emberwood", 1], ["Hope's Fall", 1], ["Silverthorn Keep", 1]] },
+  { region: "Dowdun Reach", areas: [["The Grand Hall", 1], ["The Garrison", 1], ["The Menagerie", 1]] },
+  { region: "Umbral Sands", areas: [["Alcarrid Oasis", 1], ["The Burning Spire", 1], ["Manafem Plains", 1]] },
+  { region: "Scorned Wilderness", areas: [["Fragments of Ghornfell", 2], ["Cataclysm Keep", 1]] },
+];
+const uslug = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const URN_LIST = URNS.flatMap(g => g.areas.flatMap(([a, n]) => Array.from({ length: n }, (_, i) => ({ id: `u-${uslug(a)}-${i + 1}`, n: n > 1 ? `${a} urn ${i + 1}` : `${a} urn`, area: a, region: g.region }))));
+const URN_IDS = URN_LIST.map(u => u.id);
+const BY_ID = Object.fromEntries([...ALL_Q, ...EXTRA, ...ALL_REC, ...URN_LIST].map(q => [q.id, q]));
+function buildUrns() {
+  const host = document.getElementById("urnMain");
+  host.innerHTML = URNS.map(g => `<section class="panel" id="urns-${uslug(g.region)}"><div class="sec-head"><h2>${esc(g.region)}</h2><span class="count"></span></div><div class="rule"></div>
+    <ul class="list">${g.areas.map(([a, n]) => `<li class="urn-area" data-area="${uslug(a)}"><div><div class="an">${esc(a)}</div><div class="ac"></div></div>
+      <div class="umarks">${Array.from({ length: n }, (_, i) => { const id = `u-${uslug(a)}-${i + 1}`; return `<button class="mark umark" type="button" id="m-${id}" data-id="${id}" aria-label="${esc(a)} urn ${i + 1}"><span class="d">${CHECK}</span></button>`; }).join("")}</div></li>`).join("")}</ul>
+    <p class="empty">Every urn here is absorbed.</p></section>`).join("");
+  host.addEventListener("click", (e) => { const b = e.target.closest(".umark"); if (b) cycle(b.dataset.id); });
+}
+function paintUrns() {
+  const d = URN_IDS.filter(id => stateOf(id) === "done").length;
+  document.getElementById("uDone").textContent = d;
+  document.getElementById("uTotal").textContent = URN_IDS.length;
+  document.getElementById("uBar").style.width = (100 * d / URN_IDS.length) + "%";
+  document.getElementById("uHp").textContent = `+${d * 10}`;
+  document.querySelectorAll(".umark").forEach(b => {
+    const on = stateOf(b.dataset.id) === "done";
+    b.classList.toggle("on", on); b.disabled = !canWrite;
+    b.setAttribute("aria-pressed", String(on));
+  });
+  URNS.forEach(g => {
+    let rd = 0, rt = 0;
+    g.areas.forEach(([a, n]) => {
+      const ids = Array.from({ length: n }, (_, i) => `u-${uslug(a)}-${i + 1}`);
+      const ad = ids.filter(id => stateOf(id) === "done").length;
+      rd += ad; rt += n;
+      const row = document.querySelector(`[data-area="${uslug(a)}"]`);
+      row.querySelector(".ac").textContent = `${ad} of ${n} absorbed`;
+      row.classList.toggle("all-done", ad === n);
+    });
+    const sec = document.getElementById("urns-" + uslug(g.region));
+    sec.querySelector(".count").textContent = `${rd} / ${rt}`;
+    sec.classList.toggle("all-done", rd === rt);
+  });
+}
+const IMPORT_MAP = {"r":{"r-suspiciously-light-tattered-boots":["UkZw90N90ma_M6S0fOXDGg"],"r-a-simple-broken-bow":["E8R8fkp8ynIfL1qxiwwC0A","pBMjZ01ZT75jbueWYWzr9w"],"r-a-threadbare-grain-sack":["gBbTTUeWw4qUoMSyhYGzVw"],"r-scratchy-sackcloth":["9oa7Q0HZcRP0Qs-kqmGYAw"],"r-an-educational-blade":["6OKIMEQhtnAdpqqfPfL3IQ"],"r-a-cruel-goblin-blade":["b-47w0EkWO48qQWnIo9c3g"],"r-remnants-of-a-shattered-skull":["sTeIJ0-wYrxI986GAiRJlg"],"r-a-mysterious-crescent-carving":["nlMcNEoEOCHx-ga5KVtiQg"],"r-a-corroded-serrated-blade":["6ZoOqktOYN3PPOyrlvbjVw"],"r-a-brutal-bladehead":["6fLFNEt1eKIB3I6XuxqMuw"],"r-a-string-of-sinew":["iFVoxEDa9Sb-SVil-Ju2CQ"],"r-parts-of-a-sinister-looking-staff":["HLZnakQ10bVDkMyWDjK4lg"],"r-azure-metal-contraption":["7vhlAE3bRnouR0uDHMN8gg"],"r-abyssal-remains":["kRJ8QUBQGTMmDROOrE_OnQ"],"r-corroded-white-visor":["HTWQ1keuR6WRFKyAnQjtuA"],"r-dented-white-pauldron":["fLSyM0gsdZYgksqrjGFYfg"],"r-crushed-white-cuisse":["0WuAY04CfwrxKyOpbf75VQ"],"r-simply-splendid-feather":["wVPkqU7jENWfOw2LULSMRw"],"r-slightly-chaffing-chestguard":["7cuDAEffIxsuFv2fLRhZJQ"],"r-tastefully-torn-tights":["x2nHK0Oazc7y2hKyYDz2HA"],"r-curse-carrying-crown":["ncQP2kATcpgHreOdGo425g"],"r-remnants-of-a-rotting-robe":["QyOosU0H5UpN6JqIXnvADA"],"r-burnished-belt-buckle":["qE0T70ziVhSPwvunAaafhQ"],"r-cloying-damp-cowl":["QCfCWkdqMgflGB-5DsLDiw"],"r-serrated-claw":["LLm9O0UhZkBEFOax3N48Jg"],"r-shard-of-smoky-glass":["1trjEENYSpVmgrC3xtdHAg","h1ebAUfMLRP2PDiTH4tSUA"],"r-sundering-spiked-slab":["XwnJo092UaK46Dakc-C1qQ"],"r-bloodstained-black-visor":["vK0jUUDhV0pzXOO95yMwEw"],"r-shard-of-black-pauldron":["qdGf7EMRuwGDwsmKolsz9A"],"r-grim-black-codpiece":["N_t1M0dkBWFy7nWz9f9HDQ"],"r-sodden-black-leather":["yeFKy0YVGBD3keSZ6pYW-w"],"r-limp-black-lining":["RVOoF0vHRTuyIb6OESokog"],"r-dusty-black-pocket":["zeMFNkDzj6LwihmMVeRltw"],"r-fabric-that-hums-with-you":["90aktE9-nhG4UVCqa3jaWA"],"r-whispering-elbow-pad":["88pK_0U6C2w55ByctWy2QA"],"r-wizard-s-kneecap":["4_TRJUFBuffFpMeEAKGuuA"],"r-sinister-mechanism":["ckoLQ0DdNEnIi1qt3XGTCQ"],"r-bloodstained-hilt":["YXnuyksXvK0tQ9GH04S1Xw"],"r-demonic-metal-rod":["98-7zUsC8HnuCoazkvXZLg"],"r-shattered-black-blade":["f_jgxUDz1WJSWPWKR2EIyw"],"r-battle-scarred-black-metal":["aqimiUj2vk4FR5uasjaEHg"],"r-chipped-obsidian-construct":["jjQQek1ssmHyYt-8jWalbA"],"r-crushed-obsidian-construct":["0FvGeklUduSgLLaY_6kClA"],"r-fractured-obsidian-construct":["VfflqEvupHNIogWRipKSSA"],"r-selenic-veil":["5OpwxkAfYS1wiweVjvZ0MA"],"r-lunular-wrappings":["mzbUUUEUJRiAIYOtONwT2Q"],"r-lunate-shawl":["rUwZ6kpVADIMWzmY6sOSYQ"],"r-twitching-antenna":["VbcUikH4KIx42fysXmksZA"],"r-barbed-appendage":["ABK5jk0ivolQWEyOZxCMQQ"],"r-chitinous-carapace":["PWW0kULLE6QEej2rz_ZU-Q"],"r-sun-bleached-head-wrap":["36dUrUKb76qY-DWA4AJZYw"],"r-sun-bleached-leggings":["XJsyK0cR-KB0j1y0g_wZ9Q"],"r-sun-bleached-vest":["q_AIy0vARq9e1My8KU3ibg"],"r-unyielding-obsidian-construct":["JN2j9UHgnDw3Wxe8_owfsA"],"r-elongated-obsidian-construct":["uXztMETtoloOuMquV7X2Kw"],"r-bludgeoning-obsidian-construct":["o6x5pU00awkOmqiIL6yLaA"],"r-shattered-black-blade-umbral-sands":["rhpbmkZxtIYusJuxZyClkg"],"r-corroded-curved-blade":["3DskHUAqz1rfmgOAJqkAgw"],"r-icthlarian-fetish":["nPHTJky85bBWiI-YMJIatA"],"r-plate-of-pure-obsidian":["Y3BPSkumg2BOIe6kEtr1Vw"],"r-vault-wild-scout-s-shortbow":["SKlZZkSUWpDWsa6loSZHUA"],"r-vault-anti-dragon-shield":["yPbjI0hoL8uWS2S-UyFNLA"],"r-vault-granite-maul":["HZaxd0qJZ4lENGqsbSTudg"],"r-vault-paladin-helmet":["OfBwl0V1XdyKKCiz7C9wpA"],"r-vault-paladin-platebody":["GvLwNEJOpmPKkdeOdexIRg"],"r-vault-paladin-platelegs":["SqRHXUJjZBD2rJ6wIMoLHQ"],"r-vault-wild-archer-cowl":["eeOXkUTpr35PKtm1Xj0BGQ"],"r-vault-wild-archer-body":["hIJsUU4P9gjQ8wy9jNeBUA"],"r-vault-wild-archer-chaps":["azgWk0zK6W1sXz-J3qpnKA"],"r-vault-dragonbone-dagger":["HW2DyU6qtHJXsqGl7Gt7uA"],"r-vault-dragonkin-mage-hood":["XdQvq0vL60gh69uNaVH3zw"],"r-vault-dragonkin-mage-robes":["9_I3gEvcghNchbGQdBtxUw"],"r-vault-dragonkin-mage-robe-legs":["-Exs9UAQhztJhBOeIryWWw"],"r-vault-fallen-hoplite-s-helm":["XAeyZUOozEUpIDGcJvT5fg"],"r-vault-fallen-hoplite-s-chest":["bojvI0K_wX1kcnqoIofQcQ"],"r-vault-fallen-hoplite-s-tassets":["y5rZHUj2-0BZ-ymDie7Hlw"],"r-vault-undead-ranger-s-bow":["Le9gC0m-DxolsnuWqps_xw"],"r-vault-wolfbane-dagger":["fs1l5E3ejhV9JcqKCvLjhg"],"r-vault-necromancer-s-staff":["bJ6FhUnS1G25mf6j4j30RQ"],"r-sigil-of-a-phoenix":["e_5WDkqE8pfYEZWK0XZYfQ"],"r-weighted-training-band":["qzXp8E9Bh7oEwY2QZtG4sw"],"r-hardy-weathered-shell":["V_11hkemndKMowqI8AhdAQ"],"r-arrowhead-of-ancient-origin":["6J0jMUCrzI8GpEaGwExkRg"],"r-softly-vibrating-orb":["r7SMXUoARkhmx3i9TpBbFg"],"r-a-cracked-bronze-vanity-mirror":["wrvMcU_V4L3QM3SmgUf9-w"],"r-carved-bone-animal-lure":["DhAXrU2cFm0w3pmIbKiKUg","uqKvMkGbwu3y46u_DGUasQ"],"r-rotten-farming-tool":["bX-eyE7rMqasf-yf7vwm6g"],"r-commemorative-coin":["g4nWJE5tQiweh1S14kFO5g"],"r-inspiring-insignia":["Vt8IP0kgdvJ9kTSqdigoJw"],"r-tattered-time-lost-cloth":["w9G5dUgk7rQpRruVqjK6RQ"],"r-torn-tapestry":["snP_W08KFZUrZwmggck8Fw"],"r-shred-of-sunbleached-weave":["BVJ7CEavZcLckp6VnL7DUA"],"r-moth-eaten-yellow-cloth":["Iu40xkoK4vuP_HuoR9c12Q"],"r-moth-eaten-blue-cloth":["GblmUkXkbCKRdyCocEmmAQ"],"r-moth-eaten-red-cloth":["g0tx5E3fPPUjaJG7KyQvAQ"],"r-moth-eaten-purple-cloth":["JBAiVUssRJavioWBctmuHQ"],"r-moth-eaten-green-cloth":["MuomBkUSPjH3amuxj9cqRA"],"r-moth-eaten-black-cloth":["DNFU5kz2YHMiztuFg3WWJg"],"r-moth-eaten-orange-cloth":["JWxhBEQk_wpACnWda8unJw"],"r-moth-eaten-pink-cloth":["liGUzEMGLSrNwc2GNGfXEw"],"r-moth-eaten-white-cloth":["pzFz9UslDExps6C6ACu__w"],"r-chewed-pink-cloth":["xUaZYU0U43lFX6KDxgy_sQ"],"r-chewed-yellow-cloth":["4VpoVka1Ypjz_qmdXb2c9w"],"r-chewed-blue-cloth":["b8k7SUk-P69NwoWYE3cL9A"],"r-chewed-green-cloth":["tF6yLEvhVu0pFVCIdRtXdQ"],"r-chewed-red-cloth":["FWjpH0stKxcWXquzeey7fA"],"r-soiled-pink-cloth":["Cw4tc0JaM4be1zW9uRHI5A"],"r-soiled-yellow-cloth":["v5kfI0hE2lQ0ULGUPDD0Gg"],"r-soiled-blue-cloth":["8u3FiUODNjoKhgqkyjSsNg"],"r-soiled-green-cloth":["5uxvWEzlOCVJjUCNCi6qiQ"],"r-soiled-red-cloth":["d_tA0kaiyQ0OkkOHnmG7fA"],"r-black-memory-of-menaphos":["QN6kpkaDRFju_KCDGCOz5w"],"r-blue-memory-of-menaphos":["5llkxkJl1yTlLWO2yyxvaA"],"r-green-memory-of-menaphos":["E1WNS0fVmAnN8r-mfZEyHg"],"r-orange-memory-of-menaphos":["Avmul0fDbhF-Ww64mxKeDg"],"r-pink-memory-of-menaphos":["f6frc0p4A5lOlSu9YDhlLA"],"r-purple-memory-of-menaphos":["6TTFREl4uoFVI4W5i1H49w"],"r-red-memory-of-menaphos":["gI5RRUjOy1Frk7iXCjd0IQ"],"r-white-memory-of-menaphos":["BrNQmkXJ688DQ-O-vIZMLQ"],"r-yellow-memory-of-menaphos":["Jdc_1EnCfs3LEpKlRXccPA"],"r-extinguished-blue-remnants":["9l--cUSqJK7vbxifm-Qmxw"],"r-extinguished-yellow-remnants":["iBIdCkvGVl2OIV2DSEIKDg"],"r-extinguished-green-remnants":["Dc4ihUVgN3eoAJ-jmtASwQ"],"r-extinguished-purple-remnants":["wVNkT0yqc_FXhuCTvpd9cA"],"r-extinguished-red-remnants":["9G6NjEjIwdo-432bi8AsUg"]},"q":{"first-steps":["luaLQEzPXjx9_ICiz5zkNg","AmuXOUitB08PYDCmdVA_Ug","v9LCTEjS-igQFrq4bpvtsA","7i8X403LNgw6uY-XK5OgnA"],"getting-started":["xa8o60AbJZ23FymQeiH3bg"],"ratcatcher":["SDcUrkVqRiTKKEyzEh5DWw","4lW6rU0i0js1e3qFEAVI4w"],"rune-mysteries":["TgVnb0NCLvmEVRed59IgsQ","zrqqFUNmx3lcF6umysJfvQ","EWRW7Ux-jHohLEKQCrkJJw"],"dragon-slayer":["yrRZnkmro-IvH_OmZ3f-5A"],"withering-heights":["uftGB0es-CGrvXyPoxW31w"],"black-knights-fortress":["3MpWS0mD8A6yFVmjVAA2Qg"],"icthlarins-little-helper":["kPtTW0exXrqw2BqELR_bFA"],"regicide":["Nw3wiUaB8siRIN2bStWJmw"],"t-rogue-trader":["d6s4dUyoCduLy7eRc2KndQ"],"t-mirror-crackd":["d6M5Dkpx9Pjw_V2mNJh6eA"],"t-rag-and-bone":["1BhNkkkP6y7ireu6yVR5tg"],"t-song-ancients":["Xb1KUkU_wOIHvzahULr6yA"],"t-scaling":["Bnon4kzm_EdvZz-bma5HBg"],"t-beast-sand":["0cB0D0QD_L4nrpu6CxZEsw"],"t-dig-site":["8Rb0t0upslwKHXWYGnTKgg"],"t-saga":["XElCtUmXXqK35p63tua9og"],"t-mark-day":["nIvEyEv-kvSwgqOLc5VopQ"],"growing-pains":["_L6IAEaHSVPnhhaTamBHBA"],"shrimp-catcher":["8gKiWUPU3vW2sQesVHdrPA"],"restless-ghosts":["eKV5vkDqZH89aGWiY_T7GQ"],"goblin-diplomacy":["AsyEt0xjewNEzYmzr_kg_w"],"highlighting-the-problem":["jP8SfEP3QLjisgaHyBzCPw"],"granite-mauled":["bsfNlkgT8D_Y5HCdCf-Seg"],"heartstrings":["xsgOzUS-M2iCLDe-XTDq3w"],"a-room-with-a-garou":["4G_ph0XQeA1Nc72_CVO6HQ"],"dog-days":["Kdj6N0dEw05JjoyDP0pNvw"],"cooks-assistant":["cZlfrUaPSsi4VfeVc6iIEw"],"a-melody-remembered":["O3ruOkgGHBqwIheSH_7BBg"],"the-great-body-robbery":["db-ciknQnYrkNHuOcQXhkA"],"even-more-restless-ghosts":["4QQuNkR6spTCXC6zj6VqxQ"],"the-wild-hunt":["rai6k0UuXT_GPEixJM0boQ"],"things-that-go-boom":["wwEK50EPipTecO20yTquSQ"],"seeking-salvation":["Rov9uE687b2NkaKFCTFP3A"],"dorics-quest":["Fv3Rt0Dn18PT1DepNzEqtQ"],"letters-for-the-dead":["4kbEAUJrs6mebhGkzFQxmA"],"what-remains-is-written":["WXRGL036pJRhAU-BWTZ_9g"],"mirror-mirror":["KLBpt02O2AA_kaa_A8Av9w"],"biohazard":["2kXJ3kWFS38kZfmPnvUFXw"],"whats-theirs-is-mine":["vxS7_kzdpGvmWKWwjqF7Jg"],"contact":["A3DOkkGZxXUHc82rPKHznA"],"brink-of-extinction":["sQ91eUA55bcQx0OQ0m59sg"],"mapping-the-sands-i":["NjeUO0TBeyQGzSCmu2b3bA"],"mapping-the-sands-ii":["rI4VkUT_8837ayKcLgxWwQ"],"statues-of-saradomin":["2V1KS0R3XJX-UtiuP78EoA"],"wanted":["9Kod2UgSkm8YrJCwMgmAdQ"],"t-fuzan-trials":["kPtTW0exXrqw2BqELR_bFA"]}};
+function analyzeSave(data) {
+  const gp = data && data.GameProgress;
+  if (!gp || !gp.Progress || !gp.QuestProgress) return null;
+  const unlocked = new Set(gp.Progress.RecipesUnlocked || []);
+  const qs = {}; (gp.QuestProgress.Quests || []).forEach(q => { qs[q.QuestId] = q.QuestState; });
+  const rank = { none: 0, started: 1, done: 2 };
+  const ups = [];
+  Object.entries(IMPORT_MAP.q).forEach(([id, pids]) => {
+    if (!BY_ID[id]) return;
+    const best = Math.max(-1, ...pids.map(p => (qs[p] === undefined ? -1 : qs[p])));
+    const st = best === 2 ? "done" : best === 1 ? "started" : null;
+    if (st && rank[st] > rank[stateOf(id)]) ups.push({ id, state: st, kind: id.startsWith("r-") ? "r" : "q" });
+  });
+  Object.entries(IMPORT_MAP.r).forEach(([id, pids]) => {
+    if (BY_ID[id] && stateOf(id) !== "done" && pids.some(p => unlocked.has(p))) ups.push({ id, state: "done", kind: "r" });
+  });
+  return { name: (data.meta_data && data.meta_data.char_name) || "your character", ups };
+}
+function setImp(html) { document.getElementById("impResult").innerHTML = html; }
+document.getElementById("copyPath").addEventListener("click", () => {
+  const t = document.getElementById("savePath").textContent;
+  const done = () => { document.getElementById("copyPath").textContent = "Copied"; };
+  try { navigator.clipboard.writeText(t).then(done, () => { const r = document.createRange(); r.selectNodeContents(document.getElementById("savePath")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }); } catch {}
+});
+function readFile(f, auto) {
+  const rd = new FileReader();
+  rd.onload = () => handleSaveText(rd.result, auto);
+  rd.onerror = () => setImp(`<span class="err">Couldn't read that file. Try picking it again.</span>`);
+  rd.readAsText(f);
+}
+document.getElementById("saveFile").addEventListener("change", (e) => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  e.target.value = "";
+  readFile(f, false);
+});
+function handleSaveText(text, auto) {
+  {
+    let data = null; try { data = JSON.parse(text); } catch {}
+    const res = data && analyzeSave(data);
+    document.getElementById("importer").open = true;
+    if (!res) return setImp(`<span class="err">That doesn't look like a Dragonwilds character file. Pick the .json named after your character in the SaveCharacters folder, not a .backup file or a world .sav.</span>`);
+    const nq = res.ups.filter(u => u.kind === "q" && u.state === "done").length;
+    const ns = res.ups.filter(u => u.kind === "q" && u.state === "started").length;
+    const nr = res.ups.filter(u => u.kind === "r").length;
+    if (!res.ups.length) return setImp(`<div class="who">${esc(res.name)}</div><p>Your log is already up to date with this save.</p>`);
+    setImp(`<div class="who">${esc(res.name)}</div><p>Found new progress to add:</p><ul>
+      ${nq ? `<li>${nq} quest${nq > 1 ? "s" : ""} completed</li>` : ""}${ns ? `<li>${ns} quest${ns > 1 ? "s" : ""} in progress</li>` : ""}${nr ? `<li>${nr} recipe${nr > 1 ? "s" : ""} unlocked</li>` : ""}</ul>
+      <div class="row2"><button type="button" class="chip" id="impApply" aria-pressed="true">Add to my log</button><button type="button" class="chip" id="impCancel">Cancel</button></div>`);
+    document.getElementById("impCancel").onclick = () => setImp("");
+    document.getElementById("impApply").onclick = () => applyImport(res);
+    if (auto) applyImport(res);
+  }
+}
+/* drag and drop anywhere */
+let dragDepth = 0;
+const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files");
+window.addEventListener("dragenter", (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; document.body.classList.add("dragging"); });
+window.addEventListener("dragover", (e) => { if (hasFiles(e)) e.preventDefault(); });
+window.addEventListener("dragleave", () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) document.body.classList.remove("dragging"); });
+window.addEventListener("drop", (e) => {
+  if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging");
+  const f = e.dataTransfer.files[0]; if (f) readFile(f, false);
+});
+/* remembered file (File System Access API, Chrome/Edge) */
+const IDB = { open() { return new Promise((ok, bad) => { const r = indexedDB.open("dw-save", 1); r.onupgradeneeded = () => r.result.createObjectStore("h"); r.onsuccess = () => ok(r.result); r.onerror = () => bad(r.error); }); },
+  async get() { const db = await this.open(); return new Promise((ok) => { const t = db.transaction("h").objectStore("h").get("save"); t.onsuccess = () => ok(t.result || null); t.onerror = () => ok(null); }); },
+  async set(v) { const db = await this.open(); return new Promise((ok) => { const t = db.transaction("h", "readwrite").objectStore("h").put(v, "save"); t.onsuccess = () => ok(); t.onerror = () => ok(); }); } };
+let saveHandle = null;
+const linkBtn = document.getElementById("linkBtn"), syncBtn = document.getElementById("syncBtn"), linkNote = document.getElementById("linkNote");
+function linkUnavailable(msg) { linkBtn.hidden = true; syncBtn.hidden = true; if (msg) { linkNote.textContent = msg; linkNote.hidden = false; } }
+async function readHandle(h, auto) {
+  try {
+    let perm = h.queryPermission ? await h.queryPermission({ mode: "read" }) : "granted";
+    if (perm !== "granted" && h.requestPermission) perm = await h.requestPermission({ mode: "read" });
+    if (perm !== "granted") return setImp(`<span class="err">Access to the save file wasn't allowed. Click Sync again and choose Allow.</span>`);
+    const f = await h.getFile();
+    readFile(f, auto);
+  } catch (e) {
+    setImp(`<span class="err">Couldn't open the linked file (it may have moved). Link it again.</span>`);
+    syncBtn.hidden = true;
+  }
+}
+// Claude's artifact frame silently blocks showOpenFilePicker, so only offer it when the page is the top-level window (e.g. GitHub Pages).
+let FS_LINK_ENABLED = false;
+try { FS_LINK_ENABLED = window.self === window.top; } catch { FS_LINK_ENABLED = false; }
+if (FS_LINK_ENABLED && typeof window.showOpenFilePicker === "function") {
+  linkBtn.hidden = false;
+  linkBtn.addEventListener("click", async () => {
+    try {
+      const [h] = await window.showOpenFilePicker({ types: [{ description: "Dragonwilds character", accept: { "application/json": [".json"] } }], multiple: false });
+      saveHandle = h;
+      try { await IDB.set(h); } catch {}
+      syncBtn.hidden = false; syncBtn.textContent = `Sync from ${h.name}`;
+      linkNote.textContent = "Linked. Next time, just press Sync."; linkNote.hidden = false;
+      readHandle(h, false);
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      linkUnavailable("Your browser doesn't allow remembering a file on this page. Use Choose character file or drag the file in instead.");
+    }
+  });
+  syncBtn.addEventListener("click", () => { if (saveHandle) readHandle(saveHandle, true); });
+  (async () => { try { const h = await IDB.get(); if (h && h.getFile) { saveHandle = h; syncBtn.hidden = false; syncBtn.textContent = `Sync from ${h.name}`; } } catch {} })();
+}
+async function applyImport(res) {
+  const now = Date.now();
+  res.ups.forEach(u => { progress[u.id] = { state: u.state, at: now }; });
+  paint();
+  if (mode === "local") { lsSet(LS_KEY, JSON.stringify(progress)); return setImp(`<div class="who">Imported</div><p>${res.ups.length} updates added and saved in this browser.</p>`); }
+  let n = 0, failed = 0;
+  for (const u of res.ups) {
+    pending.add(u.id);
+    try { await myCol().doc(u.id).set({ state: u.state, at: now }); }
+    catch (e) { failed++; if (e && e.code === "invalid_argument") { goLocal("<b>Your log</b> · saved in this browser"); pending.delete(u.id); break; } }
+    pending.delete(u.id); n++;
+    if (n % 5 === 0) setImp(`<div class="who">Importing…</div><p>Saved ${n} of ${res.ups.length}.</p>`);
+  }
+  setImp(failed ? `<div class="who">Imported with gaps</div><p>${failed} updates didn't save. Import the file again to retry them.</p>`
+    : `<div class="who">Imported</div><p>${res.ups.length} updates added to your log.</p>`);
+}
+/* backup code: base64 of {v:1, p:{id:state}} */
+function makeBackup() {
+  const p = {}; Object.entries(progress).forEach(([id, v]) => { const st = v && (v.state || (v.done ? "done" : null)); if (st && BY_ID[id]) p[id] = st === "done" ? 2 : 1; });
+  return "DWC1." + btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, p }))));
+}
+function readBackup(code) {
+  try { const t = code.trim(); if (!t.startsWith("DWC1.")) return null; const o = JSON.parse(decodeURIComponent(escape(atob(t.slice(5))))); return o && o.p ? o.p : null; } catch { return null; }
+}
+document.getElementById("bkMake").addEventListener("click", () => {
+  const out = document.getElementById("bkOut"); out.value = makeBackup(); out.hidden = false; out.select();
+  document.getElementById("bkCopy").hidden = false;
+});
+document.getElementById("bkCopy").addEventListener("click", () => {
+  const out = document.getElementById("bkOut");
+  try { navigator.clipboard.writeText(out.value).then(() => { document.getElementById("bkCopy").textContent = "Copied"; }, () => out.select()); } catch { out.select(); }
+});
+document.getElementById("bkApply").addEventListener("click", () => {
+  const p = readBackup(document.getElementById("bkIn").value), msg = document.getElementById("bkMsg");
+  if (!p) { msg.textContent = "That code isn't valid. Copy the whole code, starting with DWC1."; return; }
+  const rank = { none: 0, started: 1, done: 2 };
+  const ups = Object.entries(p).filter(([id, n]) => BY_ID[id]).map(([id, n]) => ({ id, state: n === 2 ? "done" : "started", kind: "b" })).filter(u => rank[u.state] > rank[stateOf(u.id)]);
+  if (!ups.length) { msg.textContent = "Nothing new in that code; you're already up to date."; return; }
+  applyImport({ ups }).then(() => { msg.textContent = `Restored ${ups.length} ticks.`; });
+});
+function rcHTML(rc) {
+  return `<details class="craft"><summary>What it takes to craft</summary><div class="craft-body">
+    <div class="station">Craft at the <strong>${esc(rc.at)}</strong> using:</div>${ingHTML(rc.in, 0, new Set())}
+    ${rc.note ? `<p class="gnote">${esc(rc.note)}</p>` : ""}</div></details>`;
+}
+function buildBosses() {
+  const host = document.getElementById("recMain");
+  host.innerHTML = RECIPES.map(g => `<section class="panel" id="rec-${g.key}"><div class="sec-head"><h2>${esc(g.title)}</h2><span class="count"></span></div><div class="rule"></div>
+    ${g.intro ? `<p class="unlock">${esc(g.intro)}</p>` : ""}<ul class="list">${g.items.map(r => `<li class="q recipe" data-id="${r.id}">
+      <button class="mark" type="button" id="m-${r.id}"><span class="d">${CHECK}</span></button>
+      <div>
+        <div class="title-row"><span class="name">${esc(r.unl || r.n)}</span><span class="status" hidden></span></div>
+        <div class="unl"><span>${r.via || (r.n.startsWith("MOUNT") ? "Mount vestige" : "Vestige")}</span> ${esc(r.n.replace(/^MOUNT: /, ""))}</div>
+        <div class="start">${esc(r.src)}</div>
+        ${r.gear ? craftHTML(r.gear) : r.rc ? rcHTML(r.rc) : r.free ? `<div class="freecraft">Craft at the ${esc(r.free)}: no materials needed.${r.extra ? " " + esc(r.extra) : ""}</div>` : ""}
+      </div></li>`).join("")}</ul><p class="empty">Everything here is unlocked.</p></section>`).join("");
+  document.getElementById("rJump").innerHTML = RECIPES.map(g => `<a class="chip" href="#rec-${g.key}" data-rjump="${g.key}">${esc(g.title.replace("Power Level ", "PL "))} <span></span></a>`).join("");
+  host.addEventListener("click", (e) => {
+    const b = e.target.closest(".mark"); if (b) return cycle(b.closest(".q").dataset.id);
+    const lk = e.target.closest(".prev-link"); if (lk) { const d = lk.closest(".craft-body"); if (d) d.scrollIntoView({ block: "nearest" }); }
+  });
+  const norm = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const input = document.getElementById("rSearch");
+  input.addEventListener("input", () => {
+    const q = norm(input.value);
+    let any = false;
+    RECIPES.forEach(g => {
+      let hits = 0;
+      g.items.forEach(r => {
+        const li = host.querySelector(`[data-id="${r.id}"]`);
+        const ok = !q || norm(`${r.unl || ""} ${r.n}`).includes(q);
+        li.classList.toggle("nomatch", !ok);
+        if (ok) hits++;
+      });
+      document.getElementById("rec-" + g.key).classList.toggle("nomatch", hits === 0);
+      if (hits) any = true;
+    });
+    document.getElementById("rNo").hidden = any;
+  });
+}
+function paintRecipes() {
+  const d = REC_IDS.filter(id => stateOf(id) === "done").length;
+  document.getElementById("rDone").textContent = d;
+  document.getElementById("rTotal").textContent = REC_IDS.length;
+  document.getElementById("rBar").style.width = (100 * d / REC_IDS.length) + "%";
+  RECIPES.forEach(g => {
+    const n = g.items.filter(r => stateOf(r.id) === "done").length;
+    const sec = document.getElementById("rec-" + g.key);
+    sec.querySelector(".count").textContent = `${n} / ${g.items.length}`;
+    sec.classList.toggle("all-done", n === g.items.length);
+    const a = document.querySelector(`[data-rjump="${g.key}"]`);
+    a.querySelector("span").textContent = `${n}/${g.items.length}`;
+    a.classList.toggle("full", n === g.items.length);
+  });
+}
+
+function paint() {
+  document.querySelectorAll(".q").forEach(li => {
+    const id = li.dataset.id, s = stateOf(id), p = progress[id];
+    li.classList.toggle("started", s === "started");
+    li.classList.toggle("done", s === "done");
+    const st = li.querySelector(".status");
+    st.hidden = s === "none"; st.textContent = li.classList.contains("recipe") ? "Unlocked" : LABEL[s];
+    const b = li.querySelector(".mark");
+    b.disabled = !canWrite;
+    b.setAttribute("aria-label", `${BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
+    const who = li.querySelector(".who");
+    if (!who) return;
+    if (s !== "none" && mode === "shared" && p.by) {
+      const nm = p.by === uid ? "you" : (names[p.by] || "your co-op partner");
+      who.textContent = (s === "done" ? "Completed by " : "Started by ") + nm;
+      who.hidden = false;
+    } else who.hidden = true;
+  });
+  const done = ALL_IDS.filter(id => stateOf(id) === "done").length;
+  document.getElementById("qpDone").textContent = done;
+  document.getElementById("qpTotal").textContent = ALL_IDS.length;
+  document.getElementById("qpStarted").textContent = ALL_IDS.filter(id => stateOf(id) === "started").length;
+  document.getElementById("overallBar").style.width = (100 * done / ALL_IDS.length) + "%";
+
+  (window.__groups || []).forEach(([k, , ids]) => {
+    const d = ids.filter(id => stateOf(id) === "done").length;
+    const sec = document.getElementById(k);
+    sec.querySelector(".count").textContent = `${d} / ${ids.length}`;
+    sec.classList.toggle("all-done", d === ids.length);
+    const a = document.querySelector(`[data-jump="${k}"]`);
+    a.querySelector("span").textContent = `${d}/${ids.length}`;
+    a.classList.toggle("full", d === ids.length);
+  });
+  const exd = EXTRA.filter(q => stateOf(q.id) === "done").length;
+  document.querySelector("#extra .count").textContent = `${exd} / ${EXTRA.length}`;
+  document.getElementById("exChip").textContent = `${exd}/${EXTRA.length}`;
+  document.getElementById("extra").classList.toggle("all-done", exd === EXTRA.length);
+  document.getElementById("exChip").parentElement.classList.toggle("full", exd === EXTRA.length);
+  paintRecipes();
+  paintUrns();
+}
+
+async function resolveNames() {
+  if (!user || typeof user.profiles !== "function") return;
+  const ids = [...new Set(Object.values(progress).map(p => p.by).filter(Boolean))];
+  if (!ids.length) return;
+  try {
+    const ps = await user.profiles(ids);
+    let changed = false;
+    ids.forEach(id => { const n = (ps?.[id]?.name || "").split(" ")[0]; if (n && names[id] !== n) { names[id] = n; changed = true; } });
+    if (changed) paint();
+  } catch {}
+}
+
+let bannerTimer = null;
+const id2kind = (id) => id.startsWith("u-") ? "Urn Absorbed" : id.startsWith("r-") ? "Recipe Unlocked" : "Quest Complete";
+function showBanner(q, isBoss) {
+  const host = document.getElementById("bannerHost");
+  host.innerHTML = `<div class="banner" role="status"><div class="t">${id2kind(q.id)}</div><div class="qn">${esc(q.unl || q.n)}${q.id.startsWith("u-") ? " · +10 max health" : ""}</div>${(q.rw || []).length ? `<div class="rw">${q.rw.map(esc).join(" · ")}</div>` : ""}</div>`;
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => { host.innerHTML = ""; }, 3500);
+}
+
+const myCol = () => db.collection("data/users/" + uid);
+function goLocal(msg) {
+  mode = "local";
+  lsSet(LS_KEY, JSON.stringify(progress));
+  setSync(msg);
+}
+
+async function cycle(id) {
+  if (pending.has(id)) return;
+  const cur = stateOf(id);
+  const isBoss = id.startsWith("r-") || id.startsWith("u-");
+  const next = isBoss ? (cur === "done" ? "none" : "done") : (cur === "none" ? "started" : cur === "started" ? "done" : "none");
+  if (next === "none") delete progress[id];
+  else progress[id] = { state: next, at: Date.now() };
+  paint();
+  if (next === "done") showBanner(BY_ID[id], isBoss);
+  if (mode === "local") { lsSet(LS_KEY, JSON.stringify(progress)); return; }
+  pending.add(id);
+  try {
+    const ref = myCol().doc(id);
+    if (next === "none") await ref.delete();
+    else await ref.set({ state: next, at: Date.now() });
+  } catch (e) {
+    if (e && e.code === "invalid_argument") goLocal("<b>Your log</b> · saved in this browser (your access level can't save to your account)");
+    else setSync("That change didn't save. Check your connection and tap the quest again.");
+  } finally { pending.delete(id); }
+}
+function setSync(html) { document.getElementById("sync").innerHTML = html; }
+
+function setFilter(todo) {
+  document.body.classList.toggle("hide-done", todo);
+  document.querySelectorAll(".f-all").forEach(x => x.setAttribute("aria-pressed", String(!todo)));
+  document.querySelectorAll(".f-todo").forEach(x => x.setAttribute("aria-pressed", String(todo)));
+  lsSet("dw-filter", todo ? "todo" : "all");
+}
+document.querySelectorAll(".f-all").forEach(x => x.onclick = () => setFilter(false));
+document.querySelectorAll(".f-todo").forEach(x => x.onclick = () => setFilter(true));
+
+const TABS = { quests: ["tabQuests", "view-quests"], bosses: ["tabBosses", "view-bosses"], urns: ["tabUrns", "view-urns"] };
+function setTab(t) {
+  if (!TABS[t]) t = "quests";
+  Object.entries(TABS).forEach(([k, [tab, view]]) => {
+    document.getElementById(view).hidden = k !== t;
+    document.getElementById(tab).setAttribute("aria-selected", String(k === t));
+  });
+  lsSet("dw-tab", t);
+}
+Object.entries(TABS).forEach(([k, [tab]]) => { document.getElementById(tab).onclick = () => setTab(k); });
+
+const resetBox = document.getElementById("resetBox");
+function drawReset() {
+  resetBox.innerHTML = `<button class="chip" type="button" id="resetBtn">Reset my progress</button>`;
+  document.getElementById("resetBtn").onclick = () => {
+    resetBox.innerHTML = `<span>Clear all of your progress?</span><button class="chip" type="button" id="resetYes">Yes, clear it</button><button class="chip" type="button" id="resetNo">Cancel</button>`;
+    document.getElementById("resetNo").onclick = drawReset;
+    document.getElementById("resetYes").onclick = async () => {
+      const ids = Object.keys(progress);
+      progress = {}; paint(); drawReset();
+      if (mode === "local") { lsSet(LS_KEY, "{}"); return; }
+      for (const id of ids) { try { await myCol().doc(id).delete(); } catch {} }
+    };
+  };
+}
+
+build();
+buildBosses();
+buildUrns();
+setTab(location.hash === "#bosses" ? "bosses" : location.hash === "#urns" ? "urns" : (lsGet("dw-tab") || "quests"));
+setFilter(lsGet("dw-filter") === "todo");
+paint();
+drawReset();
+setSync("<b>Your log</b> · saved in this browser");
+
+(async () => {
+  if (!window.claude || typeof window.claude.use !== "function") return;
+  try { [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]); } catch { db = null; }
+  if (!db || !user) return;
+  try { uid = await user.id(); } catch { uid = null; }
+  if (!uid) return;
+  let cw = null;
+  try { cw = typeof user.can === "function" ? await user.can("data.write") : null; } catch {}
+  if (cw === false) return;
+  mode = "account";
+  const localSaved = { ...progress };
+  let first = true;
+  myCol().onSnapshot(async (snap) => {
+    const next = {};
+    snap.docs.forEach(d => {
+      const v = d.data(); if (!v || !BY_ID[d.id]) return;
+      if (v.state === "started" || v.state === "done") next[d.id] = { state: v.state, at: v.at || 0 };
+    });
+    pending.forEach(id => { if (progress[id]) next[id] = progress[id]; else delete next[id]; });
+    if (first) {
+      first = false;
+      setSync("<b>Your log</b> · saved to your Claude account");
+      // carry over anything ticked in this browser before account saving was available
+      if (snap.empty && Object.keys(localSaved).length) {
+        progress = localSaved; paint();
+        for (const [id, v] of Object.entries(localSaved)) {
+          if (!BY_ID[id] || !v) continue;
+          const st = v.state || (v.done ? "done" : null);
+          if (st !== "started" && st !== "done") continue;
+          try { await myCol().doc(id).set({ state: st, at: v.at || Date.now() }); }
+          catch (e) { if (e && e.code === "invalid_argument") { goLocal("<b>Your log</b> · saved in this browser"); return; } }
+        }
+        return;
+      }
+    }
+    if (mode !== "account") return;
+    progress = next;
+    paint();
+  }, () => { setSync("Live sync stopped. Reload the page to reconnect."); });
+})();
+</script>
+
+</body>
+</html>
