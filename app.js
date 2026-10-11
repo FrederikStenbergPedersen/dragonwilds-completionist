@@ -263,7 +263,7 @@ function paintAgility() {
   document.getElementById("aGoldBar").style.width = (100 * ms / (COURSES.length * 3)) + "%";
   document.getElementById("aBurBar").style.width = (100 * bc / BURROWS) + "%";
   const ci = document.querySelector("#agCourses .count"); ci.textContent = `${gold} / ${COURSES.length} gold`;
-  document.getElementById("burSave").textContent = (progress[BUR_ID] ? `Your save: ${bs} opened · ` : "Import your save to fill in the total · ") + `Ticked on the maps: ${bt}` + (bs > bt ? ` · ${bs - bt} opened burrow${bs - bt > 1 ? "s" : ""} not ticked yet` : "");
+  document.getElementById("burSave").textContent = (progress[BUR_ID] ? `Opened in game: ${bs} · ` : "") + `Ticked on the maps: ${bt}` + (bs > bt ? ` · ${bs - bt} still to tick` : "");
   BURROW_MAP.forEach(r => {
     const d = r.b.filter(b => stateOf(b.id) === "done").length, sec = document.getElementById("bur-" + lslug(r.r));
     sec.querySelector(".count").textContent = `${d} / ${r.b.length}`; sec.classList.toggle("all-done", d === r.b.length);

@@ -16,7 +16,7 @@
   <header class="masthead">
     <div class="eyebrow">RuneScape · Dragonwilds</div>
     <h1>Dragonwilds Completionist</h1>
-    <p class="sub">Every quest, skill and collectible in Ashenfall, filled in from your save. Tap a marker to tick something off yourself.</p>
+    <p class="sub">Every quest, skill and collectible in Ashenfall. Tap a marker to tick something off.</p>
     <div class="ornament" aria-hidden="true"><i></i></div>
   </header>
 
@@ -58,7 +58,7 @@
       </div>
       <p class="imp-note">Quickest way: keep the SaveCharacters folder open in Explorer and drag your character file anywhere onto this page.</p>
       <div id="impResult" aria-live="polite"></div>
-      <p class="imp-note">Covers quests, recipes, Sanguine Urns and skill levels. Mounts aren't readable from the save, so tick those yourself. Imports only add ticks; they never remove any.</p>
+      <p class="imp-note">Imports only add ticks; they never remove any.</p>
     </div>
   </details>
 
@@ -132,7 +132,7 @@
     <div class="panel tips">
       <h3>Finding them</h3>
       <ul>
-        <li>Lore is saved on your character, not the world, so scraps you read in a friend’s world count for you too.</li>
+        <li>Lore belongs to your character, not the world, so scraps you read in a friend’s world count for you too.</li>
         <li>Statue sagas and songs from Umbral Sands quests aren't lore scraps, so they aren't listed here.</li>
       </ul>
     </div>
@@ -285,7 +285,6 @@
       <div class="big"><span id="mapDone">0</span><small>/32</small></div>
       <div class="lbl">Map regions uncovered</div>
       <div class="bar"><i id="mapBar"></i></div>
-      <div class="meta"><span>The save tracks 32 map regions but doesn’t name them, so this is a count.</span></div>
     </div>
   </div>
 
@@ -309,7 +308,7 @@
     <div class="confirm-row" id="resetBox"></div>
     <details class="backup" id="backup">
       <summary>Back up or move your progress</summary>
-      <p>Copy this code to keep a backup or move your ticks to another browser. Quests, recipes, urns and lore can always be re-imported from your save, but mounts only live here.</p>
+      <p>Copy this code to keep a backup or move your ticks to another browser. Everything except which kebbit burrows you ticked can be imported again, so the code mostly protects those.</p>
       <div class="confirm-row"><button type="button" class="chip" id="bkMake">Create backup code</button><button type="button" class="chip" id="bkCopy" hidden>Copy</button></div>
       <textarea id="bkOut" rows="3" readonly hidden aria-label="Backup code"></textarea>
       <label for="bkIn" class="bklbl">Restore from a code</label>
