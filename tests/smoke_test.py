@@ -14,8 +14,9 @@ FIXTURE = os.path.join(ROOT, "tests", "fixtures", "sample-character.json")
 
 # What the sample save should produce in each section's progress row.
 EXPECT_TABS = {
-    "Quests": "3/47", "Recipes": "2/125", "Crafting Journal": "5/865", "Mounts": "1/17", "Urns": "2/21",
-    "Burrows": "4/19", "Lore": "3/114", "Plants": "2/72", "Factions": "2/60", "Fauna": "2/69", "Agility Courses": "5/18",
+    "Quests": "3/47", "Recipes": "2/125", "Crafting": "5/865", "Building": "6/771", "Mounts": "1/17", "Urns": "2/21",
+    "Burrows": "4/19", "Map": "10/32", "Lore": "3/114", "Gathering": "3/87", "Factions": "2/60", "Fauna": "2/69",
+    "Agility Courses": "5/18",
 }
 
 
@@ -61,7 +62,7 @@ async def main():
 
         print("page loads")
         check(not errors, "no script errors on load " + (str(errors) if errors else ""))
-        check(await pg.locator(".tab").count() == 12, "12 section rows")
+        check(await pg.locator(".tab").count() == 14, "14 section rows")
 
         print("save import")
         await pg.click("#importer > summary")
@@ -75,7 +76,6 @@ async def main():
         for name, want in EXPECT_TABS.items():
             check(got.get(name) == want, f"{name} shows {want} (got {got.get(name)})")
         check(got.get("Skills", "").endswith("%"), "Skills shows a percentage")
-        check(await pg.locator("#nextUp").is_visible(), "finish-lines panel appears")
 
         print("ticking")
         await pg.evaluate("document.getElementById('importer').open = false")

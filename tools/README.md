@@ -9,7 +9,8 @@ rebuild it with `build_data.py` instead of editing the data files by hand.
 | File | Source | How to update |
 |---|---|---|
 | `data/lore.js` | game journal + `tools/wiki_lore.tsv` | `build_data.py` |
-| `data/journal.js` | game journal (plants, factions, fauna) | `build_data.py` |
+| `data/journal.js` | game journal (plants, materials, factions, fauna) | `build_data.py` |
+| `data/buildings.js` | build-menu catalogue | `build_data.py` |
 | `data/crafting.js` | game journal (crafting recipes) | `build_data.py` |
 | `data/agility.js` | course data assets | `build_data.py` |
 | `data/maps.js` | location data (burrows, course starts) | `build_data.py` |
@@ -18,7 +19,7 @@ rebuild it with `build_data.py` instead of editing the data files by hand.
 
 ## 1. Get the archive (sparse checkout)
 
-The full archive is many GB, so check out only what the script reads (about 70 MB):
+The full archive is many GB, so check out only what the script reads (about 80 MB):
 
 ```sh
 git clone --filter=blob:none --no-checkout https://github.com/RSDWArchive/RSDWArchive
@@ -39,7 +40,7 @@ git diff --stat data/
 ```
 
 The script stops with a clear message when the game adds something it doesn't know how
-to place yet, such as a new crafting station, a new journal category or a lore scrap
+to place yet, such as a new crafting station, a new journal category, a building piece file it can't find or a lore scrap
 that isn't in the wiki table. Add it to the mapping named in the message and run it again.
 
 `--only lore journal` rebuilds just some files. `--scan-urns` re-reads urn positions

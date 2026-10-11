@@ -3,3 +3,7 @@
 /1.0.0.5/json/**/ITEM_*.json
 /1.0.0.5/json/RSDragonwilds/Plugins/GameFeatures/Agility/Content/Gameplay/CourseData/
 /website/tools/LocationData/LocationData.json
+/1.0.0.5/json/RSDragonwilds/Content/Gameplay/BaseBuilding_New/BuildingPieces/DA_BuildPieceCatalogue_Default.json
+/1.0.0.5/json/**/BUILDPIECE_*.json
+/1.0.0.5/json/**/BuildingPieces/**/DA_*.json
+/1.0.0.5/json/**/Buildpieces/**/DA_*.json

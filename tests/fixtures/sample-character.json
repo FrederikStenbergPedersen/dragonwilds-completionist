@@ -21,7 +21,7 @@
     {
      "CourseID": "ey1IZEnvZ2D32yC14mES5Q",
      "HighestUnlockedMedal": 2,
-     "PersonalBestCompletionTime": 65.0
+     "PersonalBestCompletionTime": 65
     }
    ],
    "KebbitBurrowsActivated": [
@@ -29,6 +29,14 @@
     "00000000000000000000000000000002",
     "00000000000000000000000000000003",
     "00000000000000000000000000000004"
+   ],
+   "BuildingsUnlocked": [
+    "k6IcOKDMvU6npWyppYGNYA",
+    "0mhPHgL2LEujcXZpRVsPbw",
+    "SJQU2UL5bMtpZYCa588n0g",
+    "aonIeER4kg_uJou4RVSsAg",
+    "stMZjEphnN_wH3aw5gNbDg",
+    "4AfTREj9KmVBOF-HvMtqhw"
    ]
   },
   "QuestProgress": {
@@ -74,7 +82,8 @@
     "04xGWEzq5K5JYhiTlEQ6_w",
     "06Yb7Ec_y5YP6kCFYGHi7A",
     "Fv57Qk_1u-Vzdoqb59de0Q",
-    "qLFfgEcfOuZF9OqBT6MY7g"
+    "qLFfgEcfOuZF9OqBT6MY7g",
+    "XylifEhzgPAa7YKbl2ZuDg"
    ]
   },
   "Character": {
@@ -83,6 +92,10 @@
      "MountDataAsset:DA_Mount_Terrorbird_01_02"
     ]
    }
+  },
+  "RevealedFog": {
+   "RevealedRegionsBitmap": 1023,
+   "RevealedRegionsDetectionActive": true
   }
  }
 }

@@ -12,14 +12,18 @@ A completion tracker for **RuneScape: Dragonwilds**. Everything a completionist 
 | Skills | All 12 skills, with progress to level 94 and 99 by level and by XP |
 | Agility Courses | All 6 courses and 18 medals, with times, requirements and best runs |
 | Recipes | Every vestige and vault recipe, by its crafting-journal name |
+| Crafting | All 865 recipes in the crafting journal |
+| Building | All 771 building pieces in the build menu (Deluxe Edition pieces excluded) |
 | Mounts | The 17 obtainable terrorbird and carpet variants |
 | Urns | All 21 Sanguine Urns, on maps of each region |
 | Burrows | All 19 kebbit burrows, on maps of each region |
+| Map | How many of the world map's 32 regions you've uncovered |
 | Lore | All 114 lore scraps, by region and story |
-| Plants | All 72 plant and seed journal entries |
+| Gathering | All 87 plant, seed and material journal entries |
 | Factions | All 60 enemy journal entries |
+| Fauna | All 69 animal and fish journal entries |
 
-Three completion tiers sit on top: **Completionist** (everything except skills), **Completionist+** (every skill at 94) and **Completionist++** (every skill at 99).
+Three completion tiers sit on top: **Completionist** (every section except skills, each weighted equally), **Completionist+** (every skill at 94) and **Completionist++** (every skill at 99).
 
 ## Save import
 

@@ -26,22 +26,19 @@
     <div class="tier" data-tier="2"><div class="tname">Completionist<span>++</span></div><div class="tdesc">Plus every skill at 99</div><div class="tbar"><i></i></div><div class="tpct">0%</div></div>
   </section>
 
-  <section class="panel nextup" id="nextUp" aria-label="Nearest finish lines" hidden>
-    <h3>Nearest finish lines</h3>
-    <ul id="nextList"></ul>
-  </section>
-
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button class="tab" role="tab" type="button" id="tabQuests" aria-selected="true" aria-controls="view-quests"><span class="tl">Quests</span><span class="tc" id="tc-tabQuests">&nbsp;</span><span class="tp"><i id="tpb-tabQuests"></i></span></button>
     <button class="tab" role="tab" type="button" id="tabSkills" aria-selected="false" aria-controls="view-skills"><span class="tl">Skills</span><span class="tc" id="tc-tabSkills">&nbsp;</span><span class="tp"><i id="tpb-tabSkills"></i></span></button>
     <button class="tab" role="tab" type="button" id="tabAgility" aria-selected="false" aria-controls="view-agility"><span class="tl">Agility Courses</span><span class="tc" id="tc-tabAgility">&nbsp;</span><span class="tp"><i id="tpb-tabAgility"></i></span></button>
     <button class="tab" role="tab" type="button" id="tabBosses" aria-selected="false" aria-controls="view-bosses"><span class="tl">Recipes</span><span class="tc" id="tc-tabBosses">&nbsp;</span><span class="tp"><i id="tpb-tabBosses"></i></span></button>
-    <button class="tab" role="tab" type="button" id="tabCrafting" aria-selected="false" aria-controls="view-crafting"><span class="tl">Crafting Journal</span><span class="tc" id="tc-tabCrafting">&nbsp;</span><span class="tp"><i id="tpb-tabCrafting"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabCrafting" aria-selected="false" aria-controls="view-crafting"><span class="tl">Crafting</span><span class="tc" id="tc-tabCrafting">&nbsp;</span><span class="tp"><i id="tpb-tabCrafting"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabBuildings" aria-selected="false" aria-controls="view-buildings"><span class="tl">Building</span><span class="tc" id="tc-tabBuildings">&nbsp;</span><span class="tp"><i id="tpb-tabBuildings"></i></span></button>
     <button class="tab" role="tab" type="button" id="tabMounts" aria-selected="false" aria-controls="view-mounts"><span class="tl">Mounts</span><span class="tc" id="tc-tabMounts">&nbsp;</span><span class="tp"><i id="tpb-tabMounts"></i></span></button>
     <button class="tab" role="tab" type="button" id="tabUrns" aria-selected="false" aria-controls="view-urns"><span class="tl">Urns</span><span class="tc" id="tc-tabUrns">&nbsp;</span><span class="tp"><i id="tpb-tabUrns"></i></span></button>
     <button class="tab" role="tab" type="button" id="tabBurrows" aria-selected="false" aria-controls="view-burrows"><span class="tl">Burrows</span><span class="tc" id="tc-tabBurrows">&nbsp;</span><span class="tp"><i id="tpb-tabBurrows"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabMap" aria-selected="false" aria-controls="view-map"><span class="tl">Map</span><span class="tc" id="tc-tabMap">&nbsp;</span><span class="tp"><i id="tpb-tabMap"></i></span></button>
     <button class="tab" role="tab" type="button" id="tabLore" aria-selected="false" aria-controls="view-lore"><span class="tl">Lore</span><span class="tc" id="tc-tabLore">&nbsp;</span><span class="tp"><i id="tpb-tabLore"></i></span></button>
-    <button class="tab" role="tab" type="button" id="tabPlants" aria-selected="false" aria-controls="view-plants"><span class="tl">Plants</span><span class="tc" id="tc-tabPlants">&nbsp;</span><span class="tp"><i id="tpb-tabPlants"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabPlants" aria-selected="false" aria-controls="view-plants"><span class="tl">Gathering</span><span class="tc" id="tc-tabPlants">&nbsp;</span><span class="tp"><i id="tpb-tabPlants"></i></span></button>
     <button class="tab" role="tab" type="button" id="tabFactions" aria-selected="false" aria-controls="view-factions"><span class="tl">Factions</span><span class="tc" id="tc-tabFactions">&nbsp;</span><span class="tp"><i id="tpb-tabFactions"></i></span></button>
     <button class="tab" role="tab" type="button" id="tabFauna" aria-selected="false" aria-controls="view-fauna"><span class="tl">Fauna</span><span class="tc" id="tc-tabFauna">&nbsp;</span><span class="tp"><i id="tpb-tabFauna"></i></span></button>
   </nav>
@@ -171,7 +168,7 @@
   <div id="view-plants" role="tabpanel" aria-labelledby="tabPlants" hidden>
     <div class="panel summary">
       <div class="big"><span id="plDone">0</span><small>/<span id="plTotal">0</span></small></div>
-      <div class="lbl">Plants and seeds found</div>
+      <div class="lbl">Plants, seeds and materials found</div>
       <div class="bar"><i id="plBar"></i></div>
       <div class="meta"><span>Each one is added to your journal the first time you pick it up. Imports from your save.</span></div>
     </div>
@@ -182,7 +179,7 @@
       <span class="sep" aria-hidden="true"></span>
       <span id="plJump" style="display:contents"></span>
     </nav>
-    <div class="panel searchbar"><label for="plSearch">Find a plant</label><input type="search" id="plSearch" placeholder="Type a name, e.g. Snapdragon" autocomplete="off"><p class="nores" id="plNo" hidden>No plant matches that.</p></div>
+    <div class="panel searchbar"><label for="plSearch">Find a plant or material</label><input type="search" id="plSearch" placeholder="Type a name, e.g. Snapdragon" autocomplete="off"><p class="nores" id="plNo" hidden>No plant matches that.</p></div>
     <div id="plantsMain"></div>
   </div>
 
@@ -202,6 +199,24 @@
     </nav>
     <div class="panel searchbar"><label for="faSearch">Find an enemy</label><input type="search" id="faSearch" placeholder="Type a name, e.g. Kalphite" autocomplete="off"><p class="nores" id="faNo" hidden>No enemy matches that.</p></div>
     <div id="factionsMain"></div>
+  </div>
+
+  <div id="view-buildings" role="tabpanel" aria-labelledby="tabBuildings" hidden>
+    <div class="panel summary">
+      <div class="big"><span id="buDone">0</span><small>/<span id="buTotal">0</span></small></div>
+      <div class="lbl">Building pieces unlocked</div>
+      <div class="bar"><i id="buBar"></i></div>
+      <div class="meta"><span>Every piece in the build menu, grouped the same way. Imports from your save. Deluxe Edition pieces aren’t included.</span></div>
+    </div>
+    
+    <nav class="filters panel" aria-label="buildings filters">
+      <button type="button" class="chip f-all" aria-pressed="true">All</button>
+      <button type="button" class="chip f-todo" aria-pressed="false">Hide unlocked</button>
+      <span class="sep" aria-hidden="true"></span>
+      <span id="buJump" style="display:contents"></span>
+    </nav>
+    <div class="panel searchbar"><label for="buSearch">Find a piece</label><input type="search" id="buSearch" placeholder="Type a name, e.g. Kharidian" autocomplete="off"><p class="nores" id="buNo" hidden>No piece matches that.</p></div>
+    <div id="buildingsMain"></div>
   </div>
 
   <div id="view-fauna" role="tabpanel" aria-labelledby="tabFauna" hidden>
@@ -268,6 +283,15 @@
     <div id="burMain"></div>
   </div>
 
+  <div id="view-map" role="tabpanel" aria-labelledby="tabMap" hidden>
+    <div class="panel summary">
+      <div class="big"><span id="mapDone">0</span><small>/32</small></div>
+      <div class="lbl">Map regions uncovered</div>
+      <div class="bar"><i id="mapBar"></i></div>
+      <div class="meta"><span>Your save stores the world map as 32 regions and marks each one you’ve uncovered. It doesn’t say which region is which, so this tracks the count. Imports from your save.</span></div>
+    </div>
+  </div>
+
   <div id="view-skills" role="tabpanel" aria-labelledby="tabSkills" hidden>
     <div class="panel summary skillsum">
       <div class="sumhead"><div><div class="big"><span id="sAt94">0</span><small>/12</small></div><div class="lbl">At 94+</div></div><div><div class="big"><span id="sAt99">0</span><small>/12</small></div><div class="lbl">At 99</div></div></div>
@@ -305,6 +329,7 @@
 <script src="data/lore.js"></script>
 <script src="data/journal.js"></script>
 <script src="data/crafting.js"></script>
+<script src="data/buildings.js"></script>
 <script src="data/mounts.js"></script>
 <script src="data/agility.js"></script>
 <script src="data/maps.js"></script>

@@ -21,7 +21,7 @@ const pending = new Set();
 const LS_KEY = "dw-quest-progress";
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
-const stateOf = (id) => { const p = progress[id]; if (!p) return "none"; if (typeof p.medal === "number") return p.medal >= 3 ? "done" : p.medal > 0 ? "started" : "none"; if (typeof p.count === "number") return p.count >= BURROWS ? "done" : p.count > 0 ? "started" : "none"; return p.state || (p.done ? "done" : "none"); };
+const stateOf = (id) => { const p = progress[id]; if (!p) return "none"; if (typeof p.medal === "number") return p.medal >= 3 ? "done" : p.medal > 0 ? "started" : "none"; if (typeof p.count === "number") return p.count >= (COUNT_MAX[id] || BURROWS) ? "done" : p.count > 0 ? "started" : "none"; return p.state || (p.done ? "done" : "none"); };
 const valBody = (v) => { if (!v) return null; if (typeof v.medal === "number") return v.best ? { medal: v.medal, best: v.best } : { medal: v.medal }; if (typeof v.count === "number") return { count: v.count }; if (typeof v.xp === "number") return { xp: v.xp }; return null; };
 try { progress = JSON.parse(lsGet(LS_KEY) || "{}") || {}; } catch { progress = {}; }
 
@@ -80,16 +80,18 @@ const COLLS = [
   { key: "mounts", p: "mo", tab: "tabMounts", data: MOUNTS, status: "Unlocked", kind: "Mount Unlocked", empty: "Every mount here is unlocked.", src: "mounts" },
   { key: "plants", p: "pl", tab: "tabPlants", data: PLANTS, status: "Found", kind: "Journal Entry", empty: "Everything here is found.", src: "journal" },
   { key: "factions", p: "fa", tab: "tabFactions", data: FACTIONS, status: "Defeated", kind: "Journal Entry", empty: "Every enemy here is in your journal.", src: "journal" },
+  { key: "buildings", p: "bu", tab: "tabBuildings", data: BUILDINGS, status: "Unlocked", kind: "Building Unlocked", empty: "Every piece here is unlocked.", src: "buildings", noWiki: true },
   { key: "fauna", p: "fn", tab: "tabFauna", data: FAUNA, status: "Found", kind: "Journal Entry", empty: "Everything here is in your journal.", src: "journal" },
   { key: "crafting", p: "cr", tab: "tabCrafting", data: CRAFTING, status: "Learned", kind: "Recipe Learned", empty: "Every recipe here is learned.", src: "journal", short: { "Ammo & runes": "Ammo", "Jewellery & trinkets": "Jewellery" } },
 ];
 COLLS.forEach(c => { c.list = c.data.flatMap(r => r.g.flatMap(g => g.i.map(([id, n, sub, pid, wk]) => ({ id, n, sub, pid, wk, reg: r.r, ser: g.s })))); c.ids = c.list.map(x => x.id); });
 const COLL_OF = {}; COLLS.forEach(c => c.list.forEach(x => { COLL_OF[x.id] = c; }));
 const LORE_LIST = COLLS[0].list, LORE_IDS = COLLS[0].ids, COLL_IDS = COLLS.flatMap(c => c.ids);
-const COURSE_IDS = COURSES.map(c => c.id), BURROWS = 19, BUR_ID = "k-burrows";
+const COURSE_IDS = COURSES.map(c => c.id), BURROWS = 19, BUR_ID = "k-burrows", MAP_ID = "k-map", MAP_REGIONS = 32;
+const COUNT_MAX = { [BUR_ID]: BURROWS, [MAP_ID]: MAP_REGIONS };
 const BURROW_LIST = BURROW_MAP.flatMap(r => r.b.map((b, i) => ({ ...b, n: `${r.r} burrow ${i + 1}`, reg: r.r })));
 const BURROW_IDS = BURROW_LIST.map(b => b.id);
-const BY_ID = Object.fromEntries([...ALL_Q, ...EXTRA, ...ALL_REC, ...URN_LIST, ...COLLS.flatMap(c => c.list), ...COURSES, ...BURROW_LIST, { id: BUR_ID, n: "Kebbit burrows" }].map(q => [q.id, q]));
+const BY_ID = Object.fromEntries([...ALL_Q, ...EXTRA, ...ALL_REC, ...URN_LIST, ...COLLS.flatMap(c => c.list), ...COURSES, ...BURROW_LIST, { id: BUR_ID, n: "Kebbit burrows" }, { id: MAP_ID, n: "Map regions" }].map(q => [q.id, q]));
 const SKILL_IDS = ["attack","ranged","magic","mining","woodcutting","fishing","farming","cooking","artisan","construction","runecrafting","agility"].map(k => "s-" + k);
 SKILL_IDS.forEach(id => { BY_ID[id] = { id, n: id }; });
 function buildUrns() {
@@ -109,7 +111,7 @@ function buildColl(c) {
   host.innerHTML = c.data.map(r => `<section class="panel" id="${c.key}-${lslug(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
     ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore" data-id="${id}" data-status="${c.status}">
       <button class="mark" type="button" id="m-${id}"><span class="d">${CHECK}</span></button>
-      <div><div class="title-row"><span class="name">${esc(n)}</span><span class="status" hidden></span><a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a></div>${sub ? `<div class="start">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
+      <div><div class="title-row"><span class="name">${esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}</div>${sub ? `<div class="start">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
     <p class="empty">${esc(c.empty)}</p></section>`).join("");
   document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
   host.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
@@ -231,7 +233,8 @@ function buildBurrows() {
 }
 const burTicked = () => BURROW_IDS.filter(id => stateOf(id) === "done").length;
 const burDone = () => Math.min(BURROWS, Math.max(burCount(), burTicked()));
-const burCount = () => { const p = progress[BUR_ID]; return p && typeof p.count === "number" ? p.count : 0; };
+const countOf = (id) => { const p = progress[id]; return p && typeof p.count === "number" ? p.count : 0; };
+const burCount = () => countOf(BUR_ID);
 const medalSum = () => COURSE_IDS.reduce((a, id) => a + Math.min(3, medalOf(id)), 0);
 const medalOf = (id) => { const p = progress[id]; return p && typeof p.medal === "number" ? p.medal : 0; };
 async function setVal(id, body) {
@@ -265,6 +268,11 @@ function paintAgility() {
     const d = r.b.filter(b => stateOf(b.id) === "done").length, sec = document.getElementById("bur-" + lslug(r.r));
     sec.querySelector(".count").textContent = `${d} / ${r.b.length}`; sec.classList.toggle("all-done", d === r.b.length);
   });
+}
+function paintMap() {
+  const n = countOf(MAP_ID);
+  document.getElementById("mapDone").textContent = n;
+  document.getElementById("mapBar").style.width = (100 * n / MAP_REGIONS) + "%";
 }
 function paintUrns() {
   const d = URN_IDS.filter(id => stateOf(id) === "done").length;
@@ -311,13 +319,19 @@ function analyzeSave(data) {
   });
   const journal = new Set((gp.Journal && gp.Journal.UnlockedEntries) || []);
   const mounts = new Set((((gp.Character || {}).Mount || {}).MountsUnlockedList || []).map(m => String(m).split(":").pop()));
-  COLLS.forEach(c => c.list.forEach(l => { if (stateOf(l.id) !== "done" && (c.src === "mounts" ? mounts : journal).has(l.pid)) ups.push({ id: l.id, state: "done", kind: c.key }); }));
+  const builds = new Set(gp.Progress.BuildingsUnlocked || []);
+  const srcSet = { mounts, buildings: builds, journal };
+  COLLS.forEach(c => c.list.forEach(l => { if (stateOf(l.id) !== "done" && srcSet[c.src].has(l.pid)) ups.push({ id: l.id, state: "done", kind: c.key }); }));
   const runs = {}; (gp.Progress.AgilityCourseScores || []).forEach(r => { const o = runs[r.CourseID] || (runs[r.CourseID] = { m: 0, t: 0 }); o.m = Math.max(o.m, r.HighestUnlockedMedal || 0); if (r.PersonalBestCompletionTime > 0) o.t = o.t ? Math.min(o.t, r.PersonalBestCompletionTime) : r.PersonalBestCompletionTime; });
   COURSES.forEach(c => { const r = runs[c.pid]; if (!r) return; const p = progress[c.id] || {}, best = r.t ? Math.round(r.t * 10) / 10 : 0;
     const nb = best && (!p.best || best < p.best) ? best : p.best || 0, nm = Math.max(r.m, p.medal || 0);
     if (nm > (p.medal || 0) || nb !== (p.best || 0)) ups.push({ id: c.id, body: nb ? { medal: nm, best: nb } : { medal: nm }, kind: "a", gold: nm >= 3 && (p.medal || 0) < 3 }); });
   const nbur = Math.min(BURROWS, ((gp.Progress.KebbitBurrowsActivated) || []).length);
   if (nbur > burCount()) ups.push({ id: BUR_ID, body: { count: nbur }, kind: "k", n: nbur - burCount() });
+  let bits = Number((gp.RevealedFog || {}).RevealedRegionsBitmap) >>> 0, nmap = 0;
+  while (bits) { nmap += bits & 1; bits >>>= 1; }
+  nmap = Math.min(MAP_REGIONS, nmap);
+  if (nmap > countOf(MAP_ID)) ups.push({ id: MAP_ID, body: { count: nmap }, kind: "map" });
   const sxp = {}; ((gp.Skills && gp.Skills.Skills) || []).forEach(sk => { sxp[sk.Id] = sk.Xp; });
   SKILLS.forEach(sk => { const xp = sxp[sk.pid]; if (typeof xp === "number" && xp > xpOf(sk.id)) ups.push({ id: sk.id, xp, kind: "s" }); });
   Object.entries(IMPORT_MAP.r).forEach(([id, pids]) => {
@@ -353,12 +367,12 @@ function handleSaveText(text, auto) {
     const nr = res.ups.filter(u => u.kind === "r").length;
     const nu = res.ups.filter(u => u.kind === "u").length;
     const ns2 = res.ups.filter(u => u.kind === "s").length;
-    const nl = res.ups.filter(u => u.kind === "lore").length, nmo = res.ups.filter(u => u.kind === "mounts").length, npl = res.ups.filter(u => u.kind === "plants").length, nfa = res.ups.filter(u => u.kind === "factions").length, nfn = res.ups.filter(u => u.kind === "fauna").length, ncr = res.ups.filter(u => u.kind === "crafting").length;
+    const nl = res.ups.filter(u => u.kind === "lore").length, nmo = res.ups.filter(u => u.kind === "mounts").length, npl = res.ups.filter(u => u.kind === "plants").length, nfa = res.ups.filter(u => u.kind === "factions").length, nfn = res.ups.filter(u => u.kind === "fauna").length, nbu = res.ups.filter(u => u.kind === "buildings").length, nmp = (res.ups.find(u => u.kind === "map") || {}).body, ncr = res.ups.filter(u => u.kind === "crafting").length;
     const na = res.ups.filter(u => u.kind === "a").length, ng = res.ups.filter(u => u.kind === "a" && u.gold).length;
     const nk = (res.ups.find(u => u.kind === "k") || {}).n || 0;
     if (!res.ups.length) return setImp(`<div class="who">${esc(res.name)}</div><p>Your log is already up to date with this save.</p>`);
     setImp(`<div class="who">${esc(res.name)}</div><p>Found new progress to add:</p><ul>
-      ${nq ? `<li>${nq} quest${nq > 1 ? "s" : ""} completed</li>` : ""}${ns ? `<li>${ns} quest${ns > 1 ? "s" : ""} in progress</li>` : ""}${nr ? `<li>${nr} recipe${nr > 1 ? "s" : ""} unlocked</li>` : ""}${nu ? `<li>${nu} Sanguine Urn${nu > 1 ? "s" : ""} absorbed</li>` : ""}${nl ? `<li>${nl} lore scrap${nl > 1 ? "s" : ""} read</li>` : ""}${nmo ? `<li>${nmo} mount${nmo > 1 ? "s" : ""} unlocked</li>` : ""}${npl ? `<li>${npl} plant${npl > 1 ? "s" : ""} and seeds found</li>` : ""}${nfa ? `<li>${nfa} enem${nfa > 1 ? "ies" : "y"} added to your journal</li>` : ""}${nfn ? `<li>${nfn} animal${nfn > 1 ? "s" : ""} and fish found</li>` : ""}${ncr ? `<li>${ncr} crafting recipe${ncr > 1 ? "s" : ""} learned</li>` : ""}${na ? `<li>${na} agility course${na > 1 ? "s" : ""} updated${ng ? `, ${ng} new gold` : ""}</li>` : ""}${nk ? `<li>${nk} kebbit burrow${nk > 1 ? "s" : ""} opened</li>` : ""}${ns2 ? `<li>${ns2} skill level${ns2 > 1 ? "s" : ""} updated</li>` : ""}</ul>
+      ${nq ? `<li>${nq} quest${nq > 1 ? "s" : ""} completed</li>` : ""}${ns ? `<li>${ns} quest${ns > 1 ? "s" : ""} in progress</li>` : ""}${nr ? `<li>${nr} recipe${nr > 1 ? "s" : ""} unlocked</li>` : ""}${nu ? `<li>${nu} Sanguine Urn${nu > 1 ? "s" : ""} absorbed</li>` : ""}${nl ? `<li>${nl} lore scrap${nl > 1 ? "s" : ""} read</li>` : ""}${nmo ? `<li>${nmo} mount${nmo > 1 ? "s" : ""} unlocked</li>` : ""}${npl ? `<li>${npl} plants, seeds and materials found</li>` : ""}${nfa ? `<li>${nfa} enem${nfa > 1 ? "ies" : "y"} added to your journal</li>` : ""}${nfn ? `<li>${nfn} animal${nfn > 1 ? "s" : ""} and fish found</li>` : ""}${nbu ? `<li>${nbu} building piece${nbu > 1 ? "s" : ""} unlocked</li>` : ""}${nmp ? `<li>${nmp.count} of ${MAP_REGIONS} map regions uncovered</li>` : ""}${ncr ? `<li>${ncr} crafting recipe${ncr > 1 ? "s" : ""} learned</li>` : ""}${na ? `<li>${na} agility course${na > 1 ? "s" : ""} updated${ng ? `, ${ng} new gold` : ""}</li>` : ""}${nk ? `<li>${nk} kebbit burrow${nk > 1 ? "s" : ""} opened</li>` : ""}${ns2 ? `<li>${ns2} skill level${ns2 > 1 ? "s" : ""} updated</li>` : ""}</ul>
       <div class="row2"><button type="button" class="chip" id="impApply" aria-pressed="true">Add to my log</button><button type="button" class="chip" id="impCancel">Cancel</button></div>`);
     document.getElementById("impCancel").onclick = () => setImp("");
     document.getElementById("impApply").onclick = () => applyImport(res);
@@ -435,7 +449,7 @@ document.getElementById("bkApply").addEventListener("click", () => {
       if (n && typeof n === "object") {
         if (typeof n.x === "number") return { id, xp: n.x, kind: "s" };
         if (typeof n.m === "number") return (n.m > medalOf(id) || (n.b && (!(progress[id] || {}).best || n.b < progress[id].best))) ? { id, body: { medal: Math.max(n.m, medalOf(id)), ...(n.b ? { best: Math.min(n.b, (progress[id] || {}).best || Infinity) } : {}) }, kind: "a" } : null;
-        if (typeof n.c === "number") return n.c > burCount() ? { id, body: { count: Math.min(BURROWS, n.c) }, kind: "k" } : null;
+        if (typeof n.c === "number") return n.c > countOf(id) ? { id, body: { count: Math.min(COUNT_MAX[id] || BURROWS, n.c) }, kind: "k" } : null;
         return null;
       }
       return { id, state: n === 2 ? "done" : "started", kind: "b" };
@@ -513,6 +527,8 @@ function paintTabs() {
   const ag = medalSum(), bc = burDone();
   setTabProg("tabAgility", `${ag}/${COURSE_IDS.length * 3}`, ag / (COURSE_IDS.length * 3));
   setTabProg("tabBurrows", `${bc}/${BURROWS}`, bc / BURROWS);
+  const mc = countOf(MAP_ID);
+  setTabProg("tabMap", `${mc}/${MAP_REGIONS}`, mc / MAP_REGIONS);
   setTabProg("tabSkills", Math.floor(100 * f.x94 / k) + "%", f.x94 / k);
   document.getElementById("tabSkills").title = "XP progress toward level 94 in every skill";
 }
@@ -521,43 +537,10 @@ function setTabProg(t, label, v) {
   document.getElementById("tpb-" + t).style.width = (100 * Math.min(1, v)) + "%";
   document.getElementById(t).classList.toggle("full", v >= 1);
 }
-/* Nearest finish lines: small groups that are almost done, across every section. */
-function nextGroups() {
-  const out = [], left = (ids) => ids.filter(id => stateOf(id) !== "done");
-  const started = [...ALL_Q, ...EXTRA].filter(q => stateOf(q.id) === "started").map(q => q.id);
-  if (started.length) out.push({ label: "Quests in progress", tab: "quests", ids: started, size: 99, always: true });
-  URNS.forEach(g => { const ids = g.areas.flatMap(([a, n]) => Array.from({ length: n }, (_, i) => `u-${uslug(a)}-${i + 1}`)); out.push({ label: `Urns · ${g.region}`, tab: "urns", ids: left(ids), size: ids.length }); });
-  RECIPES.forEach(g => out.push({ label: `Recipes · ${g.title}`, tab: "bosses", ids: left(g.items.map(r => r.id)), size: g.items.length }));
-  COLLS.forEach(c => c.data.forEach(r => r.g.forEach(g => { const ids = g.i.map(x => x[0]);
-    out.push({ label: `${document.querySelector(`#${c.tab} .tl`).textContent} · ${r.r}${g.s ? " · " + g.s : ""}`, tab: c.key, ids: left(ids), size: ids.length }); })));
-  const noGold = COURSES.filter(c => medalOf(c.id) < 3).map(c => c.id);
-  out.push({ label: "Agility Courses · gold medals", tab: "agility", ids: noGold, size: COURSES.length });
-  return out.filter(g => g.ids.length && (g.always || (g.ids.length <= 3 && g.size >= 3 && g.ids.length < g.size)))
-    .sort((a, b) => (b.always ? 1 : 0) - (a.always ? 1 : 0) || a.ids.length - b.ids.length || (b.size - b.ids.length) / b.size - (a.size - a.ids.length) / a.size)
-    .filter((g, i, arr) => arr.findIndex(x => x.tab === g.tab) === i)
-    .slice(0, 6);
-}
-function itemName(id) { const o = BY_ID[id] || {}; return (o.unl || o.n || id).replace(/^MOUNT: /, ""); }
-function paintNext() {
-  const box = document.getElementById("nextUp"), gs = nextGroups();
-  box.hidden = !gs.length;
-  document.getElementById("nextList").innerHTML = gs.map(g => `<li><span class="nl">${esc(g.label)}</span><span class="nn">${g.always ? g.ids.length + " started" : g.ids.length + " left"}</span>
-    <span class="ni">${g.ids.slice(0, 6).map(id => `<button type="button" data-go="${g.tab}" data-gid="${id}">${esc(itemName(id))}</button>`).join("")}${g.ids.length > 6 ? `<span class="nn">+${g.ids.length - 6} more</span>` : ""}</span></li>`).join("");
-}
-document.getElementById("nextList").addEventListener("click", (e) => {
-  const b = e.target.closest("button[data-go]"); if (!b) return;
-  setTab(b.dataset.go);
-  const id = b.dataset.gid;
-  const el = document.querySelector(`.q[data-id="${CSS.escape(id)}"]`) || document.querySelector(`[data-cid="${CSS.escape(id)}"]`) || (document.getElementById("m-" + id) || {}).closest?.call(document.getElementById("m-" + id), ".urn-area");
-  if (!el) return;
-  el.scrollIntoView({ block: "center", behavior: "smooth" });
-  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
-});
 function paintTiers() {
   paintTabs();
-  paintNext();
   const frac = (ids) => ids.length ? ids.filter(id => stateOf(id) === "done").length / ids.length : 1;
-  const parts = [frac(ALL_IDS), frac(REC_IDS), frac(URN_IDS), ...COLLS.map(c => frac(c.ids)), medalSum() / (COURSE_IDS.length * 3), burDone() / BURROWS];
+  const parts = [frac(ALL_IDS), frac(REC_IDS), frac(URN_IDS), ...COLLS.map(c => frac(c.ids)), medalSum() / (COURSE_IDS.length * 3), burDone() / BURROWS, countOf(MAP_ID) / MAP_REGIONS];
   const base = parts.reduce((a, b) => a + b, 0), n = parts.length, k = SKILLS.length, f = skillFracs();
   const pct = [base / n, (base + f.x94 / k) / (n + 1), (base + f.x99 / k) / (n + 1)];
   document.querySelectorAll(".tier").forEach((t, i) => {
@@ -650,6 +633,7 @@ function paint() {
   paintUrns();
   COLLS.forEach(paintColl);
   paintAgility();
+  paintMap();
   paintMaps();
   paintSkills();
   paintTiers();
@@ -725,7 +709,7 @@ function setFilter(todo) {
 document.querySelectorAll(".f-all").forEach(x => x.onclick = () => setFilter(false));
 document.querySelectorAll(".f-todo").forEach(x => x.onclick = () => setFilter(true));
 
-const TABS = { quests: ["tabQuests", "view-quests"], bosses: ["tabBosses", "view-bosses"], urns: ["tabUrns", "view-urns"], lore: ["tabLore", "view-lore"], mounts: ["tabMounts", "view-mounts"], plants: ["tabPlants", "view-plants"], factions: ["tabFactions", "view-factions"], fauna: ["tabFauna", "view-fauna"], crafting: ["tabCrafting", "view-crafting"], agility: ["tabAgility", "view-agility"], burrows: ["tabBurrows", "view-burrows"], skills: ["tabSkills", "view-skills"] };
+const TABS = { quests: ["tabQuests", "view-quests"], bosses: ["tabBosses", "view-bosses"], urns: ["tabUrns", "view-urns"], lore: ["tabLore", "view-lore"], mounts: ["tabMounts", "view-mounts"], plants: ["tabPlants", "view-plants"], factions: ["tabFactions", "view-factions"], fauna: ["tabFauna", "view-fauna"], buildings: ["tabBuildings", "view-buildings"], map: ["tabMap", "view-map"], crafting: ["tabCrafting", "view-crafting"], agility: ["tabAgility", "view-agility"], burrows: ["tabBurrows", "view-burrows"], skills: ["tabSkills", "view-skills"] };
 function setTab(t) {
   if (!TABS[t]) t = "quests";
   Object.entries(TABS).forEach(([k, [tab, view]]) => {
@@ -758,7 +742,7 @@ buildUrns();
 COLLS.forEach(buildColl);
 buildAgility();
 buildSkills();
-setTab(["#bosses", "#urns", "#lore", "#mounts", "#plants", "#factions", "#fauna", "#crafting", "#agility", "#burrows", "#skills"].includes(location.hash) ? location.hash.slice(1) : (lsGet("dw-tab") || "quests"));
+setTab(["#bosses", "#urns", "#lore", "#mounts", "#plants", "#factions", "#fauna", "#buildings", "#map", "#crafting", "#agility", "#burrows", "#skills"].includes(location.hash) ? location.hash.slice(1) : (lsGet("dw-tab") || "quests"));
 setFilter(lsGet("dw-filter") === "todo");
 paint();
 drawReset();
@@ -785,7 +769,7 @@ setSync("<b>Your log</b> · saved in this browser");
       if (v.state === "started" || v.state === "done") next[d.id] = { state: v.state, at: v.at || 0 };
       else if (d.id.startsWith("s-") && typeof v.xp === "number") next[d.id] = { xp: v.xp, at: v.at || 0 };
       else if (d.id.startsWith("a-") && typeof v.medal === "number") next[d.id] = { medal: v.medal, ...(typeof v.best === "number" ? { best: v.best } : {}), at: v.at || 0 };
-      else if (d.id === BUR_ID && typeof v.count === "number") next[d.id] = { count: v.count, at: v.at || 0 };
+      else if (COUNT_MAX[d.id] && typeof v.count === "number") next[d.id] = { count: v.count, at: v.at || 0 };
     });
     pending.forEach(id => { if (progress[id]) next[id] = progress[id]; else delete next[id]; });
     new Set([...pendingB, ...holdB]).forEach(k => { COLLS.find(c => c.key === k).ids.forEach(id => { if (progress[id]) next[id] = progress[id]; else delete next[id]; }); });
