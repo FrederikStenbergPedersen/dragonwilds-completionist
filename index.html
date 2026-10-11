@@ -16,7 +16,7 @@
   <header class="masthead">
     <div class="eyebrow">RuneScape · Dragonwilds</div>
     <h1>Dragonwilds Completionist</h1>
-    <p class="sub">Every quest, special recipe, Sanguine Urn, lore scrap, agility course and skill in Ashenfall. Tap a marker to track your progress.</p>
+    <p class="sub">Every quest, skill and collectible in Ashenfall, filled in from your save. Tap a marker to tick something off yourself.</p>
     <div class="ornament" aria-hidden="true"><i></i></div>
   </header>
 
@@ -46,7 +46,7 @@
   <details class="panel importer" id="importer">
     <summary>Import progress from your save file <span>PC</span></summary>
     <div class="imp-body">
-      <p>Fill in your quests, recipes, urns, lore scraps, agility medals and skill levels automatically from your character save. The file is read in your browser and never uploaded.</p>
+      <p>Fills in every section from your character save. The file is read in your browser and never uploaded.</p>
       <ol>
         <li>Close the game, then press <kbd>Win</kbd> + <kbd>R</kbd> and paste:
           <div class="pathrow"><code id="savePath">%LOCALAPPDATA%\RSDragonwilds\Saved\SaveCharacters</code><button type="button" class="chip" id="copyPath">Copy</button></div></li>
@@ -88,7 +88,7 @@
       <div class="big"><span id="rDone">0</span><small>/<span id="rTotal">0</span></small></div>
       <div class="lbl">Recipes unlocked</div>
       <div class="bar"><i id="rBar"></i></div>
-      <div class="meta"><span>Names match your crafting journal. Most recipes are unlocked by studying a vestige (a rare drop, chest find, shop purchase or quest reward); the rest are found inside the Dragonkin vaults.</span></div>
+      <div class="meta"><span>Named as they appear in your crafting journal. Most unlock by studying a vestige; the rest are found in the Dragonkin vaults.</span></div>
     </div>
     <nav class="filters panel" aria-label="Recipe filters">
       <button type="button" class="chip f-all" aria-pressed="true">All</button>
@@ -127,12 +127,11 @@
       <div class="big"><span id="lDone">0</span><small>/<span id="lTotal">0</span></small></div>
       <div class="lbl">Lore scraps read</div>
       <div class="bar"><i id="lBar"></i></div>
-      <div class="meta"><span>Grouped by region, then by the story each scrap belongs to. Where it’s known, the area under each title tells you where it lies; Wiki has the exact spot.</span></div>
+      <div class="meta"><span>Grouped by region and story. The area under each title says roughly where it lies.</span></div>
     </div>
     <div class="panel tips">
       <h3>Finding them</h3>
       <ul>
-        <li>Lore scraps are notes, diaries and books lying on tables, shelves and the ground. Pick one up to add it to your journal.</li>
         <li>Lore is saved on your character, not the world, so scraps you read in a friend’s world count for you too.</li>
         <li>Statue sagas and songs from Umbral Sands quests aren't lore scraps, so they aren't listed here.</li>
       </ul>
@@ -152,7 +151,6 @@
       <div class="big"><span id="moDone">0</span><small>/<span id="moTotal">0</span></small></div>
       <div class="lbl">Mounts unlocked</div>
       <div class="bar"><i id="moBar"></i></div>
-      <div class="meta"><span>Imports from your save. Tap Wiki on any mount to see where it drops or who sells it.</span></div>
     </div>
     <div class="panel tips"><h3>Good to know</h3><ul><li>Terrorbird variants need The Wild Hunt done first, and magic carpets need part of Icthlarin’s Little Helper.</li><li>The plain Terrorbird and Magic Carpet come from those quests, so they’re tracked on the Quests tab.</li></ul></div>
     <nav class="filters panel" aria-label="mounts filters">
@@ -170,7 +168,7 @@
       <div class="big"><span id="plDone">0</span><small>/<span id="plTotal">0</span></small></div>
       <div class="lbl">Plants, seeds and materials found</div>
       <div class="bar"><i id="plBar"></i></div>
-      <div class="meta"><span>Each one is added to your journal the first time you pick it up. Imports from your save.</span></div>
+      <div class="meta"><span>Added to your journal the first time you pick each one up.</span></div>
     </div>
     
     <nav class="filters panel" aria-label="plants filters">
@@ -188,7 +186,7 @@
       <div class="big"><span id="faDone">0</span><small>/<span id="faTotal">0</span></small></div>
       <div class="lbl">Enemies in your journal</div>
       <div class="bar"><i id="faBar"></i></div>
-      <div class="meta"><span>Each enemy is added to your journal the first time you defeat it. Imports from your save.</span></div>
+      <div class="meta"><span>Added to your journal the first time you defeat each enemy.</span></div>
     </div>
     
     <nav class="filters panel" aria-label="factions filters">
@@ -206,7 +204,7 @@
       <div class="big"><span id="buDone">0</span><small>/<span id="buTotal">0</span></small></div>
       <div class="lbl">Building pieces unlocked</div>
       <div class="bar"><i id="buBar"></i></div>
-      <div class="meta"><span>Every piece in the build menu, grouped the same way. Imports from your save. Deluxe Edition pieces aren’t included.</span></div>
+      <div class="meta"><span>Grouped like the build menu. Deluxe Edition pieces aren’t included.</span></div>
     </div>
     
     <nav class="filters panel" aria-label="buildings filters">
@@ -224,7 +222,7 @@
       <div class="big"><span id="fnDone">0</span><small>/<span id="fnTotal">0</span></small></div>
       <div class="lbl">Animals and fish found</div>
       <div class="bar"><i id="fnBar"></i></div>
-      <div class="meta"><span>Animals are added the first time you defeat one, fish the first time you catch one. Imports from your save.</span></div>
+      <div class="meta"><span>Animals are added when you defeat one, fish when you catch one.</span></div>
     </div>
     
     <nav class="filters panel" aria-label="fauna filters">
@@ -242,7 +240,7 @@
       <div class="big"><span id="crDone">0</span><small>/<span id="crTotal">0</span></small></div>
       <div class="lbl">Recipes in your crafting journal</div>
       <div class="bar"><i id="crBar"></i></div>
-      <div class="meta"><span>Every recipe in the in-game crafting journal, grouped by type and then by where you craft it. Imports from your save.</span></div>
+      <div class="meta"><span>Grouped by type, then by where you craft it.</span></div>
     </div>
     
     <nav class="filters panel" aria-label="crafting filters">
@@ -260,7 +258,6 @@
       <div class="big"><span id="aGold">0</span><small>/<span id="aGoldT">18</span></small></div>
       <div class="lbl">Medals earned</div>
       <div class="bar"><i id="aGoldBar"></i></div>
-      <div class="meta"><span>Medals and best times import from your save. You can also tap a medal to set it yourself.</span></div>
     </div>
     <section class="panel" id="agCourses"><div class="sec-head"><h2>Agility courses</h2><span class="count"></span></div><div class="rule"></div>
       <p class="unlock">Start a course at its banner. Your first gold on a course unlocks its golden cape recipe.</p>
@@ -288,7 +285,7 @@
       <div class="big"><span id="mapDone">0</span><small>/32</small></div>
       <div class="lbl">Map regions uncovered</div>
       <div class="bar"><i id="mapBar"></i></div>
-      <div class="meta"><span>Your save stores the world map as 32 regions and marks each one you’ve uncovered. It doesn’t say which region is which, so this tracks the count. Imports from your save.</span></div>
+      <div class="meta"><span>The save tracks 32 map regions but doesn’t name them, so this is a count.</span></div>
     </div>
   </div>
 
@@ -301,7 +298,6 @@
         <div class="trow"><span>To 99</span><em>Level</em><div class="tbar"><i id="b99l"></i></div><b id="p99l">0%</b></div>
         <div class="trow"><span></span><em>XP</em><div class="tbar"><i class="xp" id="b99x"></i></div><b class="tpx" id="p99x">0%</b></div>
       </div>
-      <div class="meta"><span>Levels import from your save. You can also type a level in yourself.</span></div>
     </div>
     <div class="panel tips"><h3>Why 94?</h3><ul><li>Levels 85–93 cost about 10k XP each. From 93 to 94 it jumps to 52k, and the last level alone is 181k.</li><li>Level 94 is 395,129 XP, only 40% of the way to 99 (1,000,000 XP).</li></ul></div>
     <div id="skillMain" class="panel skills"></div>
