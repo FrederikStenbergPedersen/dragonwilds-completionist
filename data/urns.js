@@ -1,0 +1,10 @@
+// Sanguine Urns by region, and each urn's save-file id (BP_HealthShrine UniqueShrineIdentifier). Edit by hand.
+const URNS = [
+  { region: "Brynmoor", areas: [["Bramblemead Valley", 3], ["Whispering Swamp", 3]] },
+  { region: "Ghornfell", areas: [["Fractured Plains", 1], ["Stormtouched Highlands", 1], ["Bloodblight Swamp", 1]] },
+  { region: "Fellhollow", areas: [["Emberwood", 1], ["Hope's Fall", 1], ["Silverthorn Keep", 1]] },
+  { region: "Dowdun Reach", areas: [["The Grand Hall", 1], ["The Garrison", 1], ["The Menagerie", 1]] },
+  { region: "Umbral Sands", areas: [["Alcarrid Oasis", 1], ["The Burning Spire", 1], ["Manafem Plains", 1]] },
+  { region: "Scorned Wilderness", areas: [["Fragments of Ghornfell", 2], ["Cataclysm Keep", 1]] },
+];
+const URN_MAP = {"u-bramblemead-valley-1": "824A3798412A1067890E86A2AEB609FF", "u-bramblemead-valley-2": "7DE4A84C4997053BD7171089B408AE13", "u-bramblemead-valley-3": "DB621D2A40316F7B97255696742C2AA1", "u-whispering-swamp-1": "ABB5944041C18CAAC148EF8EB84CE0B7", "u-whispering-swamp-2": "485514AA4D440FC3EBF331B6F5128ECE", "u-whispering-swamp-3": "13C2DCA14ADFC8C4A882FC9E92624D37", "u-fractured-plains-1": "DCF55CC14E4019584B5B03AB1D1ECC75", "u-stormtouched-highlands-1": "FFFC3EC542BE3EC01D043ABBD6DE12BD", "u-bloodblight-swamp-1": "13A95FDF40A30E7465E66C96CAA63778", "u-hope-s-fall-1": "186B64E241A3790BE54292A84653E981", "u-silverthorn-keep-1": "5D81E4DB41E190FF887E26B70012DCB6", "u-emberwood-1": "BA041CF14868F751575411B22EFE218A", "u-the-garrison-1": "7F08EB5E423CA1F87DDC9C909EA0B3A8", "u-the-menagerie-1": "F57EA8C8495F0671B12659A84D4D1239", "u-the-grand-hall-1": "FBA02FCB4F0443D2E48EBAA3ABDC5FE2", "u-alcarrid-oasis-1": "30D8FACB490D76F52996A58311D5B528", "u-the-burning-spire-1": "00BD25DE45F90484B177FDA9F0AC392E", "u-manafem-plains-1": "D934D328425EF220C8050A82599895A8", "u-fragments-of-ghornfell-1": "C5AFB2F3441D61ABE1DC7AACF61FC7E7", "u-fragments-of-ghornfell-2": "93BA5CA64D045F23573ACBAC89221B83", "u-cataclysm-keep-1": "189437844E5DD62D0458C9A415C5F5E2"};

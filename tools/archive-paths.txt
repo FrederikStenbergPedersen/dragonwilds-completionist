@@ -1,0 +1,5 @@
+/1.0.0.5/json/**/ST_*.json
+/1.0.0.5/json/**/JournalData/Entries/**
+/1.0.0.5/json/**/ITEM_*.json
+/1.0.0.5/json/RSDragonwilds/Plugins/GameFeatures/Agility/Content/Gameplay/CourseData/
+/website/tools/LocationData/LocationData.json

@@ -31,6 +31,22 @@ Kebbit burrows are the one exception: the save only counts how many you've opene
 
 Progress is stored in your browser. Backup codes let you move it to another browser.
 
+## Project layout
+
+Plain HTML, CSS and JavaScript with no build step: open `index.html` and it runs.
+
+```
+index.html        page layout
+style.css         styles
+app.js            behaviour: save import, ticking, maps, progress
+data/             one file per section (quests, recipes, lore, journal, crafting, ...)
+maps/             region map images
+tools/            scripts that rebuild data/ from the game files after a patch
+tests/            headless smoke test, run on every push
+```
+
+After a game patch, see [tools/README.md](tools/README.md) to rebuild the data.
+
 ## Data sources
 
 - [RuneScape: Dragonwilds Wiki](https://dragonwilds.runescape.wiki/) for quests, recipes, lore and the world map.

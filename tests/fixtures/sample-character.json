@@ -1,0 +1,88 @@
+{
+ "meta_data": {
+  "char_name": "Test Adventurer"
+ },
+ "GameProgress": {
+  "Progress": {
+   "RecipesUnlocked": [
+    "UkZw90N90ma_M6S0fOXDGg",
+    "E8R8fkp8ynIfL1qxiwwC0A"
+   ],
+   "ShrinesUnlocked": [
+    "824A3798412A1067890E86A2AEB609FF",
+    "7DE4A84C4997053BD7171089B408AE13"
+   ],
+   "AgilityCourseScores": [
+    {
+     "CourseID": "ozOAhU5oKLJNkta_kV8edw",
+     "HighestUnlockedMedal": 3,
+     "PersonalBestCompletionTime": 50.5
+    },
+    {
+     "CourseID": "ey1IZEnvZ2D32yC14mES5Q",
+     "HighestUnlockedMedal": 2,
+     "PersonalBestCompletionTime": 65.0
+    }
+   ],
+   "KebbitBurrowsActivated": [
+    "00000000000000000000000000000001",
+    "00000000000000000000000000000002",
+    "00000000000000000000000000000003",
+    "00000000000000000000000000000004"
+   ]
+  },
+  "QuestProgress": {
+   "Quests": [
+    {
+     "QuestId": "luaLQEzPXjx9_ICiz5zkNg",
+     "QuestState": 2
+    },
+    {
+     "QuestId": "xa8o60AbJZ23FymQeiH3bg",
+     "QuestState": 2
+    },
+    {
+     "QuestId": "SDcUrkVqRiTKKEyzEh5DWw",
+     "QuestState": 2
+    },
+    {
+     "QuestId": "TgVnb0NCLvmEVRed59IgsQ",
+     "QuestState": 1
+    }
+   ]
+  },
+  "Skills": {
+   "Skills": [
+    {
+     "Id": "4pefO9k1lUqfA6mvHNi1SA",
+     "Xp": 40594
+    }
+   ]
+  },
+  "Journal": {
+   "UnlockedEntries": [
+    "1lsMh0K0DhRNq8CY9e0Fiw",
+    "4HvN0EeK2ybjcVeYUaGTQg",
+    "oC7r_ER7SAe4bO6PWmPrGw",
+    "lpBBkEO9D3PdfzGfH9oU5g",
+    "69malEcvkWTO0UikBpcl4Q",
+    "s1dQUULGXV1Nk-GrxTSjig",
+    "ndin8k_pWHqxobilQCF46Q",
+    "-OXFOkbhYwZlfMS3_qTzmA",
+    "Uv2bgUOxKLoRy2WscXVLTw",
+    "bCZT5ka4X-nFmH6I34RhRw",
+    "04xGWEzq5K5JYhiTlEQ6_w",
+    "06Yb7Ec_y5YP6kCFYGHi7A",
+    "Fv57Qk_1u-Vzdoqb59de0Q",
+    "qLFfgEcfOuZF9OqBT6MY7g"
+   ]
+  },
+  "Character": {
+   "Mount": {
+    "MountsUnlockedList": [
+     "MountDataAsset:DA_Mount_Terrorbird_01_02"
+    ]
+   }
+  }
+ }
+}
