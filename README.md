@@ -1,26 +1,41 @@
 # Dragonwilds Completionist
 
-A completion tracker for **RuneScape: Dragonwilds**: every quest, every special recipe unlock and all 21 Sanguine Urns, in one page.
+A completion tracker for **RuneScape: Dragonwilds**. Everything a completionist chases, in one page, filled in from your own save file.
 
 **Live site:** https://frederikstenbergpedersen.github.io/dragonwilds-completionist/
 
-## Features
+## What it tracks
 
-- **Quests**: all primary, secondary and tertiary quests in the order the map opens up, with where to start each one and its rewards.
-- **Recipes**: every recipe unlocked by a vestige or found in a Dragonkin vault, listed by the name shown in your crafting journal, with the full crafting recipe and where to get each ingredient.
-- **Urns**: all 21 Sanguine Urns by area, with your max-health bonus.
-- **Save import**: load your character's `.json` save and your quests and recipes are ticked automatically. In Chrome or Edge you can link the file once and press **Sync** after each session.
-- **Backup codes**: move manual ticks (urns, mounts) between browsers.
+| Section | What's in it |
+|---|---|
+| Quests | Every primary, secondary and tertiary quest, plus the bigger challenges beyond them |
+| Skills | All 12 skills, with progress to level 94 and 99 by level and by XP |
+| Agility Courses | All 6 courses and 18 medals, with times, requirements and best runs |
+| Recipes | Every vestige and vault recipe, by its crafting-journal name |
+| Mounts | The 17 obtainable terrorbird and carpet variants |
+| Urns | All 21 Sanguine Urns, on maps of each region |
+| Burrows | All 19 kebbit burrows, on maps of each region |
+| Lore | All 114 lore scraps, by region and story |
+| Plants | All 72 plant and seed journal entries |
+| Factions | All 60 enemy journal entries |
 
-Progress is stored in your browser. Your save file is read locally and never uploaded.
+Three completion tiers sit on top: **Completionist** (everything except skills), **Completionist+** (every skill at 94) and **Completionist++** (every skill at 99).
 
-## Your save file (PC)
+## Save import
+
+Drop your character save on the page and everything it records is ticked for you. The file is read in your browser and never uploaded.
 
 `%LOCALAPPDATA%\RSDragonwilds\Saved\SaveCharacters\<CharacterName>.json`
 
+Kebbit burrows are the one exception: the save only counts how many you've opened, so you tick which ones on the maps.
+
+Progress is stored in your browser. Backup codes let you move it to another browser.
+
 ## Data sources
 
-- [RuneScape: Dragonwilds Wiki](https://dragonwilds.runescape.wiki/) for quests, recipes, vestiges and urns.
-- [RSDWArchive](https://github.com/RSDWArchive/RSDWArchive) game-data exports (patch 1.0.0.5) for the internal IDs used by the save import.
+- [RuneScape: Dragonwilds Wiki](https://dragonwilds.runescape.wiki/) for quests, recipes, lore and the world map.
+- [RSDWArchive](https://github.com/RSDWArchive/RSDWArchive) game-data exports (patch 1.0.0.5) for names, positions and the internal IDs used by the save import.
 
-Fan-made and not affiliated with Jagex.
+## License
+
+Code is [MIT](LICENSE). Game names, data and map imagery belong to Jagex; this is a non-commercial fan project and not affiliated with Jagex.

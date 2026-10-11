@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Completion tracker for RuneScape: Dragonwilds: every quest, special recipe and Sanguine Urn, with save-file import.">
+<meta name="description" content="Completion tracker for RuneScape: Dragonwilds: quests, skills, agility courses, recipes, mounts, urns, kebbit burrows, lore, plants and factions, filled in from your save file.">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
-<title>Ashenfall Quest Log</title>
+<title>Dragonwilds Completionist</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap">
@@ -163,14 +163,27 @@ ol.path, ul.list { list-style: none; margin: 0; padding: 0; }
 
 footer { margin-top: 22px; padding: 14px 18px; font-size: .84rem; color: var(--cream-dim); }
 footer a { color: var(--gold); }
+.foot-src { margin: 0 0 8px; }
+.foot-gh { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.foot-gh a { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
 .confirm-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
 :focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 
 /* tabs */
-.tabs { display: flex; justify-content: center; gap: 4px; margin-top: 20px; border-bottom: 1px solid var(--line); }
-.tab { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; letter-spacing: .08em; color: var(--cream-dim); background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 18px 10px; cursor: pointer; margin-bottom: -1px; }
-.tab:hover { color: var(--cream); }
-.tab[aria-selected="true"] { color: var(--gold-hi); border-bottom-color: var(--gold); text-shadow: 0 0 12px rgba(240,122,44,.35); }
+.tabs { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 0 16px; margin-top: 18px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(14,18,26,.55); }
+.tab { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "tl tc" "tp tp"; align-items: baseline; gap: 3px 8px; text-align: left; font: inherit; color: var(--cream-dim); background: none; border: 0; border-radius: 6px; padding: 7px 8px 8px; margin: 0 -8px; cursor: pointer; min-width: 0; position: relative; }
+.tab:hover { color: var(--cream); background: rgba(226,178,92,.06); }
+.tab .tl { grid-area: tl; font-weight: 600; font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tab .tc { grid-area: tc; font-size: .78rem; font-weight: 600; color: var(--cream-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tab .tp { grid-area: tp; display: block; height: 3px; border-radius: 2px; background: rgba(222,179,98,.12); overflow: hidden; }
+.tab .tp i { display: block; height: 100%; width: 0; background: var(--gold); border-radius: 2px; }
+.tab.full .tc { color: var(--done); }
+.tab.full .tp i { background: var(--done); }
+.tab[aria-selected="true"] { color: var(--gold-hi); background: rgba(226,178,92,.12); }
+.tab[aria-selected="true"] .tl { font-weight: 700; }
+.tab[aria-selected="true"]::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--gold); }
+.tab[aria-selected="true"] { padding-left: 12px; }
+@media (max-width: 380px) { .tabs { gap: 0 12px; padding: 6px 10px; } .tab .tl { font-size: .86rem; } .tab .tc { font-size: .74rem; } }
 
 /* boss rows */
 .pl { font-family: var(--font-display); font-weight: 700; font-size: .78rem; color: var(--gold-hi); border: 1px solid var(--line-strong); border-radius: 3px; padding: 0 6px; letter-spacing: .04em; }
@@ -284,6 +297,63 @@ details.craft[open] > summary::before { content: "▾ "; }
 .umark.on .d { background: var(--c); box-shadow: 0 0 12px color-mix(in srgb, var(--c) 55%, transparent); }
 .umark.on .d svg { opacity: 1; }
 .hide-done .urn-area.all-done { display: none; }
+.lser { font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--cream-dim); margin: 14px 0 2px; display: flex; justify-content: space-between; gap: 10px; }
+.lser:first-of-type { margin-top: 4px; }
+.lser .lc { letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.lgrp.all-done .lser { opacity: .6; }
+.hide-done .lgrp.all-done, .lgrp.nomatch { display: none; }
+.q.lore { padding: 7px 0; }
+.course { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 13px 0; border-bottom: 1px solid rgba(222,179,98,.1); }
+.course:last-child { border-bottom: 0; }
+.course .cinfo { flex: 1 1 15rem; min-width: 0; }
+.course .cn { font-weight: 700; font-size: 1.05rem; }
+.course .cw { font-size: .86rem; color: var(--cream-dim); }
+.course .creq, .course .crw { font-size: .82rem; color: var(--cream-dim); margin-top: 3px; }
+.course .crw b { color: var(--gold-hi); font-weight: 600; }
+.course .cbest { font-size: .84rem; margin-top: 4px; color: var(--cream); font-variant-numeric: tabular-nums; }
+.course.gold .cn { color: var(--cream-dim); }
+.hide-done .course.gold { display: none; }
+.medals { display: flex; gap: 6px; flex: none; }
+.medal { --c: #b8793f; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: 0; padding: 2px; cursor: pointer; color: var(--cream-dim); font: inherit; font-size: .72rem; font-variant-numeric: tabular-nums; }
+.medal.silver { --c: #c9cfd6; } .medal.goldm { --c: #f1c14e; }
+.medal .coin { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--c); display: grid; place-items: center; font-weight: 800; font-size: .8rem; color: var(--c); background: rgba(0,0,0,.25); }
+.medal.on .coin { background: var(--c); color: #1a1408; box-shadow: 0 0 12px color-mix(in srgb, var(--c) 55%, transparent); }
+.medal:disabled { cursor: default; }
+.bmap { display: block; width: 100%; max-width: 560px; height: auto; margin: 6px auto 4px; border: 1px solid var(--line); border-radius: 8px; background: radial-gradient(ellipse at 50% 40%, rgba(226,178,92,.06), rgba(0,0,0,.25)); }
+.bmap .shade { fill: transparent; pointer-events: none; }
+.bmap.has-map .shade { fill: rgba(8,10,16,.28); }
+.bmap .tile { pointer-events: none; }
+.mapcredit { text-align: center; font-size: .72rem; color: var(--cream-dim); margin: 0 0 4px; }
+.mapcredit a { color: var(--gold); }
+.bmap .lm circle { fill: #6b7380; } .bmap .lm.u circle { fill: #b9483d; } .bmap .lm.a circle { fill: #c9a24a; }
+.bmap .lm text { fill: var(--cream-dim); font-size: 10px; paint-order: stroke; stroke: rgba(10,12,18,.85); stroke-width: 3px; }
+.bmap .mpt[role=button] { cursor: pointer; }
+.bmap .mpt rect { fill: rgba(0,0,0,.6); stroke: var(--mc, var(--gold)); stroke-width: 2; }
+.bmap .mpt > text { fill: var(--gold-hi); font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.bmap .mpt .ml { fill: var(--cream); font-size: 10.5px; font-weight: 600; dominant-baseline: auto; paint-order: stroke; stroke: rgba(10,12,18,.9); stroke-width: 3px; }
+.bmap .mpt.bur { --mc: var(--gold); } .bmap .mpt.urn { --mc: #e0574a; } .bmap .mpt.crs { --mc: #f1c14e; }
+.bmap .mpt.on rect { fill: var(--mc); } .bmap .mpt.on > text:not(.ml) { fill: #10140c; }
+.bmap .mpt.bur.on { --mc: var(--done); }
+.bmap .scale line { stroke: var(--cream-dim); stroke-width: 2; } .bmap .scale text { fill: var(--cream-dim); font-size: 10px; }
+.q.burrow { padding: 8px 0; }
+.blegend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; justify-content: center; font-size: .76rem; color: var(--cream-dim); margin: 0 0 6px; }
+.blegend .lg { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-left: 8px; }
+.blegend .lg.u { background: #b9483d; } .blegend .lg.a { background: #c9a24a; }
+.blegend .lg.b { border-radius: 2px; transform: rotate(45deg); border: 2px solid var(--gold); width: 8px; height: 8px; }
+.q.burrow .mark { --c: var(--done); }
+.q.burrow .start { margin-top: 0; font-size: .84rem; }
+.burrow-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-top: 6px; }
+.stepper { display: flex; align-items: center; gap: 8px; }
+.stepper input { width: 3.6em; font: inherit; font-size: 1.1rem; font-weight: 700; text-align: center; color: var(--cream); background: rgba(0,0,0,.25); border: 1px solid var(--line); border-radius: 6px; padding: 5px 4px; }
+.stepper span { color: var(--cream-dim); }
+.stepper .chip { min-width: 2.2em; justify-content: center; font-size: 1.1rem; }
+.bnote { flex: 1 1 16rem; margin: 0; font-size: .86rem; color: var(--cream-dim); }
+.bregions { list-style: none; margin: 10px 0 4px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.bregions li { font-size: .84rem; color: var(--cream-dim); border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; }
+.bregions b { color: var(--cream); font-weight: 600; }
+.q.lore .name { font-size: 1rem; }
+.q.lore .start { margin-top: 0; font-size: .84rem; }
+.q.lore .mark { --c: var(--gold); }
 
 .importer { margin-top: 14px; padding: 0; }
 .importer > summary { cursor: pointer; list-style: none; padding: 12px 18px; font-weight: 700; color: var(--gold-hi); display: flex; align-items: center; gap: 10px; }
@@ -319,6 +389,57 @@ body.dragging::after { content: "Drop your character file to import"; position: 
 .bklbl { display: block; margin-top: 12px; font-size: .74rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 #bkMsg { font-size: .85rem; }
 
+.tiers { margin-top: 20px; padding: 14px 18px; display: grid; gap: 10px; }
+.tier { display: grid; grid-template-columns: minmax(0, 11.5rem) minmax(0, 1fr) 3.4rem; grid-template-areas: "n bar p" "d bar p"; gap: 0 14px; align-items: center; }
+.tier .tname { grid-area: n; font-family: var(--font-display); font-weight: 700; color: var(--gold-hi); font-size: 1.02rem; letter-spacing: .02em; }
+.tier .tname span { color: var(--flame); margin-left: 1px; }
+.tier .tdesc { grid-area: d; font-size: .78rem; color: var(--cream-dim); }
+.tier .tbar { grid-area: bar; height: 10px; border-radius: 5px; background: rgba(255,255,255,.07); border: 1px solid var(--line); overflow: hidden; }
+.tier .tbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--flame), var(--gold-hi)); transition: width .5s ease; }
+.tier .tpct { grid-area: p; text-align: right; font-family: var(--font-display); font-weight: 700; color: var(--cream); font-variant-numeric: tabular-nums; }
+.tier.full .tbar i { background: linear-gradient(90deg, #6fb35e, var(--done)); }
+.tier.dual { grid-template-columns: minmax(0, 11.5rem) minmax(0, 1fr); grid-template-areas: "n bars" "d bars"; }
+.tbars { grid-area: bars; display: grid; gap: 5px; }
+.trow { display: grid; grid-template-columns: 3.4rem 2.6rem minmax(0, 1fr) 3.4rem; gap: 10px; align-items: center; }
+.trow > em { font-style: normal; font-size: .7rem; color: var(--cream-dim); }
+.trow > span { font-family: var(--font-display); font-weight: 700; font-size: .85rem; letter-spacing: .02em; text-transform: none; color: var(--gold-hi); }
+.skillsum { display: block; }
+.skillsum .tbar { height: 9px; border-radius: 5px; background: rgba(255,255,255,.07); border: 1px solid var(--line); overflow: hidden; }
+.skillsum .tbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--flame), var(--gold-hi)); transition: width .5s ease; }
+.skillsum .tbar i.xp { background: linear-gradient(90deg, #8a5a2b, var(--flame)); }
+.skillsum .meta { margin-top: 12px; }
+.skillsum .sumhead { display: flex; gap: 32px; }
+.skillsum .tbars { margin-top: 12px; }
+.skillsum .tbars .trow:nth-child(3) { margin-top: 6px; }
+.trow > span { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--cream-dim); }
+.trow .tbar { grid-area: auto; height: 8px; }
+.trow b { grid-area: auto; }
+.trow .tbar i.xp { background: linear-gradient(90deg, #8a5a2b, var(--flame)); }
+.trow b { text-align: right; font-family: var(--font-display); font-weight: 700; font-variant-numeric: tabular-nums; }
+.trow b.tpx { color: var(--cream-dim); font-size: .9rem; }
+.tier.dual.full .trow .tbar i { background: linear-gradient(90deg, #6fb35e, var(--done)); }
+.tier.full .tpct { color: var(--done); }
+@media (max-width: 520px) { .tier { grid-template-columns: minmax(0, 1fr) 3.2rem; grid-template-areas: "n p" "d p" "bar bar"; } .tier .tbar { margin-top: 6px; } .tier.dual { grid-template-columns: minmax(0, 1fr); grid-template-areas: "n" "d" "bars"; } .tier.dual .tbars { margin-top: 6px; } .trow .tbar { margin-top: 0; } }
+.skills { margin-top: 16px; padding: 6px 18px; }
+.skill { display: grid; grid-template-columns: minmax(0, 8.5rem) 4.2rem minmax(0, 1fr); gap: 4px 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(222,179,98,.1); }
+.skill:last-child { border-bottom: 0; }
+.skill .sn { font-weight: 700; }
+.skill .sx { grid-column: 1; font-size: .76rem; color: var(--cream-dim); font-variant-numeric: tabular-nums; }
+.skill input { grid-row: span 2; width: 4.2rem; font: inherit; font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; text-align: center; color: var(--gold-hi); background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 6px; padding: 4px 2px; }
+.skill input:focus { outline: 2px solid var(--gold); border-color: transparent; }
+.skill .sbars { grid-row: span 2; display: grid; gap: 9px; padding-top: 8px; }
+.skill .sb { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: 8px; align-items: center; }
+.skill .sb em { font-style: normal; font-size: .68rem; color: var(--cream-dim); }
+.skill .strack { position: relative; height: 9px; border-radius: 5px; background: rgba(255,255,255,.07); border: 1px solid var(--line); }
+.skill .strack.xpt i { background: linear-gradient(90deg, #8a5a2b, var(--flame)); }
+.skill .strack i { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 6px; background: linear-gradient(90deg, var(--flame), var(--gold-hi)); }
+.skill .strack b { position: absolute; top: -5px; bottom: -5px; width: 2px; background: var(--cream-dim); }
+.skill .strack b::after { content: attr(data-l); position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font-size: .62rem; font-weight: 700; color: var(--cream-dim); }
+.skill.at94 .sn::after { content: " · 94"; color: var(--gold); font-size: .78rem; }
+.skill.at99 .sn::after { content: " · 99"; color: var(--done); font-size: .78rem; }
+.skill.at99 .strack i { background: linear-gradient(90deg, #6fb35e, var(--done)); }
+@media (max-width: 520px) { .skill { grid-template-columns: minmax(0, 1fr) 4.2rem; } .skill .sbars { grid-column: 1 / -1; grid-row: auto; margin-top: 6px; } .skill input { grid-row: 1 / span 2; grid-column: 2; } .trow { grid-template-columns: 3rem 2.4rem minmax(0, 1fr) 3rem; gap: 8px; } }
+
 /* quest complete banner */
 .banner {
   position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 20;
@@ -339,22 +460,35 @@ body.dragging::after { content: "Drop your character file to import"; position: 
 
 <div class="wrap">
   <header class="masthead">
-    <div class="eyebrow">RuneScape · Dragonwilds 1.0</div>
-    <h1>Ashenfall Quest Log</h1>
-    <p class="sub">Every quest, special recipe and Sanguine Urn in Ashenfall. Tap a marker to track your progress.</p>
+    <div class="eyebrow">RuneScape · Dragonwilds</div>
+    <h1>Dragonwilds Completionist</h1>
+    <p class="sub">Every quest, special recipe, Sanguine Urn, lore scrap, agility course and skill in Ashenfall. Tap a marker to track your progress.</p>
     <div class="ornament" aria-hidden="true"><i></i></div>
   </header>
 
+  <section class="panel tiers" aria-label="Overall completion">
+    <div class="tier" data-tier="0"><div class="tname">Completionist</div><div class="tdesc">Everything except skills</div><div class="tbar"><i></i></div><div class="tpct">0%</div></div>
+    <div class="tier" data-tier="1"><div class="tname">Completionist<span>+</span></div><div class="tdesc">Plus every skill at 94</div><div class="tbar"><i></i></div><div class="tpct">0%</div></div>
+    <div class="tier" data-tier="2"><div class="tname">Completionist<span>++</span></div><div class="tdesc">Plus every skill at 99</div><div class="tbar"><i></i></div><div class="tpct">0%</div></div>
+  </section>
+
   <nav class="tabs" role="tablist" aria-label="Sections">
-    <button class="tab" role="tab" type="button" id="tabQuests" aria-selected="true" aria-controls="view-quests">Quests</button>
-    <button class="tab" role="tab" type="button" id="tabBosses" aria-selected="false" aria-controls="view-bosses">Recipes</button>
-    <button class="tab" role="tab" type="button" id="tabUrns" aria-selected="false" aria-controls="view-urns">Urns</button>
+    <button class="tab" role="tab" type="button" id="tabQuests" aria-selected="true" aria-controls="view-quests"><span class="tl">Quests</span><span class="tc" id="tc-tabQuests">&nbsp;</span><span class="tp"><i id="tpb-tabQuests"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabSkills" aria-selected="false" aria-controls="view-skills"><span class="tl">Skills</span><span class="tc" id="tc-tabSkills">&nbsp;</span><span class="tp"><i id="tpb-tabSkills"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabAgility" aria-selected="false" aria-controls="view-agility"><span class="tl">Agility Courses</span><span class="tc" id="tc-tabAgility">&nbsp;</span><span class="tp"><i id="tpb-tabAgility"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabBosses" aria-selected="false" aria-controls="view-bosses"><span class="tl">Recipes</span><span class="tc" id="tc-tabBosses">&nbsp;</span><span class="tp"><i id="tpb-tabBosses"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabMounts" aria-selected="false" aria-controls="view-mounts"><span class="tl">Mounts</span><span class="tc" id="tc-tabMounts">&nbsp;</span><span class="tp"><i id="tpb-tabMounts"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabUrns" aria-selected="false" aria-controls="view-urns"><span class="tl">Urns</span><span class="tc" id="tc-tabUrns">&nbsp;</span><span class="tp"><i id="tpb-tabUrns"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabBurrows" aria-selected="false" aria-controls="view-burrows"><span class="tl">Burrows</span><span class="tc" id="tc-tabBurrows">&nbsp;</span><span class="tp"><i id="tpb-tabBurrows"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabLore" aria-selected="false" aria-controls="view-lore"><span class="tl">Lore</span><span class="tc" id="tc-tabLore">&nbsp;</span><span class="tp"><i id="tpb-tabLore"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabPlants" aria-selected="false" aria-controls="view-plants"><span class="tl">Plants</span><span class="tc" id="tc-tabPlants">&nbsp;</span><span class="tp"><i id="tpb-tabPlants"></i></span></button>
+    <button class="tab" role="tab" type="button" id="tabFactions" aria-selected="false" aria-controls="view-factions"><span class="tl">Factions</span><span class="tc" id="tc-tabFactions">&nbsp;</span><span class="tp"><i id="tpb-tabFactions"></i></span></button>
   </nav>
 
   <details class="panel importer" id="importer">
     <summary>Import progress from your save file <span>PC</span></summary>
     <div class="imp-body">
-      <p>Tick your quests and recipes automatically from your character save. The file is read in your browser and never uploaded.</p>
+      <p>Fill in your quests, recipes, urns, lore scraps, agility medals and skill levels automatically from your character save. The file is read in your browser and never uploaded.</p>
       <ol>
         <li>Close the game, then press <kbd>Win</kbd> + <kbd>R</kbd> and paste:
           <div class="pathrow"><code id="savePath">%LOCALAPPDATA%\RSDragonwilds\Saved\SaveCharacters</code><button type="button" class="chip" id="copyPath">Copy</button></div></li>
@@ -369,7 +503,7 @@ body.dragging::after { content: "Drop your character file to import"; position: 
       <p class="imp-note" id="linkNote" hidden></p>
       <p class="imp-note">Quickest way: keep the SaveCharacters folder open in Explorer and drag your character file anywhere onto this page.</p>
       <div id="impResult" aria-live="polite"></div>
-      <p class="imp-note">Covers quests and recipes. Urns and mounts aren't readable from the save, so tick those yourself. Imports only add ticks; they never remove any.</p>
+      <p class="imp-note">Covers quests, recipes, Sanguine Urns and skill levels. Mounts aren't readable from the save, so tick those yourself. Imports only add ticks; they never remove any.</p>
     </div>
   </details>
 
@@ -424,7 +558,6 @@ body.dragging::after { content: "Drop your character file to import"; position: 
         <li>Urns show on your in-game map (a red potion in a spiked frame) once you've discovered that area.</li>
         <li>Your compass picks one up from about 50–60 metres away.</li>
         <li>Some are in caves or underground. None are inside the Dragonkin vaults.</li>
-        <li>The Whispering Swamp has one inside the cave by the Goblin Diplomacy area, not on the cliff above it.</li>
       </ul>
     </div>
     <nav class="filters panel" aria-label="Urn filters">
@@ -434,14 +567,135 @@ body.dragging::after { content: "Drop your character file to import"; position: 
     <div id="urnMain"></div>
   </div>
 
+  <div id="view-lore" role="tabpanel" aria-labelledby="tabLore" hidden>
+    <div class="panel summary">
+      <div class="big"><span id="lDone">0</span><small>/<span id="lTotal">0</span></small></div>
+      <div class="lbl">Lore scraps read</div>
+      <div class="bar"><i id="lBar"></i></div>
+      <div class="meta"><span>Grouped by region, then by the story each scrap belongs to. Where it’s known, the area under each title tells you where it lies; Wiki has the exact spot.</span></div>
+    </div>
+    <div class="panel tips">
+      <h3>Finding them</h3>
+      <ul>
+        <li>Lore scraps are notes, diaries and books lying on tables, shelves and the ground. Pick one up to add it to your journal.</li>
+        <li>Lore is saved on your character, not the world, so scraps you read in a friend’s world count for you too.</li>
+        <li>Statue sagas and songs from Umbral Sands quests aren't lore scraps, so they aren't listed here.</li>
+      </ul>
+    </div>
+    <nav class="filters panel" aria-label="Lore filters">
+      <button type="button" class="chip f-all" aria-pressed="true">All</button>
+      <button type="button" class="chip f-todo" aria-pressed="false">Hide read</button>
+      <span class="sep" aria-hidden="true"></span>
+      <span id="lJump" style="display:contents"></span>
+    </nav>
+    <div class="panel searchbar"><label for="lSearch">Find a scrap</label><input type="search" id="lSearch" placeholder="Type a title or area, e.g. Lacrussa" autocomplete="off"><p class="nores" id="lNo" hidden>No lore scrap matches that.</p></div>
+    <div id="loreMain"></div>
+  </div>
+
+  <div id="view-mounts" role="tabpanel" aria-labelledby="tabMounts" hidden>
+    <div class="panel summary">
+      <div class="big"><span id="moDone">0</span><small>/<span id="moTotal">0</span></small></div>
+      <div class="lbl">Mounts unlocked</div>
+      <div class="bar"><i id="moBar"></i></div>
+      <div class="meta"><span>Imports from your save. Tap Wiki on any mount to see where it drops or who sells it.</span></div>
+    </div>
+    <div class="panel tips"><h3>Good to know</h3><ul><li>Terrorbird variants need The Wild Hunt done first, and magic carpets need part of Icthlarin’s Little Helper.</li><li>The plain Terrorbird and Magic Carpet come from those quests, so they’re tracked on the Quests tab.</li></ul></div>
+    <nav class="filters panel" aria-label="mounts filters">
+      <button type="button" class="chip f-all" aria-pressed="true">All</button>
+      <button type="button" class="chip f-todo" aria-pressed="false">Hide unlocked</button>
+      <span class="sep" aria-hidden="true"></span>
+      <span id="moJump" style="display:contents"></span>
+    </nav>
+    <div class="panel searchbar"><label for="moSearch">Find a mount</label><input type="search" id="moSearch" placeholder="Type a name, e.g. Crybaby" autocomplete="off"><p class="nores" id="moNo" hidden>No mount matches that.</p></div>
+    <div id="mountsMain"></div>
+  </div>
+
+  <div id="view-plants" role="tabpanel" aria-labelledby="tabPlants" hidden>
+    <div class="panel summary">
+      <div class="big"><span id="plDone">0</span><small>/<span id="plTotal">0</span></small></div>
+      <div class="lbl">Plants and seeds found</div>
+      <div class="bar"><i id="plBar"></i></div>
+      <div class="meta"><span>Each one is added to your journal the first time you pick it up. Imports from your save.</span></div>
+    </div>
+    
+    <nav class="filters panel" aria-label="plants filters">
+      <button type="button" class="chip f-all" aria-pressed="true">All</button>
+      <button type="button" class="chip f-todo" aria-pressed="false">Hide found</button>
+      <span class="sep" aria-hidden="true"></span>
+      <span id="plJump" style="display:contents"></span>
+    </nav>
+    <div class="panel searchbar"><label for="plSearch">Find a plant</label><input type="search" id="plSearch" placeholder="Type a name, e.g. Snapdragon" autocomplete="off"><p class="nores" id="plNo" hidden>No plant matches that.</p></div>
+    <div id="plantsMain"></div>
+  </div>
+
+  <div id="view-factions" role="tabpanel" aria-labelledby="tabFactions" hidden>
+    <div class="panel summary">
+      <div class="big"><span id="faDone">0</span><small>/<span id="faTotal">0</span></small></div>
+      <div class="lbl">Enemies in your journal</div>
+      <div class="bar"><i id="faBar"></i></div>
+      <div class="meta"><span>Each enemy is added to your journal the first time you defeat it. Imports from your save.</span></div>
+    </div>
+    
+    <nav class="filters panel" aria-label="factions filters">
+      <button type="button" class="chip f-all" aria-pressed="true">All</button>
+      <button type="button" class="chip f-todo" aria-pressed="false">Hide defeated</button>
+      <span class="sep" aria-hidden="true"></span>
+      <span id="faJump" style="display:contents"></span>
+    </nav>
+    <div class="panel searchbar"><label for="faSearch">Find an enemy</label><input type="search" id="faSearch" placeholder="Type a name, e.g. Kalphite" autocomplete="off"><p class="nores" id="faNo" hidden>No enemy matches that.</p></div>
+    <div id="factionsMain"></div>
+  </div>
+
+  <div id="view-agility" role="tabpanel" aria-labelledby="tabAgility" hidden>
+    <div class="panel summary">
+      <div class="big"><span id="aGold">0</span><small>/<span id="aGoldT">18</span></small></div>
+      <div class="lbl">Medals earned</div>
+      <div class="bar"><i id="aGoldBar"></i></div>
+      <div class="meta"><span>Medals and best times import from your save. You can also tap a medal to set it yourself.</span></div>
+    </div>
+    <section class="panel" id="agCourses"><div class="sec-head"><h2>Agility courses</h2><span class="count"></span></div><div class="rule"></div>
+      <p class="unlock">Start a course at its banner. Your first gold on a course unlocks its golden cape recipe.</p>
+      <div id="courseMap"></div>
+      <ul class="list" id="courseList"></ul>
+    </section>
+  </div>
+
+  <div id="view-burrows" role="tabpanel" aria-labelledby="tabBurrows" hidden>
+    <div class="panel summary">
+      <div class="big"><span id="aBur">0</span><small>/19</small></div>
+      <div class="lbl">Kebbit burrows opened</div>
+      <div class="bar"><i id="aBurBar"></i></div>
+      <div class="meta"><span id="burSave"></span></div>
+    </div>
+    <nav class="filters panel" aria-label="Burrow filters">
+      <button type="button" class="chip f-all" aria-pressed="true">All</button>
+      <button type="button" class="chip f-todo" aria-pressed="false">Hide ticked</button>
+    </nav>
+    <div id="burMain"></div>
+  </div>
+
+  <div id="view-skills" role="tabpanel" aria-labelledby="tabSkills" hidden>
+    <div class="panel summary skillsum">
+      <div class="sumhead"><div><div class="big"><span id="sAt94">0</span><small>/12</small></div><div class="lbl">At 94+</div></div><div><div class="big"><span id="sAt99">0</span><small>/12</small></div><div class="lbl">At 99</div></div></div>
+      <div class="tbars">
+        <div class="trow"><span>To 94</span><em>Level</em><div class="tbar"><i id="b94l"></i></div><b id="p94l">0%</b></div>
+        <div class="trow"><span></span><em>XP</em><div class="tbar"><i class="xp" id="b94x"></i></div><b class="tpx" id="p94x">0%</b></div>
+        <div class="trow"><span>To 99</span><em>Level</em><div class="tbar"><i id="b99l"></i></div><b id="p99l">0%</b></div>
+        <div class="trow"><span></span><em>XP</em><div class="tbar"><i class="xp" id="b99x"></i></div><b class="tpx" id="p99x">0%</b></div>
+      </div>
+      <div class="meta"><span>Levels import from your save. You can also type a level in yourself.</span></div>
+    </div>
+    <div class="panel tips"><h3>Why 94?</h3><ul><li>Levels 85–93 cost about 10k XP each. From 93 to 94 it jumps to 52k, and the last level alone is 181k.</li><li>Level 94 is 395,129 XP, only 40% of the way to 99 (1,000,000 XP).</li></ul></div>
+    <div id="skillMain" class="panel skills"></div>
+  </div>
+
   <footer class="panel">
-    Quest, recipe and urn data from the RuneScape: Dragonwilds Wiki, checked 11 October 2026 against patch 1.0.0.6.
-    <a href="https://dragonwilds.runescape.wiki/w/Quests" target="_blank" rel="noopener">Quests</a> ·
-    <a href="https://dragonwilds.runescape.wiki/w/Vestige" target="_blank" rel="noopener">Vestiges</a> on the wiki.
+    <p class="foot-src">Data from the <a href="https://dragonwilds.runescape.wiki/" target="_blank" rel="noopener">RuneScape: Dragonwilds Wiki</a> and the game files (via <a href="https://github.com/RSDWArchive/RSDWArchive" target="_blank" rel="noopener">RSDWArchive</a>), checked 11 October 2026 against patch 1.0.0.6. Fan-made, not affiliated with Jagex.</p>
+    <p class="foot-gh"><a href="https://github.com/FrederikStenbergPedersen/dragonwilds-completionist" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Open source on GitHub</a> · MIT licence · Spotted something wrong? Open an issue.</p>
     <div class="confirm-row" id="resetBox"></div>
     <details class="backup" id="backup">
       <summary>Back up or move your progress</summary>
-      <p>Copy this code to keep a backup or move your ticks to another browser. Quests and recipes can always be re-imported from your save, but urns and mounts only live here.</p>
+      <p>Copy this code to keep a backup or move your ticks to another browser. Quests, recipes, urns and lore can always be re-imported from your save, but mounts only live here.</p>
       <div class="confirm-row"><button type="button" class="chip" id="bkMake">Create backup code</button><button type="button" class="chip" id="bkCopy" hidden>Copy</button></div>
       <textarea id="bkOut" rows="3" readonly hidden aria-label="Backup code"></textarea>
       <label for="bkIn" class="bklbl">Restore from a code</label>
@@ -3461,6 +3715,7 @@ const RECIPES = [
 "intro": "Terrorbird mounts need The Wild Hunt completed first."
 }
 ];
+RECIPES.splice(RECIPES.findIndex(g => g.key === "mounts"), 1);
 const ALL_REC = RECIPES.flatMap(g => g.items);
 const REC_IDS = ALL_REC.map(r => r.id);
 
@@ -3478,7 +3733,8 @@ const names = {};
 const LS_KEY = "dw-quest-progress";
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
-const stateOf = (id) => { const p = progress[id]; if (!p) return "none"; return p.state || (p.done ? "done" : "none"); };
+const stateOf = (id) => { const p = progress[id]; if (!p) return "none"; if (typeof p.medal === "number") return p.medal >= 3 ? "done" : p.medal > 0 ? "started" : "none"; if (typeof p.count === "number") return p.count >= BURROWS ? "done" : p.count > 0 ? "started" : "none"; return p.state || (p.done ? "done" : "none"); };
+const valBody = (v) => { if (!v) return null; if (typeof v.medal === "number") return v.best ? { medal: v.medal, best: v.best } : { medal: v.medal }; if (typeof v.count === "number") return { count: v.count }; if (typeof v.xp === "number") return { xp: v.xp }; return null; };
 try { progress = JSON.parse(lsGet(LS_KEY) || "{}") || {}; } catch { progress = {}; }
 
 const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -3565,14 +3821,201 @@ const URNS = [
 const uslug = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const URN_LIST = URNS.flatMap(g => g.areas.flatMap(([a, n]) => Array.from({ length: n }, (_, i) => ({ id: `u-${uslug(a)}-${i + 1}`, n: n > 1 ? `${a} urn ${i + 1}` : `${a} urn`, area: a, region: g.region }))));
 const URN_IDS = URN_LIST.map(u => u.id);
-const BY_ID = Object.fromEntries([...ALL_Q, ...EXTRA, ...ALL_REC, ...URN_LIST].map(q => [q.id, q]));
+const LORE = [{"r":"Brynmoor & Ghornfell","g":[{"s":"Dragon Attack","i":[["l-lorescrap-a2","Bloodstained Journal","Temple Woods","1lsMh0K0DhRNq8CY9e0Fiw"],["l-lorescrap-a1","Dust-covered Diary","Temple Woods","4HvN0EeK2ybjcVeYUaGTQg","Dust-Covered Diary"],["l-lorescrap-a3","Priest's Journal","Temple Woods","oC7r_ER7SAe4bO6PWmPrGw"],["l-lorescrap-a4","Scrawled Diary Page","Bramblemead Valley","kFfVhU8-4w0SC2WtbOo7hQ"],["l-lorescrap-a5","Tear-stained journal","Bramblemead Valley","BS1NukY1CerNiQ2xdQ34Zw","Tear-Stained Journal"]]},{"s":"Goblin","i":[["l-lorescrap-b1","Grimey Parchment","Bramblemead Valley","ncA1i0q4Oq8CyruGCU06XQ","Grimy Parchment"],["l-lorescrap-b2","Grubby Note","Bramblemead Valley","3KoCUUwzzmOGdOO_5z9mWg"],["l-lorescrap-b5","Muddy Scrawl","Bramblemead Valley","WKTL4UFW8Jyy4smBwMnLWA"],["l-lorescrap-b4","Pungent Scribble","Bramblemead Valley","RZNtvUrgfQXof7GCpeqkyw"],["l-lorescrap-b3","Weathered Diary","Bramblemead Valley","GUGQhkkmfuEmvCiGf30vug","Weathered Diary (Bramblemead Valley)"]]},{"s":"Guthix","i":[["l-lorescrap-c4","Ancient Journal Page","Bramblemead Valley","AXQBd0BXEuu9SHmz2f_6JA"],["l-lorescrap-c2","Druid's Memoirs","Bramblemead Valley","HzA3DE0d66FQkNamVWdF5A"],["l-lorescrap-c5","Forgotten Diary","Bramblemead Valley","SpWEokKCqk06QjGw0YGayA"],["l-lorescrap-c1","Preserved Diary","Bramblemead Valley","ir7QSEbZkqbBnGGiHjf2xA"],["l-lorescrap-c3","Soot-stained Diary","Bramblemead Valley","EUgzbETXBPa0OpeD8_6Ryg","Soot-Stained Diary"]]},{"s":"Garou","i":[["l-lorescrap-d5","Elder's Storybook Page","Fractured Plains","RswQwkbJMYRquU2Co2FugQ"],["l-lorescrap-d2","Garou Writings","Fractured Plains","5kJG-k224U5QJoehW6Hprw"],["l-lorescrap-d4","Leathery Parchment","Stormtouched Highlands","r_nqAk8JqHEoud6hwxqCQw"],["l-lorescrap-d3","Scorched Journal","Fractured Plains","6BEYTUwc1mo-wimF1pocLA"],["l-lorescrap-d1","Torn Journal Page","Whispering Swamp","fPWMkEEAKR8L9FejxozN3w"]]},{"s":"Dragonkin","i":[["l-lorescrap-e2","Dragonkin Diary Page","Stormtouched Highlands","TDIfkUgQdoS53H6h1bPTRw"],["l-lorescrap-e1","Dragonkin Journal Page","Fractured Plains","oUP5CkfWTvMen7iyax8r6Q"],["l-lorescrap-e4","Dragonkin Notebook Page","Fractured Plains","MyT1vU6pk6MrzEeoOabPzg"],["l-lorescrap-e3","Infused Journal","Fractured Plains","du_ei0P8IB72QrOq3Pa84Q"]]},{"s":"Abyssal","i":[["l-lorescrap-f1","Bloodstained Page","Bloodblight Swamp","3Ov7L0PWiqGLkK2JO8kZZw"],["l-lorescrap-f2","Leaf-scented Page","Fractured Plains","Hz5RbUF4lDObe2CzuUiquw","Leaf-Scented Page"]]},{"s":"Castle","i":[["l-lorescrap-castleextra2","Duke's Diary","Bramblemead Valley","_-gyUkbyClhREhGmsUn9iA"],["l-lorescrap-castleextra1","Servant's Secret Diary","Bramblemead Valley","AFeVw0_BRHsJn1a1HKCJ1w"]]},{"s":"Cathan","i":[["l-cathanjournal-castle","Cathan's Journal [Castle]","Bramblemead Valley","pJ9MG0xpiZUuC-O6REvtrg","Cathan's Journal (Bramblemead Valley)"],["l-cathanjournal-velgarslair","Cathan's Journal [Ghornfell]","Fractured Plains","D6gcQkbq6C2B9ceCRIsp-A","Cathan's Journal (Fractured Plains)"],["l-cathanjournal-vannaka","Cathan's note","Temple Woods","pAl4b08eN6VPzP2EukYItw","Cathan's Note"]]},{"s":"Quest","i":[["l-dogdays","Ritual Of Purification","Stormtouched Highlands","-zfUiUdA61xMlpKfkNoQIg"],["l-lorescrap-hltp","Vault Hunter's Journal","Bramblemead Valley","P0G2xU3Gbc8Vo9GBjXafgg"]]}]},{"r":"Fellhollow","g":[{"s":"Rising Dead","i":[["l-the-rising-dead-1","Mould-covered Journal","Bleakfields Valley","etDzvUlnTXvWmJSZMSWQMA"],["l-the-rising-dead-3","Soot-stained Journal","Silverthorn Keep","w4-5SEyBdAFX9Ua99EoOUg"],["l-the-rising-dead-4","Red-stained Diary","Silverthorn Keep","pWRMbU5v6i32TwCKdtj4NA"],["l-the-rising-dead-5","Priestly Journal","Emberwood","hcb2AEokP0kvI0CSxPyCyw"],["l-the-withering-5","Weathered Journal","Bleakfields Valley","1SJAu0KafPw9RbyivPZezQ"]]},{"s":"Zogre","i":[["l-zogres-1","Farmer Fred's Journal","Dragon's Run","i0Mk3UXAp8Ece_qNVBw5mw"],["l-zogres-2","Ulgo's Diary","Lake of Lost Souls","cgZIUEVmALlSYhePUyEheQ"],["l-zogres-3","Captain Rainer's Journal","Silverthorn Keep","70w3P0rEvRI4LAunQZuwKw"]]},{"s":"Withered","i":[["l-the-rising-dead-2","Withered Journal","Lake of Lost Souls","sNgvyEnUjiagYOew6Ws5AQ"],["l-the-withering-2","Lazilly-penned Diary","Emberwood","JYYa80O08UI0VUGhDtYNOA"],["l-the-withering-3","Dragon-embossed Journal","Witchwillow Range","NAFbtEgqE-fLcUqf8YF1dg"],["l-the-withering-4","Battered Diary","Hope's Fall","UnH8F0KsdFeWP0WAvFkURw"],["l-the-withering-1","Weathered Diary","Forgotten Temple","pHj1RkOMEVnStPGMqqdHdQ","Weathered Diary (Fellhollow)"],["l-the-withering-6","Withered Diary","Lake of Lost Souls","8nFb6kZEahBwnN-EINfUGQ"],["l-vault-puzzle-2","Rot-covered Journal","Vekchenven Kara","iiStFULBYzlnY-eq8n26Cw","Rot-Covered Journal"]]},{"s":"Dragonwolves","i":[["l-dragonwolves-1","Laboratory Note","Coalridge Pass","Dn1QnkOc-9vl4qyAO1WBPw"],["l-dragonwolves-2","Experiment Log","Emberwood","VVZorUrUYjk_2U2rqTI3nw"],["l-dragonwolves-3","The Tale of the Ghost Wolves","Dragon's Run","pLYEPUCD3qRLoBCpXCh0hg"]]},{"s":"Lacrussa's Writings","i":[["l-the-dragonkin-1","Lacrussa's Journal","Lake of Lost Souls","SOCywEpkCQW7JySanzgulQ"],["l-the-dragonkin-5","Lacrussa's Diary","","v-rYukqtQVMri_CxuMA4jA"],["l-the-dragonkin-2","Lacrussa's Notes","Emberwood","ZYM6UEK_5MTm4RWUPLq2TQ"],["l-the-dragonkin-3","Lacrussa's Ravings","Lake of Lost Souls","oFySdUZNm86hkVy9okXgEg"],["l-the-dragonkin-4","Lacrussa's Writings","Skekven Kara","VdsCfEvn4k3R2KqB6Yp4cg"],["l-vault-puzzle-1","Lacrussa's Memoir","Emberwood","6yFW2EhtBi01RYiLBKKZfw"]]},{"s":"Ravanna's Journals","i":[["l-necromancer-and-the-wolf-1","Ravanna's First Journal","Forgotten Temple","LTaOH0WFxbtz0pyExZ8HAw"],["l-necromancer-and-the-wolf-2","Ravanna's Second Journal","Emberwood","JeltXEGZhEw96SGmeesbEw"],["l-necromancer-and-the-wolf-3","Ravanna's Third Journal","Bleakfields Valley","RgttQEzclLMvIt2vaHZ70A"],["l-necromancer-and-the-wolf-4","Ravanna's Fourth Journal","Lake of Lost Souls","cbG1vUBh7K4RQ8y09GTLIg"],["l-necromancer-and-the-wolf-5","Ravanna's Fifth Journal","Hope's Fall","hAqYv05ROWRcvL65Ss6Vrg"],["l-necromancer-and-the-wolf-6","Ravanna's Sixth Journal","Emberwood","T14b4kToIb-xHfGrcFwbMA"],["l-necromancer-and-the-wolf-7","Ravanna's Seventh Journal","Hope's Fall","LaV4T0I-vcpcXA2wEtCVKg"]]},{"s":"Travellers","i":[["l-xmarksthespot-2","Eleanor Scathe's Diary","Bleakfields Valley","uw1dwEpYaW-Mpd-0cyjEgw"],["l-xmarksthespot-intro","Diary of Archibald Kleptor","Starts X Marks the Spot","NgCZhEpzQxuxkniiQSeqoQ"],["l-xmarksthespot-1","Nolan Scathe's Journal","Coalridge Pass","v8FW3UDIaY262ZO77J4kZw"],["l-xmarksthespot-3","Samuel Malcifer's Journal","Hope's Fall","EXL050juX4HXfe-WbnAtIA"],["l-xmarksthespot-4","Winston Henning's Diary","Dragon's Run","qqOkN0FG9Uq02QCWz0f4pQ"]]}]},{"r":"Dowdun Reach","g":[{"s":"Travellers","i":[["l-drlorescrap-l1","Badly Scrawled Note","The Approach","WSOwtkSqySmioFWeoJ4QOA"],["l-drlorescrap-l3","A Transport Network","The Nexus","ZBXwA0c27CnHsLGrj3dEew"]]},{"s":"Black Knight","i":[["l-drlorescrap-l16","A Report on the Withering","Cathedral","oZwwtEjEGWyRuYiMuKnNjA"],["l-drlorescrap-l4","Rasmodel's Diary","The Demon Gate","OuI3005HJ6DqGI2eb8B8fA"]]},{"s":"Goblin","i":[["l-drlorescrap-l15","Goblins of da Reach Unite!","Pastures","jesI5kQsZnteMkuzpicYYg"]]},{"s":"Alric","i":[["l-drlorescrap-l2","Archmage's Note to Students","Library","Sc85Hkbq4MOOwv2q-LdxFw"],["l-drlorescrap-l11","Alric's Plan (Part 1)","Library","RnbVl0Is08GJiAqXj_3QWQ"],["l-drlorescrap-l12","Alric's Plan (Part 2)","Library","_bfWFkIe2dSw88Wu-ouIkA"],["l-drlorescrap-l5","Alric's Journal","Library","9vGQrE4Ty4bU9vyqIn0eYA"]]},{"s":"Zamorakian","i":[["l-drlorescrap-l13","A New Pestilence","Library","7sMmsk7aPiTi3QmtjissKQ"],["l-drlorescrap-l14","An Acolyte's Guide to Demon Handling","Cathedral","1vbaBk_I-jpp38GZw288VQ"],["l-drlorescrap-l8","The Gospel of Zamorak","Cathedral","xG_ehkX_WPfI40Kj0tZXGQ"],["l-drlorescrap-l6","Quartermaster's Journal","Garrison","4q2Sk04ZqCirhx6Y1DyAjQ"],["l-drlorescrap-l17","Hall of Heroes","The Bastion","ZssY4UtIG7WxrySDwUMgtQ"]]}]},{"r":"Umbral Sands","g":[{"s":"First People","i":[["l-ums-firstpeople-1","Sand-worn Leather Tome","Alcarrid Oasis","Myra3EELXr6KrtmtnkCfSQ"],["l-ums-firstpeople-2","Sun-scorched Recipe Book","Alcarrid Oasis","hPaYZksgIVjjpBiUZLFUeg"],["l-ums-firstpeople-3","Chewed Doodle-Covered Journal","Dunes of Uzzer","_OHuB09e6B51jcW7UF8CeA"],["l-ums-firstpeople-4","Gold-plated Tome","Manafem Plains","pC8_dUvBCFBZOEC-0JlRhQ"],["l-ums-firstpeople-5","Ancient Text","The Burning Spire","9ogkfkqwEdZRXXubO7j1nw"]]},{"s":"Kalphite","i":[["l-ums-kalphite-4","Avisk's Experiment Log","Dunes of Uzzer","WBC5D0j_4DVBdjWCEoBDtg"],["l-ums-kalphite-1","Dragonkin Journal","Alcarrid Oasis","j4TJgkIZABMmxuesGSnzNw"],["l-ums-kalphite-2","Avisk's Musings","","CwFbLUm_oOY8IZ-P2-twqw"],["l-ums-kalphite-3","Entomologist's Journal","Manafem Plains","Qb9lfUWwSm6PT26RlyxADw"],["l-ums-kalphite-5","Bug Catcher's Diary","Dunes of Uzzer","Tys23kTwANNREtiF-26doA"]]},{"s":"KotHaar","i":[["l-ums-kothaar-1","Dusty Tome","The Burning Spire","FHx410Tuqng1MUOa0Gm6FQ"],["l-ums-kothaar-2","Obsidian- carved Book","The Burning Spire","2BEOKUopSw4V8VuO8CNViA","Obsidian-carved Book"],["l-ums-kothaar-3","Soot-stained Ledger","The Burning Spire","pSXRkkFXP_H7JWuD8m3t1A"],["l-ums-kothaar-4","Partially-melted Journal","Manafem Plains","ykCXO01jSgDboDqdYp0oZQ"],["l-ums-kothaar-5","Sand-scoured Diary","Dunes of Uzzer","2wg4eUDThZzhjNW-CIiqyg"]]},{"s":"Queen of Ashes","i":[["l-ums-qoa-1","Black-plated Tome","The Burning Spire","_0JwGEqKhyEj4c6HNdVdtA"],["l-ums-qoa-2","Child's Storybook","Alcarrid Oasis","wjoHzUkItTFSIMqDrhUaIQ"],["l-ums-qoa-3","Dragonscorched Ledger","The Burning Spire","5kUKJkN5xQBdnYajgtORlQ"],["l-ums-qoa-4","Everburning Book","Manafem Plains","6MXnx0AzGCpGKpW2I4nP7Q"],["l-ums-qoa-5","Sand-weathered Book","","NKIu10jZF2TDEraX78ES7g"]]},{"s":"Wolf and Goddess","i":[["l-ums-wolfandgoddess","The Wolf and the Goddess","Manafem Plains","io-n0UZc1NNx0DqlV3VaIg"]]}]},{"r":"Scorned Wilderness","g":[{"s":"Main path","i":[["l-sw-lorescrap-criticalpath-book1","Anima-infused Tome","","B-OMCEptEvPy2GyrIP1z2w"],["l-sw-lorescrap-criticalpath-book2","Lavish Dragonkin Tome","","HXsCiUXWB-neHPiOD2GTIw"],["l-sw-lorescrap-criticalpath-book3","Flame-licked Journal","","97p8pEJCJUHS4P-e-7ipMg"],["l-sw-lorescrap-criticalpath-book4","Rasthin's Journal","","VNAaDkOhzpVbg4eVah7U-Q"],["l-sw-lorescrap-criticalpath-book5","Scorched Tome","","AdcqukHN5xXODCeJqcrI5Q"],["l-sw-lorescrap-criticalpath-book6","Hate-filled Tome","","jzWOpkLYQS2DEM6SF7_JCA"]]},{"s":"Optional","i":[["l-sw-lorescrap-optional-book1","Confusing Notebook","","TeFWukEOfCEZYv6kXFcsSw"],["l-sw-lorescrap-optional-book2","Aviansie Tome","","YVxd90kyqCUdHqCIiNmw0Q"],["l-sw-lorescrap-optional-book3","Damaged Journal","","GN9q100deUHjkcu6GkHiEw"],["l-sw-lorescrap-puzzletext","Rasthin's Riddle of Faith","","8K1AvUK-Ju3tSFK5BK7kpw"]]}]}];
+const PLANTS = [{"r":"Plants","g":[{"s":"","i":[["j-flora-animainfusedbark","Anima-infused Bark","","lpBBkEO9D3PdfzGfH9oU5g"],["j-flora-ashsapling","Ash Sapling","","69malEcvkWTO0UikBpcl4Q"],["j-flora-ashtree","Ash Tree","Pick up Ash Logs","o1NCoEmSWJkmEVOI6F3hFA"],["j-flora-barrelcactus","Barrel Cactus","Pick up Cactus Water","wP7u8EkwFqaK6DunFeStwg"],["j-flora-mushroom-bittercap","Bittercap Mushroom","","VNWW3kgqyG4AOm2Vgoe06Q"],["j-flora-blightwood-root","Blightwood Root","Pick up Blightwood","GTCY8kgXryk1gTqt_lOykA"],["j-flora-bunnycactus","Bunny Cactus","Pick up Desert Weed","SYePQk8zKvwg_6u117Segw"],["j-flora-cabbage","Cabbage","","GwfmlEwgzXIceJ-pW_nCSg"],["j-flora-cactussteak","Cactus Steak","","Brx7vkanEvtPmrm-1FwI2w"],["j-flora-corpsecotton","Corpse Cotton","","y6vKO0oAgWexqyqEx0CbvQ"],["j-flora-herb-desertweed","Desert Weed","","eXsW5kckn2Xgl1WHpeCGpQ"],["j-flora-dwellberries","Dwellberries","","N-zacUEqcnX58w-tfNw38g"],["j-flora-flax","Flax","","4lTZfEViBSwMz42RE96zYA"],["j-flora-herb-harralander","Harralander","","KCXVmkixZ5lG-IigEEpVpA"],["j-flora-resource-herb-irit","Irit","","vYkr50Hgho9SBzKumMHYnw"],["j-flora-magictreesapling","Magic Sapling","","hu9P7EFEzixasj-Mgebmtw"],["j-flora-magictree","Magic Tree","Pick up Magic Logs","xVzRD01Aih7LMsaaQ7SG5Q"],["j-flora-maplesapling","Maple Sapling","","CWBDnEiVwv-iCxG_qWvt0Q"],["j-flora-mapletree","Maple Tree","Pick up Maple Logs","UoZLqEjrRR9JdjiiMe5JWA"],["j-flora-herb-marrentil","Marrentill","","tflg5UeIzGSjyRCTIUdsYw"],["j-flora-oaksapling","Oak Sapling","","j40f1kiD2Vm4H-GYI8MVpA"],["j-flora-oaktree","Oak Tree","Pick up Oak Logs","xuFgf0CMc6QCqz-VDe3IGA"],["j-flora-onion","Onion","","Z3db10eyphUq0kG4f0DVgw"],["j-flora-peach","Peach","","yKpA0UCZ4oDuAH2NkopkJA"],["j-flora-pipecactus","Pipe Cactus","Pick up Fibrous Pipe Cactus","57dXqkQKiIt1oxeXQf7h1A"],["j-flora-potato","Potato","","3UWezUiSeA5fK_-smJfVHw"],["j-flora-pumpkin","Pumpkin","","r6-Nv025W21hlsa-piGJrw"],["j-flora-redberries","Redberries","","5opdaUedWo1U256QkHmGyw"],["j-flora-herb-snapdragon","Snapdragon","","MuF2sk-qvmozbTetuxeU9Q"],["j-flora-herb-swampweed","Swamp Weed","","vCeDd0PYGfcVGnecUfaXkg"],["j-flora-herb-irit","Thorny Irit Root","Pick up Irit","VrGwy0H4PGMXCVOSW-t6MQ"],["j-flora-herb-toadflax","Toadflax","","OG_q3kkG0jKtPx65QOV5Nw"],["j-flora-tomato","Tomato","","OxOwGkTTB3aCqu-bimarkg"],["j-flora-watermelon","Watermelon","","dcGJvUNPrz7AEh6MezTn6g"],["j-flora-weeds","Weeds","","sj2oOkK5aBCHXLWRFniZnA"],["j-flora-wheat","Wheat","","6DoptUKTZVGvWCCDUUz2OQ"],["j-flora-wildjadevine-poison","Wild Jade Vine","","aEAuAkwDxUH92HeetgYMiA"],["j-flora-wildjadevine-shock","Wild Lapulis Vine","","a-O41kaoByrfgWy8IzYnnw"],["j-flora-rubyvine","Wild Ruby Vine","","dWoRGkj0m5VeNhCVTAUklQ"],["j-flora-willowsapling","Willow Sapling","","1tkPUkagPJ4evOm2_q6TLA"],["j-flora-willowtree","Willow Tree","Pick up Willow Logs","VSkuBENWXW6xnzuZnhwy0g"],["j-flora-yewsapling","Yew Sapling","","_kTXuEeXYGlY5DWOFzjUDQ"],["j-flora-yewtree","Yew Tree","Pick up Yew Logs","n8Z0ZULlLPOkbx6Hu2qtyw"]]}]},{"r":"Seeds","g":[{"s":"","i":[["j-flora-seeds-ash-tree","Ash Tree Seed","","zITwvkmvrbpqSyylzvSVrw"],["j-flora-seeds-barrel-cactus","Barrel Cactus Seeds","","CkNmTEopnX0O6nqgN2RlEw"],["j-flora-seeds-bunny-cactus","Bunny Cactus Seeds","","brOYOkhwDlp500mCjoXMpQ"],["j-flora-seeds-cabbage","Cabbage Seeds","","9xNsOE-UFpDPO-SSkcswhw"],["j-flora-seeds-cadavaberry","Cadavaberry Seeds","","qMLJOEjv-4HW_Mq2lsWJgw"],["j-flora-seeds-corpsecotton","Corpse Cotton Seeds","","RgVaUEW6CLpF7Hu-P0oQCw"],["j-flora-seeds-desert-weed","Desert Weed Seeds","","WH5dDEsJHTOVJ0ejnsZpBw"],["j-flora-seeds-dwellberry","Dwellberry Seeds","","eVwnAEVwavJwfF6H76cMDw"],["j-flora-seeds-flax","Flax Seeds","","Q2zeF0Th8DgFmFqhgKCiJA"],["j-flora-seeds-harralander","Harralander Seeds","","Wywdgkbet9gxWgSeByo9Bw"],["j-flora-seeds-irit","Irit Seeds","","gMbhNklJmn7ZjT-uM8z6Jw"],["j-flora-seeds-kwuarm","Kwuarm Seeds","","SDGqZU0kVjqirTO21aPGZA"],["j-flora-seeds-magic-tree","Magic Seeds","Pick up Magic Tree Seed","zZkE3k6XQETrf0OkR2PoKQ"],["j-flora-seeds-maple-tree","Maple Tree Seed","","l7DjPUVW9EdVMpe7617_rQ"],["j-flora-seeds-marrentill","Marrentill Seeds","","wH2RHEOdRp0lXDG3PLFo1g"],["j-flora-seeds-oak-tree","Oak Tree Seed","","Ek1x1EhJW89XZ6KrPjKZBA"],["j-flora-seeds-onion","Onion Seeds","","vqOoUkdqd3l-a9yBZ2JGYw"],["j-flora-seeds-pipe-cactus","Pipe Cactus Seeds","","MP1Eukj9rh20Mc6wW8-X2A"],["j-flora-seeds-potato","Potato Seeds","","3OASXE28wstqe-G6WcwXjQ"],["j-flora-seeds-pumpkin","Pumpkin Seeds","","p4O2PUHlZeNfh_OsO7Yd2w"],["j-flora-seeds-redberry","Redberry Seeds","","z0wUzUKZdJ9PZiGQGAfH2g"],["j-flora-seeds-snapdragon","Snapdragon Seeds","","W0kSpUj9HOZCeBK3Cl2MFw"],["j-flora-seeds-swampweed","Swamp Weed Seeds","","W8CniUz1mLzAKgCwHaSvug"],["j-flora-seeds-toadflax","Toadflax Seeds","","6YrV8keyMWM6J_uqZQL5Nw"],["j-flora-seeds-tomato","Tomato Seeds","","5CANREUPlznIISKLOra0iw"],["j-flora-seeds-watermelon","Watermelon Seeds","","Zztuu08BB1wjBya1BzjfVQ"],["j-flora-seeds-wheat","Wheat Seeds","","EvXw2kPqMyuN2BqEuFEmuw"],["j-flora-seeds-willow-tree","Willow Tree Seed","","6AfIDEmIBBdjHgCSjQSyuw"],["j-flora-seeds-yew-tree","Yew tree Seed","","26N_901W-90YOlem_KlSXw"]]}]}];
+const FACTIONS = [{"r":"Goblins","g":[{"s":"","i":[["j-factions-goblin-shooter","Goblin Archer","","s1dQUULGXV1Nk-GrxTSjig"],["j-factions-goblin-bruiser","Goblin Bruiser","","ndin8k_pWHqxobilQCF46Q"],["j-factions-goblin-runt","Goblin Runt","","IkvXP0UAWVm5FE2t9lAUmA"],["j-factions-goblin-grunt","Goblin Warrior","","Ad2vNUC004V6bCe9X2Ao_Q"]]}]},{"r":"Garou","g":[{"s":"","i":[["j-factions-garou-berserker","Garou Berserker","","8PrmaUJ3FIG-xl-cnKRR-A"],["j-factions-garou-druid","Garou Druid","","nBkOlkVKX-pMjA-a1Fa8rQ"],["j-factions-garou-ranger","Garou Hunter","","VuIe8ERvLW8NZYyTLqWTqw"],["j-factions-garou-king","Garou King","","1CsQPk21nDrYBI60K7EhyA"],["j-factions-garou-thane","Garou Thane","","mthH10B5Y9wVE4OpWrP2bQ"]]}]},{"r":"Black Knights","g":[{"s":"","i":[["j-factions-blackknight-melee","Black Knight Guardian","","jbNP3E8doqY2cDSrRTogOA"],["j-factions-blackknight-ranged","Black Knight Sniper","","Kp9FyEiRcrPPUJS-GhuKTA"],["j-factions-blackknight-titan","Black Knight Titan","","UwEppkor2DHQdOm74qi5cQ"],["j-factions-blackknight-1h","Black Knight Warrior","","d6gx2EsrZT-gFiK1uvsldA"],["j-factions-blackknight-2h","Elite Black Knight","","18zYLkz8lpx68Pq5e5_bVw"],["j-factions-blackknight-houndmaster","Houndmaster Rexiton","","rK7D0kX3lZ-mml6tRtLKYQ"],["j-factions-blackknight-sgtblister","Sergeant Blister","","lZWMdU2WhYtm7QSQ77n_-g"]]}]},{"r":"Zamorakians","g":[{"s":"","i":[["j-factions-zamorak-mage","Mage of Zamorak","","qvSh90elBoLdkYe4Pu5sfg"],["j-factions-zamorak-ratmaster","Rat Master Skrexis","","SqqlZkN7Gm_zS7OWb_gs9A"],["j-factions-zamorak-demonmaster","Summoner Flament","","yhfn80mpHlDfWmmBJL_cHQ"],["j-factions-zamorak-acolyte","Zamorakian Acolyte","","EE3UU0P2FzcBCq-s-0hjuQ"]]}]},{"r":"Demons","g":[{"s":"","i":[["j-factions-lesserdemon-delrom","Delrom","","I-59sEsP1J_Aeq-6YLx-Ng"],["j-factions-lesserdemon","Lesser Demon","","S8rj5URPii4LqhqreAS0rA"],["j-factions-lesserdemon-shardbound","Shardbound Lesser Demon","","58Dy7EfcbfniN4uIuC5BvQ"]]}]},{"r":"Vault guardians","g":[{"s":"","i":[["j-factions-vault-guardian-ranged-colossal","Vault Archon","","tJ-NcU85ARUtK9-73UZnPQ"],["j-factions-vault-guardian-melee","Vault Guardian Hulk","","aNKCoky9zviLi-iZj_PGBA"],["j-factions-vault-guardian-ranged","Vault Guardian Sentinel","","OwSAP0M0DZmUVU62pbY2mg"],["j-factions-vault-guardian-melee-colossal","Vault Overlord","","QakpIEBP-jZKEtmEq-eyaQ"]]}]},{"r":"Fellhollow","g":[{"s":"","i":[["j-factions-fellhollow-imaru","Imaru","Interact","_6T6YkegHyuxYSmIFeK3Tw"],["j-factions-fellhollow-lostsoul","Lost Soul","","hFy7-kxX0Sy-_5iTxBeXdA"],["j-factions-fellhollow-skeleton-marauder-rotsworn","Rotsworn Marauder","","AzmmY0m0o8_H-HW99R4FUQ"],["j-factions-fellhollow-skeleton-necromancer-rotsworn","Rotsworn Necromancer","","Dnusl0jve3DrBmuCY0doNg"],["j-factions-fellhollow-skeleton-warrior-rotsworn","Rotsworn Warrior","","Ny9UaEzjSCqNUeGieLRC7w"],["j-factions-fellhollow-zombie-rotsworn","Rotsworn Zombie","","wDWe90zKbAmP6xacrul2ZA"],["j-factions-fellhollow-skeleton-archer","Skeletal Archer","","F8L1AEoqOnmznce3vB40pg"],["j-factions-fellhollow-skeleton-hoplite","Skeletal Hoplite","","Y5ldkkqkLG6rid-3Giu78Q"],["j-factions-fellhollow-skeleton-marauder","Skeletal Marauder","","iCd_AkJGlF_ygqq6RSRE0g"],["j-factions-fellhollow-skeleton-necromancer","Skeletal Necromancer","","XE22dkzoN_VzqxiFCjZxEw"],["j-factions-fellhollow-skeleton-warrior","Skeletal Warrior","","fBAQnkqG3BLMCCirmkGXIQ"],["j-factions-fellhollow-soulstonesentinel","Soulstone Sentinel","","51UMtEMSATn-m5SRotnh-w"],["j-factions-fellhollow-zogre","Zogre","","MZGkM0r5w76ASWeMYscFng"],["j-factions-fellhollow-zombie","Zombie","","Mxa1GUBjGDw2jU-1VOGh-A"]]}]},{"r":"Kalphites","g":[{"s":"","i":[["j-factions-kalphiteguardian","Kalphite Guardian","","wzz5FkVcGdmuE7CAhqxihA"],["j-factions-kalphitequeen","Kalphite Queen","","PeKe4EyIhUeifmSCK_rmrw"],["j-factions-kalphitesoldier","Kalphite Soldier","","vc8pYE8a8WhjvbaJWHMZBg"],["j-factions-kalphiteworker","Kalphite Worker","","c80EX0uZDjuWmMqaFre8Tw"]]}]},{"r":"KotHaar","g":[{"s":"","i":[["j-factions-kothaar-kothaarhur","KotHaar-Hur","","BZEVZE3_qRBWqv-QNGUiqg"],["j-factions-kothaar-kothaarkal","KotHaar-Kal","","_rc21U8LjhEcV0-Ge-0XGw"],["j-factions-kothaar-kothaarket","KotHaar-Ket","","5H7v5UuGWicUqICMLz5e-w"],["j-factions-kothaar-kothaarxil","KotHaar-Xil","","3bDCckT-L8Orih-xd1qqGw"],["j-factions-kothaar-tokxil","Tok-Xil","","Gl06Bkg4IoZDiXmh_MMItg"]]}]},{"r":"Scorned Wilderness","g":[{"s":"","i":[["j-factions-sw-lesserblackdragon","Black Dragon","","NBlDGkUF_k9OUBq-FPRtVQ"],["j-factions-sw-blackdragonhatchling","Black Dragon Hatchling","","FQoAIky4-ihevlCDJmOoCA"],["j-factions-sw-bluedragonhatchling","Blue Dragon Hatchling","","pFcEeEqxwHNCAbC0Cix7aA"],["j-factions-sw-greendragonhatchling","Green Dragon Hatchling","","b6f6ZUkGROs_SbmxQxWrWA"],["j-factions-sw-hookworm","Heartworm","","WsjNXkUN0oA-YUylgRYDYQ"],["j-factions-sw-reddragonhatchling","Red Dragon Hatchling","","ZZ0tfkn0hB3Yo3GSEM5aaw"],["j-factions-sw-revenantknight","Revenant Knight","","lYeX3kYCGYLAIceU6r0xLw"]]}]},{"r":"Dragons","g":[{"s":"","i":[["j-factions-fuzan","Fuzan","","uIb0IEF4z9Ncbe2r-vjpZQ"],["j-factions-general-velgar","General Velgar","","BDid9Ub4zdWScEGm8Y7sYQ"],["j-factions-sw-kuldra","Kuldra","","a8xUgE04_yY1aWa1YL-kvg"]]}]}];
+const MOUNTS = [{"r":"Terrorbirds","g":[{"s":"Fellhollow drops","i":[["r-springdown-runner","Springdown Runner","","DA_Mount_Terrorbird_01_02","Springdown runner"],["r-grassfoot-screecher","Grassfoot Screecher","","DA_Mount_Terrorbird_01_03","Grassfoot screecher"],["r-leafwood-strider","Leafwood Strider","","DA_Mount_Terrorbird_01_04","Leafwood strider"]]},{"s":"Dowdun Reach drops","i":[["r-summerbellied-wagtail","Summerbellied Wagtail","","DA_Mount_Terrorbird_02_02","Summerbellied wagtail"],["r-eclipseborn-sharpbeak","Eclipseborn Sharpbeak","","DA_Mount_Terrorbird_02_03","Eclipseborn sharpbeak"],["r-sunkissed-clawfoot","Sunkissed Clawfoot","","DA_Mount_Terrorbird_02_04","Sunkissed clawfoot"]]},{"s":"Umbral Sands drops","i":[["r-crimson-crybaby","Crimson Crybaby","","DA_Mount_Terrorbird_03_04","Crimson crybaby"],["r-scorchsummer-ashbeak","Scorchsummer Ashbeak","","DA_Mount_Terrorbird_03_02","Scorchsummer ashbeak"],["r-applefeather-mosstail","Applefeather Mosstail","","DA_Mount_Terrorbird_03_03","Applefeather mosstail"]]},{"s":"Bought from Death","i":[["r-mossbeak-hunter","Mossbeak Hunter","","DA_Mount_Terrorbird_01_01","Mossbeak hunter"],["r-oakfeather-raptor","Oakfeather Raptor","","DA_Mount_Terrorbird_01_05","Oakfeather raptor"]]},{"s":"Bought from the Evil Emporium","i":[["r-coastal-sunbeak","Coastal Sunbeak","","DA_Mount_Terrorbird_02_01","Coastal sunbeak"],["r-astralbeak-warbler","Astralbeak Warbler","","DA_Mount_Terrorbird_02_05","Astralbeak warbler"]]},{"s":"Bought from Domri","i":[["r-infernal-blightbeak","Infernal Blightbeak","","DA_Mount_Terrorbird_03_05","Infernal blightbeak"],["r-zamorakian-pledgesaddle","Zamorakian Pledgesaddle","","DA_Mount_Terrorbird_03_01","Zamorakian pledgesaddle"]]}]},{"r":"Magic carpets","g":[{"s":"","i":[["r-uzzerian-umber","Uzzerian Umber","","DA_Mount_FlyingCarpet_01_05","Uzzerian umber"],["r-moonsilk-weave","Moonsilk Weave","","DA_Mount_FlyingCarpet_01_02","Moonsilk weave"]]}]}];
+const COLLS = [
+  { key: "lore", p: "l", tab: "tabLore", data: LORE, status: "Read", kind: "Lore Scrap Read", empty: "Every scrap here is read.", short: { "Brynmoor & Ghornfell": "Brynmoor" }, src: "journal" },
+  { key: "mounts", p: "mo", tab: "tabMounts", data: MOUNTS, status: "Unlocked", kind: "Mount Unlocked", empty: "Every mount here is unlocked.", src: "mounts" },
+  { key: "plants", p: "pl", tab: "tabPlants", data: PLANTS, status: "Found", kind: "Journal Entry", empty: "Everything here is found.", src: "journal" },
+  { key: "factions", p: "fa", tab: "tabFactions", data: FACTIONS, status: "Defeated", kind: "Journal Entry", empty: "Every enemy here is in your journal.", src: "journal" },
+];
+COLLS.forEach(c => { c.list = c.data.flatMap(r => r.g.flatMap(g => g.i.map(([id, n, sub, pid, wk]) => ({ id, n, sub, pid, wk, reg: r.r, ser: g.s })))); c.ids = c.list.map(x => x.id); });
+const COLL_OF = {}; COLLS.forEach(c => c.list.forEach(x => { COLL_OF[x.id] = c; }));
+const LORE_LIST = COLLS[0].list, LORE_IDS = COLLS[0].ids, COLL_IDS = COLLS.flatMap(c => c.ids);
+const COURSES = [{"id":"a-chasm-dash","n":"Chasm Dash","where":"Brynmoor","pid":"ozOAhU5oKLJNkta_kV8edw","g":57,"s":65,"b":75,"lvl":0,"perks":[],"cape":["Golden Bramblemead Cape","Golden Whispering Cape"]},{"id":"a-fractured-ruins","n":"Fractured Ruins","where":"Fractured Plains","pid":"ey1IZEnvZ2D32yC14mES5Q","g":56,"s":70,"b":90,"lvl":15,"perks":["Windstep","Double Jump"],"cape":["Golden Fractured Cape"]},{"id":"a-thunder-assault","n":"Thunder Assault","where":"Stormtouched Highlands","pid":"_bdK2EOlh_awoE2OSPQKTg","g":66,"s":78,"b":105,"lvl":15,"perks":["Windstep","Double Jump"],"cape":["Golden Stormtouched Cape"]},{"id":"a-grave-run","n":"Grave Run","where":"Fellhollow","pid":"T8AD905FMrkXty6vDN52tQ","g":67,"s":80,"b":120,"lvl":30,"perks":["Windstep","Double Jump"],"cape":["Golden Fellhollow Cape"]},{"id":"a-tower-climb","n":"Tower Climb","where":"Dowdun Reach","pid":"DY92hUu0TrbWlfa_mn07Ew","g":69,"s":80,"b":120,"lvl":51,"perks":["Windstep","Double Jump","Air Dash"],"cape":["Golden Dowdun Reach Cape"]},{"id":"a-lava-fields","n":"Lava Fields","where":"Umbral Sands","pid":"jRj_gkpcW9KatSSSMhVYMA","g":65,"s":75,"b":105,"lvl":65,"perks":["Double Jump","Air Dash"],"cape":["Golden Umbral Sands Cape"]}];
+const COURSE_IDS = COURSES.map(c => c.id), BURROWS = 19, BUR_ID = "k-burrows";
+const BURROW_MAP = [{"r":"Brynmoor","b":[{"id":"b-brynmoor-1","x":18134,"y":146860,"near":"a-chasm-dash","m":140},{"id":"b-brynmoor-2","x":78070,"y":149009,"near":"u-whispering-swamp-3","m":20},{"id":"b-brynmoor-3","x":28047,"y":152245,"near":"a-chasm-dash","m":30},{"id":"b-brynmoor-4","x":75797,"y":187117,"near":"u-bramblemead-valley-2","m":160}],"l":["u-bramblemead-valley-1","u-bramblemead-valley-2","u-bramblemead-valley-3","u-whispering-swamp-1","u-whispering-swamp-2","u-whispering-swamp-3","a-chasm-dash"]},{"r":"Ghornfell","b":[{"id":"b-ghornfell-1","x":44307,"y":78583,"near":"a-thunder-assault","m":230},{"id":"b-ghornfell-2","x":77262,"y":81674,"near":"a-fractured-ruins","m":520},{"id":"b-ghornfell-3","x":127982,"y":97613,"near":"u-fractured-plains-1","m":70},{"id":"b-ghornfell-4","x":74037,"y":121956,"near":"a-fractured-ruins","m":130},{"id":"b-ghornfell-5","x":127427,"y":160544,"near":"u-bloodblight-swamp-1","m":40}],"l":["u-fractured-plains-1","u-stormtouched-highlands-1","u-bloodblight-swamp-1","a-fractured-ruins","a-thunder-assault"]},{"r":"Fellhollow","b":[{"id":"b-fellhollow-1","x":134795,"y":-79772,"near":"u-hope-s-fall-1","m":240},{"id":"b-fellhollow-2","x":107850,"y":-49049,"near":"a-grave-run","m":60},{"id":"b-fellhollow-3","x":202850,"y":-47550,"near":"u-silverthorn-keep-1","m":360},{"id":"b-fellhollow-4","x":83557,"y":-14972,"near":"a-grave-run","m":470}],"l":["u-hope-s-fall-1","u-silverthorn-keep-1","u-emberwood-1","a-grave-run"]},{"r":"Dowdun Reach","b":[{"id":"b-dowdun-reach-1","x":260295,"y":27920,"near":"u-the-garrison-1","m":260},{"id":"b-dowdun-reach-2","x":185303,"y":65320,"near":"u-the-grand-hall-1","m":90}],"l":["u-the-garrison-1","u-the-menagerie-1","u-the-grand-hall-1","a-tower-climb"]},{"r":"Umbral Sands","b":[{"id":"b-umbral-sands-1","x":368112,"y":43259,"near":"u-manafem-plains-1","m":930},{"id":"b-umbral-sands-2","x":220913,"y":112678,"near":"u-the-grand-hall-1","m":560},{"id":"b-umbral-sands-3","x":356881,"y":140172,"near":"u-manafem-plains-1","m":220},{"id":"b-umbral-sands-4","x":258240,"y":247645,"near":"a-lava-fields","m":580}],"l":["u-alcarrid-oasis-1","u-the-burning-spire-1","u-manafem-plains-1","a-lava-fields","u-the-grand-hall-1"]}];
+const LANDMARKS = {"u-bramblemead-valley-1":[52124,172225],"u-bramblemead-valley-2":[82654,173185],"u-bramblemead-valley-3":[51232,153631],"u-whispering-swamp-1":[41590,131700],"u-whispering-swamp-2":[74399,142355],"u-whispering-swamp-3":[76151,150386],"u-fractured-plains-1":[124803,104132],"u-stormtouched-highlands-1":[13599,73450],"u-bloodblight-swamp-1":[124799,157955],"u-hope-s-fall-1":[151032,-62753],"u-silverthorn-keep-1":[185163,-15881],"u-emberwood-1":[32025,-46994],"u-the-garrison-1":[241211,10909],"u-the-menagerie-1":[235467,43987],"u-the-grand-hall-1":[194484,63727],"u-alcarrid-oasis-1":[295248,164836],"u-the-burning-spire-1":[288488,198441],"u-manafem-plains-1":[336637,131081],"a-tower-climb":[203059,42939],"a-fractured-ruins":[80035,133497],"a-thunder-assault":[25252,91619],"a-lava-fields":[279007,193923],"a-grave-run":[111002,-53562],"a-chasm-dash":[30068,155052]};
+const BURROW_LIST = BURROW_MAP.flatMap(r => r.b.map((b, i) => ({ ...b, n: `${r.r} burrow ${i + 1}`, reg: r.r })));
+const BURROW_IDS = BURROW_LIST.map(b => b.id);
+const BY_ID = Object.fromEntries([...ALL_Q, ...EXTRA, ...ALL_REC, ...URN_LIST, ...COLLS.flatMap(c => c.list), ...COURSES, ...BURROW_LIST, { id: BUR_ID, n: "Kebbit burrows" }].map(q => [q.id, q]));
+const SKILL_IDS = ["attack","ranged","magic","mining","woodcutting","fishing","farming","cooking","artisan","construction","runecrafting","agility"].map(k => "s-" + k);
+SKILL_IDS.forEach(id => { BY_ID[id] = { id, n: id }; });
 function buildUrns() {
   const host = document.getElementById("urnMain");
+  const urnMap = (g) => { const pts = g.areas.flatMap(([a, n]) => Array.from({ length: n }, (_, i) => { const id = `u-${uslug(a)}-${i + 1}`, L = LANDMARKS[id]; return L && { id, x: L[0], y: L[1], txt: n > 1 ? i + 1 : "", label: a, cls: "urn", click: true, aria: `${a} urn${n > 1 ? " " + (i + 1) : ""}` }; })).filter(Boolean);
+    return pts.length ? mapSVG("urns-" + uslug(g.region), `Map of ${g.region} urns`, pts) : ""; };
   host.innerHTML = URNS.map(g => `<section class="panel" id="urns-${uslug(g.region)}"><div class="sec-head"><h2>${esc(g.region)}</h2><span class="count"></span></div><div class="rule"></div>
-    <ul class="list">${g.areas.map(([a, n]) => `<li class="urn-area" data-area="${uslug(a)}"><div><div class="an">${esc(a)}</div><div class="ac"></div></div>
+    ${urnMap(g)}<ul class="list">${g.areas.map(([a, n]) => `<li class="urn-area" data-area="${uslug(a)}"><div><div class="an">${esc(a)}</div><div class="ac"></div></div>
       <div class="umarks">${Array.from({ length: n }, (_, i) => { const id = `u-${uslug(a)}-${i + 1}`; return `<button class="mark umark" type="button" id="m-${id}" data-id="${id}" aria-label="${esc(a)} urn ${i + 1}"><span class="d">${CHECK}</span></button>`; }).join("")}</div></li>`).join("")}</ul>
     <p class="empty">Every urn here is absorbed.</p></section>`).join("");
+  wireMaps(host);
   host.addEventListener("click", (e) => { const b = e.target.closest(".umark"); if (b) cycle(b.dataset.id); });
+}
+const lslug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+function buildColl(c) {
+  const host = document.getElementById(c.key + "Main"), gid = (r, g) => `${c.key}-${lslug(r.r + "-" + g.s)}`;
+  host.innerHTML = c.data.map(r => `<section class="panel" id="${c.key}-${lslug(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
+    ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore" data-id="${id}" data-status="${c.status}">
+      <button class="mark" type="button" id="m-${id}"><span class="d">${CHECK}</span></button>
+      <div><div class="title-row"><span class="name">${esc(n)}</span><span class="status" hidden></span><a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a></div>${sub ? `<div class="start">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
+    <p class="empty">${esc(c.empty)}</p></section>`).join("");
+  document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
+  host.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
+  const norm = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const input = document.getElementById(c.p + "Search");
+  input.addEventListener("input", () => {
+    const q = norm(input.value); let any = false;
+    c.data.forEach(r => {
+      let rh = 0;
+      r.g.forEach(g => {
+        let gh = 0;
+        g.i.forEach(([id, n, sub]) => { const ok = !q || norm(`${n} ${sub} ${g.s}`).includes(q); host.querySelector(`[data-id="${id}"]`).classList.toggle("nomatch", !ok); if (ok) gh++; });
+        host.querySelector(`[data-lg="${gid(r, g)}"]`).classList.toggle("nomatch", !gh); rh += gh;
+      });
+      document.getElementById(`${c.key}-${lslug(r.r)}`).classList.toggle("nomatch", !rh); if (rh) any = true;
+    });
+    document.getElementById(c.p + "No").hidden = any;
+  });
+}
+function paintColl(c) {
+  const d = c.ids.filter(id => stateOf(id) === "done").length;
+  document.getElementById(c.p + "Done").textContent = d;
+  document.getElementById(c.p + "Total").textContent = c.ids.length;
+  document.getElementById(c.p + "Bar").style.width = (100 * d / c.ids.length) + "%";
+  c.data.forEach(r => {
+    let rd = 0, rt = 0;
+    r.g.forEach(g => {
+      const gd = g.i.filter(([id]) => stateOf(id) === "done").length; rd += gd; rt += g.i.length;
+      const el = document.querySelector(`[data-lg="${c.key}-${lslug(r.r + "-" + g.s)}"]`);
+      const lc = el.querySelector(".lc"); if (lc) lc.textContent = `${gd} / ${g.i.length}`;
+      el.classList.toggle("all-done", gd === g.i.length);
+    });
+    const sec = document.getElementById(`${c.key}-${lslug(r.r)}`);
+    sec.querySelector(".count").textContent = `${rd} / ${rt}`;
+    sec.classList.toggle("all-done", rd === rt);
+    const a = document.querySelector(`[data-jump="${c.key}-${lslug(r.r)}"]`);
+    if (a) { a.querySelector("span").textContent = `${rd}/${rt}`; a.classList.toggle("full", rd === rt); }
+  });
+}
+const fmtT = (sec) => { const m = Math.floor(sec / 60), s2 = sec - m * 60; return `${m}:${s2 < 10 ? "0" : ""}${(Math.round(s2 * 10) / 10).toFixed(Number.isInteger(sec) ? 0 : 1)}`; };
+const MEDALS = [["b", "Bronze", ""], ["s", "Silver", "silver"], ["g", "Gold", "goldm"]];
+function buildAgility() {
+  const cm = document.getElementById("courseMap");
+  cm.innerHTML = mapSVG("agility-courses", "Map of agility courses", COURSES.map(c => ({ id: c.id, x: LANDMARKS[c.id][0], y: LANDMARKS[c.id][1], label: c.n, cls: "crs" })), { minSpan: 0 });
+  wireMaps(cm);
+  document.getElementById("courseList").innerHTML = COURSES.map(c => `<li class="course" data-cid="${c.id}">
+    <div class="cinfo"><div class="cn">${esc(c.n)}</div><div class="cw">${esc(c.where)}</div>
+      <div class="creq">${c.lvl || c.perks.length ? "Needs " + [c.lvl ? `Agility ${c.lvl}` : "", ...c.perks].filter(Boolean).map(esc).join(" · ") : "No requirements"}</div>
+      <div class="crw">Gold reward: <b>${c.cape.map(esc).join("</b> and <b>")}</b> recipe</div>
+      <div class="cbest"></div></div>
+    <div class="medals">${MEDALS.map(([k, nm, cls], i) => `<button type="button" class="medal ${cls}" data-m="${i + 1}" aria-label="${esc(c.n)}: ${nm} medal, ${fmtT(c[k])} or faster"><span class="coin">${nm[0]}</span>${fmtT(c[k])}</button>`).join("")}</div></li>`).join("");
+  document.getElementById("courseList").addEventListener("click", (e) => {
+    const b = e.target.closest(".medal"); if (!b || b.disabled) return;
+    const id = b.closest(".course").dataset.cid, m = Number(b.dataset.m), p = progress[id] || {}, cur = p.medal || 0;
+    setVal(id, { medal: cur === m ? m - 1 : m, ...(p.best ? { best: p.best } : {}) });
+    if (m === 3 && cur !== 3) showBanner({ id, n: BY_ID[id].n, rw: BY_ID[id].cape });
+  });
+  buildBurrows();
+}
+const DIRS = ["east", "south-east", "south", "south-west", "west", "north-west", "north", "north-east"];
+const dirOf = (dx, dy) => DIRS[((Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) % 8) + 8) % 8];
+function lmName(id) { const o = BY_ID[id]; return id.startsWith("u-") ? o.n : `the ${o.n} course start`; }
+/* Map backgrounds: stitched from the RuneScape: Dragonwilds Wiki map (maps/<key>.jpg), sized to each SVG's viewBox at 2x. */
+function mapSVG(key, title, pts, opt = {}) {
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const minSpan = opt.minSpan || 30000;
+  if (x1 - x0 < minSpan) { const c = (x0 + x1) / 2; x0 = c - minSpan / 2; x1 = c + minSpan / 2; }
+  if (y1 - y0 < minSpan * 0.6) { const c = (y0 + y1) / 2; y0 = c - minSpan * 0.3; y1 = c + minSpan * 0.3; }
+  const W = 380, padX = (x1 - x0) * 0.1 + 5000, padY = (y1 - y0) * 0.1 + 5000;
+  x0 -= padX; x1 += padX; y0 -= padY; y1 += padY + (x1 - x0) * 0.03;
+  const k = W / (x1 - x0), H = Math.max(170, Math.round((y1 - y0) * k)), cy = (H - (y1 - y0) * k) / 2;
+  const P = (x, y) => [+((x - x0) * k).toFixed(1), +((y - y0) * k + cy).toFixed(1)];
+  const step = [500, 1000, 2000, 5000, 10000, 20000].find(m => m * 100 * k > 60) || 20000, sw = step * 100 * k;
+  const boxes = pts.map(p => { const [px, py] = P(p.x, p.y); return [px - 11, py - 11, px + 11, py + 11]; });
+  const hit = (q) => boxes.some(o => q[0] < o[2] && q[2] > o[0] && q[1] < o[3] && q[3] > o[1]);
+  const marks = pts.map(p => {
+    const [px, py] = P(p.x, p.y);
+    let lab = "";
+    if (p.label) {
+      const tw = p.label.length * 5.6; let best = null;
+      for (const dy of [0, -12, 12, -22, 22]) for (const right of [true, false]) {
+        const x = right ? px + 13 : px - 13, q = right ? [x, py + dy - 8, x + tw, py + dy + 3] : [x - tw, py + dy - 8, x, py + dy + 3];
+        if (q[0] < 2 || q[2] > W - 2) continue;
+        if (!hit(q)) { best = { x, y: py + dy + 3.5, right, q }; break; }
+      }
+      if (!best) { const right = px < W / 2; best = { x: right ? px + 13 : px - 13, y: py + 3.5, right, q: [0, 0, 0, 0] }; }
+      boxes.push(best.q);
+      lab = `<text class="ml" x="${best.x}" y="${best.y}" text-anchor="${best.right ? "start" : "end"}">${esc(p.label)}</text>`;
+    }
+    return `<g class="mpt ${p.cls || ""}" data-mid="${p.id}"${p.click ? ` role="button" aria-label="${esc(p.aria || p.label || p.id)}"` : ""}><rect x="${px - 9}" y="${py - 9}" width="18" height="18" rx="3" transform="rotate(45 ${px} ${py})"/><text x="${px}" y="${py}">${esc(p.txt || "")}</text>${lab}</g>`;
+  }).join("");
+  return `<svg class="bmap" viewBox="0 0 ${W} ${H}" aria-label="${esc(title)}" data-map="${key}" data-geo="${x0.toFixed(1)},${y0.toFixed(1)},${k.toExponential(6)},${cy.toFixed(2)},${W},${H}"><image class="tile" href="maps/${key}.jpg" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none"/><rect class="shade" width="${W}" height="${H}"/>${marks}<g class="scale"><line x1="12" y1="${H - 14}" x2="${(12 + sw).toFixed(1)}" y2="${H - 14}"/><text x="12" y="${H - 20}">${step >= 1000 ? step / 1000 + " km" : step + " m"}</text></g></svg>
+      <p class="mapcredit">Map: <a href="https://dragonwilds.runescape.wiki/w/Map" target="_blank" rel="noopener">RuneScape: Dragonwilds Wiki</a></p>`;
+}
+function wireMaps(host) {
+  host.querySelectorAll("image.tile").forEach(im => {
+    im.addEventListener("load", () => im.closest("svg").classList.add("has-map"), { once: true });
+    im.addEventListener("error", () => im.remove(), { once: true });
+  });
+  host.addEventListener("click", (e) => {
+    const g = e.target.closest(".mpt[role=button]"); if (g && canWrite) cycle(g.dataset.mid);
+  });
+}
+function paintMaps() {
+  document.querySelectorAll(".mpt").forEach(g => g.classList.toggle("on", stateOf(g.dataset.mid) === "done"));
+}
+function buildBurrows() {
+  const host = document.getElementById("burMain");
+  host.innerHTML = BURROW_MAP.map(r => {
+    const rows = r.b.map((b, i) => { const L = LANDMARKS[b.near];
+      return `<li class="q burrow" data-id="${b.id}"><button class="mark" type="button" id="m-${b.id}"><span class="d">${CHECK}</span></button><div><div class="title-row"><span class="name">Burrow ${i + 1}</span><span class="status" hidden></span></div></div></li>`; }).join("");
+    return `<section class="panel" id="bur-${lslug(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
+      ${mapSVG("burrows-" + lslug(r.r), `Map of ${r.r} burrows`, r.b.map((b, i) => ({ id: b.id, x: b.x, y: b.y, txt: i + 1, cls: "bur", click: true, aria: `${r.r} burrow ${i + 1}` })))}
+      <ul class="list">${rows}</ul><p class="empty">Every burrow here is ticked.</p></section>`;
+  }).join("");
+  wireMaps(host);
+  host.addEventListener("click", (e) => { const m = e.target.closest(".mark"); if (m) cycle(m.closest(".q").dataset.id); });
+}
+const burTicked = () => BURROW_IDS.filter(id => stateOf(id) === "done").length;
+const burDone = () => Math.min(BURROWS, Math.max(burCount(), burTicked()));
+const burCount = () => { const p = progress[BUR_ID]; return p && typeof p.count === "number" ? p.count : 0; };
+const medalSum = () => COURSE_IDS.reduce((a, id) => a + Math.min(3, medalOf(id)), 0);
+const medalOf = (id) => { const p = progress[id]; return p && typeof p.medal === "number" ? p.medal : 0; };
+async function setVal(id, body) {
+  progress[id] = { ...body, at: Date.now() };
+  paint();
+  if (mode === "local") { lsSet(LS_KEY, JSON.stringify(progress)); return; }
+  pending.add(id);
+  try { await myCol().doc(id).set({ ...body, at: Date.now() }); }
+  catch (e) { if (e && e.code === "invalid_argument") goLocal("<b>Your log</b> · saved in this browser"); else setSync("That change didn't save. Check your connection and try again."); }
+  finally { pending.delete(id); }
+}
+function paintAgility() {
+  let gold = 0;
+  COURSES.forEach(c => {
+    const li = document.querySelector(`[data-cid="${c.id}"]`), m = medalOf(c.id), best = (progress[c.id] || {}).best;
+    if (m >= 3) gold++;
+    li.classList.toggle("gold", m >= 3);
+    li.querySelectorAll(".medal").forEach(b => { const on = Number(b.dataset.m) <= m; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); b.disabled = !canWrite; });
+    li.querySelector(".cbest").textContent = best ? `Your best: ${fmtT(best)}${m >= 3 ? "" : ` · ${fmtT(Math.max(0, best - c.g))} off gold`}` : "";
+  });
+  const bc = burDone(), bs = burCount(), bt = burTicked();
+  const ms = medalSum();
+  document.getElementById("aGold").textContent = ms;
+  document.getElementById("aGoldT").textContent = COURSES.length * 3;
+  document.getElementById("aBur").textContent = bc;
+  document.getElementById("aGoldBar").style.width = (100 * ms / (COURSES.length * 3)) + "%";
+  document.getElementById("aBurBar").style.width = (100 * bc / BURROWS) + "%";
+  const ci = document.querySelector("#agCourses .count"); ci.textContent = `${gold} / ${COURSES.length} gold`;
+  document.getElementById("burSave").textContent = (progress[BUR_ID] ? `Your save: ${bs} opened · ` : "Import your save to fill in the total · ") + `Ticked on the maps: ${bt}` + (bs > bt ? ` · ${bs - bt} opened burrow${bs - bt > 1 ? "s" : ""} not ticked yet` : "");
+  BURROW_MAP.forEach(r => {
+    const d = r.b.filter(b => stateOf(b.id) === "done").length, sec = document.getElementById("bur-" + lslug(r.r));
+    sec.querySelector(".count").textContent = `${d} / ${r.b.length}`; sec.classList.toggle("all-done", d === r.b.length);
+  });
 }
 function paintUrns() {
   const d = URN_IDS.filter(id => stateOf(id) === "done").length;
@@ -3600,6 +4043,7 @@ function paintUrns() {
     sec.classList.toggle("all-done", rd === rt);
   });
 }
+const URN_MAP = {"u-bramblemead-valley-1": "824A3798412A1067890E86A2AEB609FF", "u-bramblemead-valley-2": "7DE4A84C4997053BD7171089B408AE13", "u-bramblemead-valley-3": "DB621D2A40316F7B97255696742C2AA1", "u-whispering-swamp-1": "ABB5944041C18CAAC148EF8EB84CE0B7", "u-whispering-swamp-2": "485514AA4D440FC3EBF331B6F5128ECE", "u-whispering-swamp-3": "13C2DCA14ADFC8C4A882FC9E92624D37", "u-fractured-plains-1": "DCF55CC14E4019584B5B03AB1D1ECC75", "u-stormtouched-highlands-1": "FFFC3EC542BE3EC01D043ABBD6DE12BD", "u-bloodblight-swamp-1": "13A95FDF40A30E7465E66C96CAA63778", "u-hope-s-fall-1": "186B64E241A3790BE54292A84653E981", "u-silverthorn-keep-1": "5D81E4DB41E190FF887E26B70012DCB6", "u-emberwood-1": "BA041CF14868F751575411B22EFE218A", "u-the-garrison-1": "7F08EB5E423CA1F87DDC9C909EA0B3A8", "u-the-menagerie-1": "F57EA8C8495F0671B12659A84D4D1239", "u-the-grand-hall-1": "FBA02FCB4F0443D2E48EBAA3ABDC5FE2", "u-alcarrid-oasis-1": "30D8FACB490D76F52996A58311D5B528", "u-the-burning-spire-1": "00BD25DE45F90484B177FDA9F0AC392E", "u-manafem-plains-1": "D934D328425EF220C8050A82599895A8", "u-fragments-of-ghornfell-1": "C5AFB2F3441D61ABE1DC7AACF61FC7E7", "u-fragments-of-ghornfell-2": "93BA5CA64D045F23573ACBAC89221B83", "u-cataclysm-keep-1": "189437844E5DD62D0458C9A415C5F5E2"};
 const IMPORT_MAP = {"r":{"r-suspiciously-light-tattered-boots":["UkZw90N90ma_M6S0fOXDGg"],"r-a-simple-broken-bow":["E8R8fkp8ynIfL1qxiwwC0A","pBMjZ01ZT75jbueWYWzr9w"],"r-a-threadbare-grain-sack":["gBbTTUeWw4qUoMSyhYGzVw"],"r-scratchy-sackcloth":["9oa7Q0HZcRP0Qs-kqmGYAw"],"r-an-educational-blade":["6OKIMEQhtnAdpqqfPfL3IQ"],"r-a-cruel-goblin-blade":["b-47w0EkWO48qQWnIo9c3g"],"r-remnants-of-a-shattered-skull":["sTeIJ0-wYrxI986GAiRJlg"],"r-a-mysterious-crescent-carving":["nlMcNEoEOCHx-ga5KVtiQg"],"r-a-corroded-serrated-blade":["6ZoOqktOYN3PPOyrlvbjVw"],"r-a-brutal-bladehead":["6fLFNEt1eKIB3I6XuxqMuw"],"r-a-string-of-sinew":["iFVoxEDa9Sb-SVil-Ju2CQ"],"r-parts-of-a-sinister-looking-staff":["HLZnakQ10bVDkMyWDjK4lg"],"r-azure-metal-contraption":["7vhlAE3bRnouR0uDHMN8gg"],"r-abyssal-remains":["kRJ8QUBQGTMmDROOrE_OnQ"],"r-corroded-white-visor":["HTWQ1keuR6WRFKyAnQjtuA"],"r-dented-white-pauldron":["fLSyM0gsdZYgksqrjGFYfg"],"r-crushed-white-cuisse":["0WuAY04CfwrxKyOpbf75VQ"],"r-simply-splendid-feather":["wVPkqU7jENWfOw2LULSMRw"],"r-slightly-chaffing-chestguard":["7cuDAEffIxsuFv2fLRhZJQ"],"r-tastefully-torn-tights":["x2nHK0Oazc7y2hKyYDz2HA"],"r-curse-carrying-crown":["ncQP2kATcpgHreOdGo425g"],"r-remnants-of-a-rotting-robe":["QyOosU0H5UpN6JqIXnvADA"],"r-burnished-belt-buckle":["qE0T70ziVhSPwvunAaafhQ"],"r-cloying-damp-cowl":["QCfCWkdqMgflGB-5DsLDiw"],"r-serrated-claw":["LLm9O0UhZkBEFOax3N48Jg"],"r-shard-of-smoky-glass":["1trjEENYSpVmgrC3xtdHAg","h1ebAUfMLRP2PDiTH4tSUA"],"r-sundering-spiked-slab":["XwnJo092UaK46Dakc-C1qQ"],"r-bloodstained-black-visor":["vK0jUUDhV0pzXOO95yMwEw"],"r-shard-of-black-pauldron":["qdGf7EMRuwGDwsmKolsz9A"],"r-grim-black-codpiece":["N_t1M0dkBWFy7nWz9f9HDQ"],"r-sodden-black-leather":["yeFKy0YVGBD3keSZ6pYW-w"],"r-limp-black-lining":["RVOoF0vHRTuyIb6OESokog"],"r-dusty-black-pocket":["zeMFNkDzj6LwihmMVeRltw"],"r-fabric-that-hums-with-you":["90aktE9-nhG4UVCqa3jaWA"],"r-whispering-elbow-pad":["88pK_0U6C2w55ByctWy2QA"],"r-wizard-s-kneecap":["4_TRJUFBuffFpMeEAKGuuA"],"r-sinister-mechanism":["ckoLQ0DdNEnIi1qt3XGTCQ"],"r-bloodstained-hilt":["YXnuyksXvK0tQ9GH04S1Xw"],"r-demonic-metal-rod":["98-7zUsC8HnuCoazkvXZLg"],"r-shattered-black-blade":["f_jgxUDz1WJSWPWKR2EIyw"],"r-battle-scarred-black-metal":["aqimiUj2vk4FR5uasjaEHg"],"r-chipped-obsidian-construct":["jjQQek1ssmHyYt-8jWalbA"],"r-crushed-obsidian-construct":["0FvGeklUduSgLLaY_6kClA"],"r-fractured-obsidian-construct":["VfflqEvupHNIogWRipKSSA"],"r-selenic-veil":["5OpwxkAfYS1wiweVjvZ0MA"],"r-lunular-wrappings":["mzbUUUEUJRiAIYOtONwT2Q"],"r-lunate-shawl":["rUwZ6kpVADIMWzmY6sOSYQ"],"r-twitching-antenna":["VbcUikH4KIx42fysXmksZA"],"r-barbed-appendage":["ABK5jk0ivolQWEyOZxCMQQ"],"r-chitinous-carapace":["PWW0kULLE6QEej2rz_ZU-Q"],"r-sun-bleached-head-wrap":["36dUrUKb76qY-DWA4AJZYw"],"r-sun-bleached-leggings":["XJsyK0cR-KB0j1y0g_wZ9Q"],"r-sun-bleached-vest":["q_AIy0vARq9e1My8KU3ibg"],"r-unyielding-obsidian-construct":["JN2j9UHgnDw3Wxe8_owfsA"],"r-elongated-obsidian-construct":["uXztMETtoloOuMquV7X2Kw"],"r-bludgeoning-obsidian-construct":["o6x5pU00awkOmqiIL6yLaA"],"r-shattered-black-blade-umbral-sands":["rhpbmkZxtIYusJuxZyClkg"],"r-corroded-curved-blade":["3DskHUAqz1rfmgOAJqkAgw"],"r-icthlarian-fetish":["nPHTJky85bBWiI-YMJIatA"],"r-plate-of-pure-obsidian":["Y3BPSkumg2BOIe6kEtr1Vw"],"r-vault-wild-scout-s-shortbow":["SKlZZkSUWpDWsa6loSZHUA"],"r-vault-anti-dragon-shield":["yPbjI0hoL8uWS2S-UyFNLA"],"r-vault-granite-maul":["HZaxd0qJZ4lENGqsbSTudg"],"r-vault-paladin-helmet":["OfBwl0V1XdyKKCiz7C9wpA"],"r-vault-paladin-platebody":["GvLwNEJOpmPKkdeOdexIRg"],"r-vault-paladin-platelegs":["SqRHXUJjZBD2rJ6wIMoLHQ"],"r-vault-wild-archer-cowl":["eeOXkUTpr35PKtm1Xj0BGQ"],"r-vault-wild-archer-body":["hIJsUU4P9gjQ8wy9jNeBUA"],"r-vault-wild-archer-chaps":["azgWk0zK6W1sXz-J3qpnKA"],"r-vault-dragonbone-dagger":["HW2DyU6qtHJXsqGl7Gt7uA"],"r-vault-dragonkin-mage-hood":["XdQvq0vL60gh69uNaVH3zw"],"r-vault-dragonkin-mage-robes":["9_I3gEvcghNchbGQdBtxUw"],"r-vault-dragonkin-mage-robe-legs":["-Exs9UAQhztJhBOeIryWWw"],"r-vault-fallen-hoplite-s-helm":["XAeyZUOozEUpIDGcJvT5fg"],"r-vault-fallen-hoplite-s-chest":["bojvI0K_wX1kcnqoIofQcQ"],"r-vault-fallen-hoplite-s-tassets":["y5rZHUj2-0BZ-ymDie7Hlw"],"r-vault-undead-ranger-s-bow":["Le9gC0m-DxolsnuWqps_xw"],"r-vault-wolfbane-dagger":["fs1l5E3ejhV9JcqKCvLjhg"],"r-vault-necromancer-s-staff":["bJ6FhUnS1G25mf6j4j30RQ"],"r-sigil-of-a-phoenix":["e_5WDkqE8pfYEZWK0XZYfQ"],"r-weighted-training-band":["qzXp8E9Bh7oEwY2QZtG4sw"],"r-hardy-weathered-shell":["V_11hkemndKMowqI8AhdAQ"],"r-arrowhead-of-ancient-origin":["6J0jMUCrzI8GpEaGwExkRg"],"r-softly-vibrating-orb":["r7SMXUoARkhmx3i9TpBbFg"],"r-a-cracked-bronze-vanity-mirror":["wrvMcU_V4L3QM3SmgUf9-w"],"r-carved-bone-animal-lure":["DhAXrU2cFm0w3pmIbKiKUg","uqKvMkGbwu3y46u_DGUasQ"],"r-rotten-farming-tool":["bX-eyE7rMqasf-yf7vwm6g"],"r-commemorative-coin":["g4nWJE5tQiweh1S14kFO5g"],"r-inspiring-insignia":["Vt8IP0kgdvJ9kTSqdigoJw"],"r-tattered-time-lost-cloth":["w9G5dUgk7rQpRruVqjK6RQ"],"r-torn-tapestry":["snP_W08KFZUrZwmggck8Fw"],"r-shred-of-sunbleached-weave":["BVJ7CEavZcLckp6VnL7DUA"],"r-moth-eaten-yellow-cloth":["Iu40xkoK4vuP_HuoR9c12Q"],"r-moth-eaten-blue-cloth":["GblmUkXkbCKRdyCocEmmAQ"],"r-moth-eaten-red-cloth":["g0tx5E3fPPUjaJG7KyQvAQ"],"r-moth-eaten-purple-cloth":["JBAiVUssRJavioWBctmuHQ"],"r-moth-eaten-green-cloth":["MuomBkUSPjH3amuxj9cqRA"],"r-moth-eaten-black-cloth":["DNFU5kz2YHMiztuFg3WWJg"],"r-moth-eaten-orange-cloth":["JWxhBEQk_wpACnWda8unJw"],"r-moth-eaten-pink-cloth":["liGUzEMGLSrNwc2GNGfXEw"],"r-moth-eaten-white-cloth":["pzFz9UslDExps6C6ACu__w"],"r-chewed-pink-cloth":["xUaZYU0U43lFX6KDxgy_sQ"],"r-chewed-yellow-cloth":["4VpoVka1Ypjz_qmdXb2c9w"],"r-chewed-blue-cloth":["b8k7SUk-P69NwoWYE3cL9A"],"r-chewed-green-cloth":["tF6yLEvhVu0pFVCIdRtXdQ"],"r-chewed-red-cloth":["FWjpH0stKxcWXquzeey7fA"],"r-soiled-pink-cloth":["Cw4tc0JaM4be1zW9uRHI5A"],"r-soiled-yellow-cloth":["v5kfI0hE2lQ0ULGUPDD0Gg"],"r-soiled-blue-cloth":["8u3FiUODNjoKhgqkyjSsNg"],"r-soiled-green-cloth":["5uxvWEzlOCVJjUCNCi6qiQ"],"r-soiled-red-cloth":["d_tA0kaiyQ0OkkOHnmG7fA"],"r-black-memory-of-menaphos":["QN6kpkaDRFju_KCDGCOz5w"],"r-blue-memory-of-menaphos":["5llkxkJl1yTlLWO2yyxvaA"],"r-green-memory-of-menaphos":["E1WNS0fVmAnN8r-mfZEyHg"],"r-orange-memory-of-menaphos":["Avmul0fDbhF-Ww64mxKeDg"],"r-pink-memory-of-menaphos":["f6frc0p4A5lOlSu9YDhlLA"],"r-purple-memory-of-menaphos":["6TTFREl4uoFVI4W5i1H49w"],"r-red-memory-of-menaphos":["gI5RRUjOy1Frk7iXCjd0IQ"],"r-white-memory-of-menaphos":["BrNQmkXJ688DQ-O-vIZMLQ"],"r-yellow-memory-of-menaphos":["Jdc_1EnCfs3LEpKlRXccPA"],"r-extinguished-blue-remnants":["9l--cUSqJK7vbxifm-Qmxw"],"r-extinguished-yellow-remnants":["iBIdCkvGVl2OIV2DSEIKDg"],"r-extinguished-green-remnants":["Dc4ihUVgN3eoAJ-jmtASwQ"],"r-extinguished-purple-remnants":["wVNkT0yqc_FXhuCTvpd9cA"],"r-extinguished-red-remnants":["9G6NjEjIwdo-432bi8AsUg"]},"q":{"first-steps":["luaLQEzPXjx9_ICiz5zkNg","AmuXOUitB08PYDCmdVA_Ug","v9LCTEjS-igQFrq4bpvtsA","7i8X403LNgw6uY-XK5OgnA"],"getting-started":["xa8o60AbJZ23FymQeiH3bg"],"ratcatcher":["SDcUrkVqRiTKKEyzEh5DWw","4lW6rU0i0js1e3qFEAVI4w"],"rune-mysteries":["TgVnb0NCLvmEVRed59IgsQ","zrqqFUNmx3lcF6umysJfvQ","EWRW7Ux-jHohLEKQCrkJJw"],"dragon-slayer":["yrRZnkmro-IvH_OmZ3f-5A"],"withering-heights":["uftGB0es-CGrvXyPoxW31w"],"black-knights-fortress":["3MpWS0mD8A6yFVmjVAA2Qg"],"icthlarins-little-helper":["kPtTW0exXrqw2BqELR_bFA"],"regicide":["Nw3wiUaB8siRIN2bStWJmw"],"t-rogue-trader":["d6s4dUyoCduLy7eRc2KndQ"],"t-mirror-crackd":["d6M5Dkpx9Pjw_V2mNJh6eA"],"t-rag-and-bone":["1BhNkkkP6y7ireu6yVR5tg"],"t-song-ancients":["Xb1KUkU_wOIHvzahULr6yA"],"t-scaling":["Bnon4kzm_EdvZz-bma5HBg"],"t-beast-sand":["0cB0D0QD_L4nrpu6CxZEsw"],"t-dig-site":["8Rb0t0upslwKHXWYGnTKgg"],"t-saga":["XElCtUmXXqK35p63tua9og"],"t-mark-day":["nIvEyEv-kvSwgqOLc5VopQ"],"growing-pains":["_L6IAEaHSVPnhhaTamBHBA"],"shrimp-catcher":["8gKiWUPU3vW2sQesVHdrPA"],"restless-ghosts":["eKV5vkDqZH89aGWiY_T7GQ"],"goblin-diplomacy":["AsyEt0xjewNEzYmzr_kg_w"],"highlighting-the-problem":["jP8SfEP3QLjisgaHyBzCPw"],"granite-mauled":["bsfNlkgT8D_Y5HCdCf-Seg"],"heartstrings":["xsgOzUS-M2iCLDe-XTDq3w"],"a-room-with-a-garou":["4G_ph0XQeA1Nc72_CVO6HQ"],"dog-days":["Kdj6N0dEw05JjoyDP0pNvw"],"cooks-assistant":["cZlfrUaPSsi4VfeVc6iIEw"],"a-melody-remembered":["O3ruOkgGHBqwIheSH_7BBg"],"the-great-body-robbery":["db-ciknQnYrkNHuOcQXhkA"],"even-more-restless-ghosts":["4QQuNkR6spTCXC6zj6VqxQ"],"the-wild-hunt":["rai6k0UuXT_GPEixJM0boQ"],"things-that-go-boom":["wwEK50EPipTecO20yTquSQ"],"seeking-salvation":["Rov9uE687b2NkaKFCTFP3A"],"dorics-quest":["Fv3Rt0Dn18PT1DepNzEqtQ"],"letters-for-the-dead":["4kbEAUJrs6mebhGkzFQxmA"],"what-remains-is-written":["WXRGL036pJRhAU-BWTZ_9g"],"mirror-mirror":["KLBpt02O2AA_kaa_A8Av9w"],"biohazard":["2kXJ3kWFS38kZfmPnvUFXw"],"whats-theirs-is-mine":["vxS7_kzdpGvmWKWwjqF7Jg"],"contact":["A3DOkkGZxXUHc82rPKHznA"],"brink-of-extinction":["sQ91eUA55bcQx0OQ0m59sg"],"mapping-the-sands-i":["NjeUO0TBeyQGzSCmu2b3bA"],"mapping-the-sands-ii":["rI4VkUT_8837ayKcLgxWwQ"],"statues-of-saradomin":["2V1KS0R3XJX-UtiuP78EoA"],"wanted":["9Kod2UgSkm8YrJCwMgmAdQ"],"t-fuzan-trials":["kPtTW0exXrqw2BqELR_bFA"]}};
 function analyzeSave(data) {
   const gp = data && data.GameProgress;
@@ -3614,6 +4058,21 @@ function analyzeSave(data) {
     const st = best === 2 ? "done" : best === 1 ? "started" : null;
     if (st && rank[st] > rank[stateOf(id)]) ups.push({ id, state: st, kind: id.startsWith("r-") ? "r" : "q" });
   });
+  const shrines = new Set(gp.Progress.ShrinesUnlocked || []);
+  Object.entries(URN_MAP).forEach(([id, sid]) => {
+    if (BY_ID[id] && stateOf(id) !== "done" && shrines.has(sid)) ups.push({ id, state: "done", kind: "u" });
+  });
+  const journal = new Set((gp.Journal && gp.Journal.UnlockedEntries) || []);
+  const mounts = new Set((((gp.Character || {}).Mount || {}).MountsUnlockedList || []).map(m => String(m).split(":").pop()));
+  COLLS.forEach(c => c.list.forEach(l => { if (stateOf(l.id) !== "done" && (c.src === "mounts" ? mounts : journal).has(l.pid)) ups.push({ id: l.id, state: "done", kind: c.key }); }));
+  const runs = {}; (gp.Progress.AgilityCourseScores || []).forEach(r => { const o = runs[r.CourseID] || (runs[r.CourseID] = { m: 0, t: 0 }); o.m = Math.max(o.m, r.HighestUnlockedMedal || 0); if (r.PersonalBestCompletionTime > 0) o.t = o.t ? Math.min(o.t, r.PersonalBestCompletionTime) : r.PersonalBestCompletionTime; });
+  COURSES.forEach(c => { const r = runs[c.pid]; if (!r) return; const p = progress[c.id] || {}, best = r.t ? Math.round(r.t * 10) / 10 : 0;
+    const nb = best && (!p.best || best < p.best) ? best : p.best || 0, nm = Math.max(r.m, p.medal || 0);
+    if (nm > (p.medal || 0) || nb !== (p.best || 0)) ups.push({ id: c.id, body: nb ? { medal: nm, best: nb } : { medal: nm }, kind: "a", gold: nm >= 3 && (p.medal || 0) < 3 }); });
+  const nbur = Math.min(BURROWS, ((gp.Progress.KebbitBurrowsActivated) || []).length);
+  if (nbur > burCount()) ups.push({ id: BUR_ID, body: { count: nbur }, kind: "k", n: nbur - burCount() });
+  const sxp = {}; ((gp.Skills && gp.Skills.Skills) || []).forEach(sk => { sxp[sk.Id] = sk.Xp; });
+  SKILLS.forEach(sk => { const xp = sxp[sk.pid]; if (typeof xp === "number" && xp > xpOf(sk.id)) ups.push({ id: sk.id, xp, kind: "s" }); });
   Object.entries(IMPORT_MAP.r).forEach(([id, pids]) => {
     if (BY_ID[id] && stateOf(id) !== "done" && pids.some(p => unlocked.has(p))) ups.push({ id, state: "done", kind: "r" });
   });
@@ -3645,9 +4104,14 @@ function handleSaveText(text, auto) {
     const nq = res.ups.filter(u => u.kind === "q" && u.state === "done").length;
     const ns = res.ups.filter(u => u.kind === "q" && u.state === "started").length;
     const nr = res.ups.filter(u => u.kind === "r").length;
+    const nu = res.ups.filter(u => u.kind === "u").length;
+    const ns2 = res.ups.filter(u => u.kind === "s").length;
+    const nl = res.ups.filter(u => u.kind === "lore").length, nmo = res.ups.filter(u => u.kind === "mounts").length, npl = res.ups.filter(u => u.kind === "plants").length, nfa = res.ups.filter(u => u.kind === "factions").length;
+    const na = res.ups.filter(u => u.kind === "a").length, ng = res.ups.filter(u => u.kind === "a" && u.gold).length;
+    const nk = (res.ups.find(u => u.kind === "k") || {}).n || 0;
     if (!res.ups.length) return setImp(`<div class="who">${esc(res.name)}</div><p>Your log is already up to date with this save.</p>`);
     setImp(`<div class="who">${esc(res.name)}</div><p>Found new progress to add:</p><ul>
-      ${nq ? `<li>${nq} quest${nq > 1 ? "s" : ""} completed</li>` : ""}${ns ? `<li>${ns} quest${ns > 1 ? "s" : ""} in progress</li>` : ""}${nr ? `<li>${nr} recipe${nr > 1 ? "s" : ""} unlocked</li>` : ""}</ul>
+      ${nq ? `<li>${nq} quest${nq > 1 ? "s" : ""} completed</li>` : ""}${ns ? `<li>${ns} quest${ns > 1 ? "s" : ""} in progress</li>` : ""}${nr ? `<li>${nr} recipe${nr > 1 ? "s" : ""} unlocked</li>` : ""}${nu ? `<li>${nu} Sanguine Urn${nu > 1 ? "s" : ""} absorbed</li>` : ""}${nl ? `<li>${nl} lore scrap${nl > 1 ? "s" : ""} read</li>` : ""}${nmo ? `<li>${nmo} mount${nmo > 1 ? "s" : ""} unlocked</li>` : ""}${npl ? `<li>${npl} plant${npl > 1 ? "s" : ""} and seeds found</li>` : ""}${nfa ? `<li>${nfa} enem${nfa > 1 ? "ies" : "y"} added to your journal</li>` : ""}${na ? `<li>${na} agility course${na > 1 ? "s" : ""} updated${ng ? `, ${ng} new gold` : ""}</li>` : ""}${nk ? `<li>${nk} kebbit burrow${nk > 1 ? "s" : ""} opened</li>` : ""}${ns2 ? `<li>${ns2} skill level${ns2 > 1 ? "s" : ""} updated</li>` : ""}</ul>
       <div class="row2"><button type="button" class="chip" id="impApply" aria-pressed="true">Add to my log</button><button type="button" class="chip" id="impCancel">Cancel</button></div>`);
     document.getElementById("impCancel").onclick = () => setImp("");
     document.getElementById("impApply").onclick = () => applyImport(res);
@@ -3684,8 +4148,8 @@ async function readHandle(h, auto) {
   }
 }
 // Claude's artifact frame silently blocks showOpenFilePicker, so only offer it when the page is the top-level window (e.g. GitHub Pages).
-let FS_LINK_ENABLED = false;
-try { FS_LINK_ENABLED = window.self === window.top; } catch { FS_LINK_ENABLED = false; }
+// Chrome refuses to remember files inside AppData (where Dragonwilds saves), so remembered-file sync is off.
+const FS_LINK_ENABLED = false;
 if (FS_LINK_ENABLED && typeof window.showOpenFilePicker === "function") {
   linkBtn.hidden = false;
   linkBtn.addEventListener("click", async () => {
@@ -3706,13 +4170,14 @@ if (FS_LINK_ENABLED && typeof window.showOpenFilePicker === "function") {
 }
 async function applyImport(res) {
   const now = Date.now();
-  res.ups.forEach(u => { progress[u.id] = { state: u.state, at: now }; });
+  const bodyOf = (u) => u.body ? { ...u.body, at: now } : typeof u.xp === "number" ? { xp: u.xp, at: now } : { state: u.state, at: now };
+  res.ups.forEach(u => { progress[u.id] = bodyOf(u); });
   paint();
   if (mode === "local") { lsSet(LS_KEY, JSON.stringify(progress)); return setImp(`<div class="who">Imported</div><p>${res.ups.length} updates added and saved in this browser.</p>`); }
   let n = 0, failed = 0;
   for (const u of res.ups) {
     pending.add(u.id);
-    try { await myCol().doc(u.id).set({ state: u.state, at: now }); }
+    try { await myCol().doc(u.id).set(bodyOf(u)); }
     catch (e) { failed++; if (e && e.code === "invalid_argument") { goLocal("<b>Your log</b> · saved in this browser"); pending.delete(u.id); break; } }
     pending.delete(u.id); n++;
     if (n % 5 === 0) setImp(`<div class="who">Importing…</div><p>Saved ${n} of ${res.ups.length}.</p>`);
@@ -3722,7 +4187,13 @@ async function applyImport(res) {
 }
 /* backup code: base64 of {v:1, p:{id:state}} */
 function makeBackup() {
-  const p = {}; Object.entries(progress).forEach(([id, v]) => { const st = v && (v.state || (v.done ? "done" : null)); if (st && BY_ID[id]) p[id] = st === "done" ? 2 : 1; });
+  const p = {}; Object.entries(progress).forEach(([id, v]) => {
+    if (!v || !BY_ID[id]) return;
+    if (typeof v.xp === "number") { p[id] = { x: v.xp }; return; }
+    if (typeof v.medal === "number") { p[id] = v.best ? { m: v.medal, b: v.best } : { m: v.medal }; return; }
+    if (typeof v.count === "number") { p[id] = { c: v.count }; return; }
+    const st = v.state || (v.done ? "done" : null); if (st) p[id] = st === "done" ? 2 : 1;
+  });
   return "DWC1." + btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, p }))));
 }
 function readBackup(code) {
@@ -3740,10 +4211,115 @@ document.getElementById("bkApply").addEventListener("click", () => {
   const p = readBackup(document.getElementById("bkIn").value), msg = document.getElementById("bkMsg");
   if (!p) { msg.textContent = "That code isn't valid. Copy the whole code, starting with DWC1."; return; }
   const rank = { none: 0, started: 1, done: 2 };
-  const ups = Object.entries(p).filter(([id, n]) => BY_ID[id]).map(([id, n]) => ({ id, state: n === 2 ? "done" : "started", kind: "b" })).filter(u => rank[u.state] > rank[stateOf(u.id)]);
+  const ups = Object.entries(p).filter(([id]) => BY_ID[id]).map(([id, n]) => {
+      if (n && typeof n === "object") {
+        if (typeof n.x === "number") return { id, xp: n.x, kind: "s" };
+        if (typeof n.m === "number") return (n.m > medalOf(id) || (n.b && (!(progress[id] || {}).best || n.b < progress[id].best))) ? { id, body: { medal: Math.max(n.m, medalOf(id)), ...(n.b ? { best: Math.min(n.b, (progress[id] || {}).best || Infinity) } : {}) }, kind: "a" } : null;
+        if (typeof n.c === "number") return n.c > burCount() ? { id, body: { count: Math.min(BURROWS, n.c) }, kind: "k" } : null;
+        return null;
+      }
+      return { id, state: n === 2 ? "done" : "started", kind: "b" };
+    }).filter(u => u && (u.body ? true : typeof u.xp === "number" ? u.xp > xpOf(u.id) : rank[u.state] > rank[stateOf(u.id)]));
   if (!ups.length) { msg.textContent = "Nothing new in that code; you're already up to date."; return; }
   applyImport({ ups }).then(() => { msg.textContent = `Restored ${ups.length} ticks.`; });
 });
+const XP_CURVE = [0, 0, 33, 70, 111, 156, 206, 261, 322, 389, 463, 545, 636, 736, 847, 969, 1104, 1253, 1417, 1598, 1798, 2018, 2261, 2529, 2825, 3152, 3512, 3910, 4349, 4833, 5367, 5957, 6608, 7326, 8118, 8993, 9958, 11023, 12199, 13496, 14929, 16510, 18255, 20181, 22307, 24654, 27245, 30105, 33262, 36747, 40594, 44581, 48717, 52997, 57421, 61990, 66702, 71560, 76562, 81708, 86998, 92433, 98012, 103735, 109603, 115616, 121772, 128073, 134518, 141108, 147842, 154720, 161743, 168910, 176222, 183678, 191278, 199022, 206911, 214944, 223122, 231444, 239910, 248521, 257276, 266176, 275219, 284407, 293740, 303217, 312838, 322604, 332514, 342568, 395129, 447689, 543044, 666881, 819200, 1000000];
+const XP94 = XP_CURVE[94], XP99 = XP_CURVE[99];
+const SKILLS = [
+  ["attack", "Attack", "4pefO9k1lUqfA6mvHNi1SA"], ["ranged", "Ranged", "heq7u88Q2UuLXFqLGTVwQw"], ["magic", "Magic", "0hreSMRVXUihq9qjDO2CFA"],
+  ["mining", "Mining", "jqX0Gh6QI0GFFPCDFK_CJQ"], ["woodcutting", "Woodcutting", "4zYUGF5u_0KbMLkWJmmBbQ"], ["fishing", "Fishing", "vwY5IkQJJDwb2PKEfoc8MQ"],
+  ["farming", "Farming", "PyUi-0LU_riFY46AnnFiWg"], ["cooking", "Cooking", "Tn7t6DQyX0-Q0cM5K7B90A"], ["artisan", "Artisan", "Wf3i7Ha-B06DH719j1vtBw"],
+  ["construction", "Construction", "waK-8EyQFQ2xEjCGYmuTRQ"], ["runecrafting", "Runecrafting", "NOqC-z-2ckqi0El22qMFlw"], ["agility", "Agility", "pJggvotwOkuoc98igUn7xA"],
+].map(([k, n, pid]) => ({ id: "s-" + k, n, pid }));
+const levelOf = (xp) => { let l = 1; for (let i = 1; i <= 99; i++) if (XP_CURVE[i] <= xp) l = i; return l; };
+const xpOf = (id) => { const p = progress[id]; return p && typeof p.xp === "number" ? p.xp : 0; };
+const fmt = (n) => n.toLocaleString("en-GB");
+function buildSkills() {
+  const host = document.getElementById("skillMain");
+  host.innerHTML = SKILLS.map(sk => `<div class="skill" data-sid="${sk.id}">
+    <div class="sn">${esc(sk.n)}</div>
+    <input type="number" inputmode="numeric" min="1" max="99" id="lv-${sk.id}" aria-label="${esc(sk.n)} level">
+    <div class="sbars" aria-hidden="true">
+      <div class="sb"><em>Level</em><div class="strack lvl"><i></i><b data-l="94" style="left:${(100 * 94 / 99).toFixed(2)}%"></b></div></div>
+      <div class="sb"><em>XP</em><div class="strack xpt"><i></i><b data-l="94" style="left:${(100 * XP94 / XP99).toFixed(2)}%"></b></div></div>
+    </div>
+    <div class="sx"></div></div>`).join("");
+  host.addEventListener("change", (e) => {
+    const inp = e.target.closest("input"); if (!inp) return;
+    const id = inp.closest(".skill").dataset.sid;
+    let l = Math.round(Number(inp.value)); if (!Number.isFinite(l)) return paint();
+    l = Math.min(99, Math.max(1, l));
+    if (levelOf(xpOf(id)) === l) return paint();
+    setSkillXP(id, XP_CURVE[l]);
+  });
+}
+async function setSkillXP(id, xp) {
+  progress[id] = { xp, at: Date.now() };
+  paint();
+  if (mode === "local") { lsSet(LS_KEY, JSON.stringify(progress)); return; }
+  pending.add(id);
+  try { await myCol().doc(id).set({ xp, at: Date.now() }); }
+  catch (e) { if (e && e.code === "invalid_argument") goLocal("<b>Your log</b> · saved in this browser"); else setSync("That change didn't save. Check your connection and try again."); }
+  finally { pending.delete(id); }
+}
+function paintSkills() {
+  let a94 = 0, a99 = 0, frac94 = 0;
+  SKILLS.forEach(sk => {
+    const xp = xpOf(sk.id), l = levelOf(xp), row = document.querySelector(`[data-sid="${sk.id}"]`);
+    if (!row) return;
+    const inp = row.querySelector("input"); if (document.activeElement !== inp) inp.value = l;
+    inp.disabled = !canWrite;
+    row.querySelector(".strack.lvl i").style.width = (100 * l / 99) + "%";
+    row.querySelector(".strack.xpt i").style.width = (100 * Math.min(xp, XP99) / XP99) + "%";
+    const toNext = l >= 99 ? "maxed" : l >= 94 ? `${fmt(XP99 - xp)} XP to 99` : `${fmt(XP94 - xp)} XP to 94`;
+    row.querySelector(".sx").textContent = `${fmt(xp)} XP · ${toNext}`;
+    row.classList.toggle("at94", l >= 94 && l < 99); row.classList.toggle("at99", l >= 99);
+    if (l >= 94) a94++; if (l >= 99) a99++; frac94 += Math.min(xp, XP94) / XP94;
+  });
+  document.getElementById("sAt94").textContent = a94;
+  document.getElementById("sAt99").textContent = a99;
+  const f = skillFracs(), k = SKILLS.length;
+  [["94l", f.l94], ["94x", f.x94], ["99l", f.l99], ["99x", f.x99]].forEach(([key, v]) => {
+    document.getElementById("b" + key).style.width = (100 * v / k) + "%";
+    document.getElementById("p" + key).textContent = pctText(v / k);
+  });
+}
+function skillFracs() {
+  let l94 = 0, x94 = 0, l99 = 0, x99 = 0;
+  SKILLS.forEach(sk => { const xp = xpOf(sk.id), l = levelOf(xp);
+    l94 += Math.min(l, 94) / 94; x94 += Math.min(xp, XP94) / XP94; l99 += Math.min(l, 99) / 99; x99 += Math.min(xp, XP99) / XP99; });
+  return { l94, x94, l99, x99 };
+}
+const pctText = (v) => { const sh = v >= 1 ? 100 : Math.min(99.9, Math.floor(v * 1000) / 10); return (sh % 1 === 0 ? sh.toFixed(0) : sh.toFixed(1)) + "%"; };
+function paintTabs() {
+  const cnt = (ids) => [ids.filter(id => stateOf(id) === "done").length, ids.length];
+  const f = skillFracs(), k = SKILLS.length;
+  const rows = { tabQuests: cnt(ALL_IDS), tabBosses: cnt(REC_IDS), tabUrns: cnt(URN_IDS) };
+  COLLS.forEach(c => { rows[c.tab] = cnt(c.ids); });
+  Object.entries(rows).forEach(([t, [d, n]]) => setTabProg(t, `${d}/${n}`, d / n));
+  const ag = medalSum(), bc = burDone();
+  setTabProg("tabAgility", `${ag}/${COURSE_IDS.length * 3}`, ag / (COURSE_IDS.length * 3));
+  setTabProg("tabBurrows", `${bc}/${BURROWS}`, bc / BURROWS);
+  setTabProg("tabSkills", Math.floor(100 * f.x94 / k) + "%", f.x94 / k);
+  document.getElementById("tabSkills").title = "XP progress toward level 94 in every skill";
+}
+function setTabProg(t, label, v) {
+  document.getElementById("tc-" + t).textContent = label;
+  document.getElementById("tpb-" + t).style.width = (100 * Math.min(1, v)) + "%";
+  document.getElementById(t).classList.toggle("full", v >= 1);
+}
+function paintTiers() {
+  paintTabs();
+  const ids = [...ALL_IDS, ...REC_IDS, ...URN_IDS, ...COLL_IDS];
+  const done = ids.filter(id => stateOf(id) === "done").length + burDone() + medalSum(), n = ids.length + BURROWS + COURSE_IDS.length * 3, k = SKILLS.length;
+  const f = skillFracs();
+  const pct = [done / n, (done + f.x94) / (n + k), (done + f.x99) / (n + k)];
+  document.querySelectorAll(".tier").forEach((t, i) => {
+    t.querySelector("i").style.width = (100 * pct[i]) + "%";
+    t.querySelector(".tpct").textContent = pctText(pct[i]);
+    t.classList.toggle("full", pct[i] >= 1);
+  });
+}
 function rcHTML(rc) {
   return `<details class="craft"><summary>What it takes to craft</summary><div class="craft-body">
     <div class="station">Craft at the <strong>${esc(rc.at)}</strong> using:</div>${ingHTML(rc.in, 0, new Set())}
@@ -3755,10 +4331,8 @@ function buildBosses() {
     ${g.intro ? `<p class="unlock">${esc(g.intro)}</p>` : ""}<ul class="list">${g.items.map(r => `<li class="q recipe" data-id="${r.id}">
       <button class="mark" type="button" id="m-${r.id}"><span class="d">${CHECK}</span></button>
       <div>
-        <div class="title-row"><span class="name">${esc(r.unl || r.n)}</span><span class="status" hidden></span></div>
+        <div class="title-row"><span class="name">${esc(r.unl || r.n)}</span><span class="status" hidden></span><a class="wiki" href="${w(r.n.replace(/^MOUNT: /, ""))}" target="_blank" rel="noopener">Wiki</a></div>
         <div class="unl"><span>${r.via || (r.n.startsWith("MOUNT") ? "Mount vestige" : "Vestige")}</span> ${esc(r.n.replace(/^MOUNT: /, ""))}</div>
-        <div class="start">${esc(r.src)}</div>
-        ${r.gear ? craftHTML(r.gear) : r.rc ? rcHTML(r.rc) : r.free ? `<div class="freecraft">Craft at the ${esc(r.free)}: no materials needed.${r.extra ? " " + esc(r.extra) : ""}</div>` : ""}
       </div></li>`).join("")}</ul><p class="empty">Everything here is unlocked.</p></section>`).join("");
   document.getElementById("rJump").innerHTML = RECIPES.map(g => `<a class="chip" href="#rec-${g.key}" data-rjump="${g.key}">${esc(g.title.replace("Power Level ", "PL "))} <span></span></a>`).join("");
   host.addEventListener("click", (e) => {
@@ -3806,7 +4380,7 @@ function paint() {
     li.classList.toggle("started", s === "started");
     li.classList.toggle("done", s === "done");
     const st = li.querySelector(".status");
-    st.hidden = s === "none"; st.textContent = li.classList.contains("recipe") ? "Unlocked" : LABEL[s];
+    st.hidden = s === "none"; st.textContent = li.dataset.status || (li.classList.contains("recipe") ? "Unlocked" : li.classList.contains("burrow") ? "Opened" : LABEL[s]);
     const b = li.querySelector(".mark");
     b.disabled = !canWrite;
     b.setAttribute("aria-label", `${BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
@@ -3840,6 +4414,11 @@ function paint() {
   document.getElementById("exChip").parentElement.classList.toggle("full", exd === EXTRA.length);
   paintRecipes();
   paintUrns();
+  COLLS.forEach(paintColl);
+  paintAgility();
+  paintMaps();
+  paintSkills();
+  paintTiers();
 }
 
 async function resolveNames() {
@@ -3855,7 +4434,7 @@ async function resolveNames() {
 }
 
 let bannerTimer = null;
-const id2kind = (id) => id.startsWith("u-") ? "Urn Absorbed" : id.startsWith("r-") ? "Recipe Unlocked" : "Quest Complete";
+const id2kind = (id) => COLL_OF[id] ? COLL_OF[id].kind : id.startsWith("b-") ? "Burrow Opened" : id.startsWith("a-") ? "Gold Medal" : id.startsWith("l-") ? "Lore Scrap Read" : id.startsWith("u-") ? "Urn Absorbed" : id.startsWith("r-") ? "Recipe Unlocked" : "Quest Complete";
 function showBanner(q, isBoss) {
   const host = document.getElementById("bannerHost");
   host.innerHTML = `<div class="banner" role="status"><div class="t">${id2kind(q.id)}</div><div class="qn">${esc(q.unl || q.n)}${q.id.startsWith("u-") ? " · +10 max health" : ""}</div>${(q.rw || []).length ? `<div class="rw">${q.rw.map(esc).join(" · ")}</div>` : ""}</div>`;
@@ -3873,7 +4452,7 @@ function goLocal(msg) {
 async function cycle(id) {
   if (pending.has(id)) return;
   const cur = stateOf(id);
-  const isBoss = id.startsWith("r-") || id.startsWith("u-");
+  const isBoss = id.startsWith("r-") || id.startsWith("u-") || id.startsWith("l-") || id.startsWith("b-") || id.startsWith("j-");
   const next = isBoss ? (cur === "done" ? "none" : "done") : (cur === "none" ? "started" : cur === "started" ? "done" : "none");
   if (next === "none") delete progress[id];
   else progress[id] = { state: next, at: Date.now() };
@@ -3901,7 +4480,7 @@ function setFilter(todo) {
 document.querySelectorAll(".f-all").forEach(x => x.onclick = () => setFilter(false));
 document.querySelectorAll(".f-todo").forEach(x => x.onclick = () => setFilter(true));
 
-const TABS = { quests: ["tabQuests", "view-quests"], bosses: ["tabBosses", "view-bosses"], urns: ["tabUrns", "view-urns"] };
+const TABS = { quests: ["tabQuests", "view-quests"], bosses: ["tabBosses", "view-bosses"], urns: ["tabUrns", "view-urns"], lore: ["tabLore", "view-lore"], mounts: ["tabMounts", "view-mounts"], plants: ["tabPlants", "view-plants"], factions: ["tabFactions", "view-factions"], agility: ["tabAgility", "view-agility"], burrows: ["tabBurrows", "view-burrows"], skills: ["tabSkills", "view-skills"] };
 function setTab(t) {
   if (!TABS[t]) t = "quests";
   Object.entries(TABS).forEach(([k, [tab, view]]) => {
@@ -3930,7 +4509,10 @@ function drawReset() {
 build();
 buildBosses();
 buildUrns();
-setTab(location.hash === "#bosses" ? "bosses" : location.hash === "#urns" ? "urns" : (lsGet("dw-tab") || "quests"));
+COLLS.forEach(buildColl);
+buildAgility();
+buildSkills();
+setTab(["#bosses", "#urns", "#lore", "#mounts", "#plants", "#factions", "#agility", "#burrows", "#skills"].includes(location.hash) ? location.hash.slice(1) : (lsGet("dw-tab") || "quests"));
 setFilter(lsGet("dw-filter") === "todo");
 paint();
 drawReset();
@@ -3953,6 +4535,9 @@ setSync("<b>Your log</b> · saved in this browser");
     snap.docs.forEach(d => {
       const v = d.data(); if (!v || !BY_ID[d.id]) return;
       if (v.state === "started" || v.state === "done") next[d.id] = { state: v.state, at: v.at || 0 };
+      else if (d.id.startsWith("s-") && typeof v.xp === "number") next[d.id] = { xp: v.xp, at: v.at || 0 };
+      else if (d.id.startsWith("a-") && typeof v.medal === "number") next[d.id] = { medal: v.medal, ...(typeof v.best === "number" ? { best: v.best } : {}), at: v.at || 0 };
+      else if (d.id === BUR_ID && typeof v.count === "number") next[d.id] = { count: v.count, at: v.at || 0 };
     });
     pending.forEach(id => { if (progress[id]) next[id] = progress[id]; else delete next[id]; });
     if (first) {
@@ -3964,8 +4549,10 @@ setSync("<b>Your log</b> · saved in this browser");
         for (const [id, v] of Object.entries(localSaved)) {
           if (!BY_ID[id] || !v) continue;
           const st = v.state || (v.done ? "done" : null);
-          if (st !== "started" && st !== "done") continue;
-          try { await myCol().doc(id).set({ state: st, at: v.at || Date.now() }); }
+          const vb = valBody(v);
+          const body = vb ? { ...vb, at: v.at || Date.now() } : (st === "started" || st === "done") ? { state: st, at: v.at || Date.now() } : null;
+          if (!body) continue;
+          try { await myCol().doc(id).set(body); }
           catch (e) { if (e && e.code === "invalid_argument") { goLocal("<b>Your log</b> · saved in this browser"); return; } }
         }
         return;
