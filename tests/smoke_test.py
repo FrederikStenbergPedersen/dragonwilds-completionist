@@ -14,7 +14,7 @@ FIXTURE = os.path.join(ROOT, "tests", "fixtures", "sample-character.json")
 
 # What the sample save should produce in each section's progress row.
 EXPECT_TABS = {
-    "Quests": "3/47", "Recipes": "2/125", "Crafting": "5/869", "Building": "6/776", "Mounts": "1/17", "Urns": "2/21",
+    "Quests": "3/47", "Recipes": "2/125", "Crafting": "5/869", "Building": "6/776", "Mounts": "1/19", "Urns": "2/21",
     "Burrows": "4/19", "Map": "10/32", "Lore": "3/117", "Gathering": "3/87", "Factions": "2/60", "Fauna": "2/69",
     "Agility Courses": "5/18",
 }
@@ -110,7 +110,7 @@ async def main():
         secs = "[...document.querySelectorAll('#recMain section')].filter(e => getComputedStyle(e).display !== 'none').length"
         check(await pg.evaluate(secs) == 0 and (await pg.evaluate(undisc, "recipes")).startswith("125 more recipes"), "unfound sections are left out, with one count for the rest")
         await pg.evaluate("progress['r-a-simple-broken-bow'] = { state: 'done' }; paint()")
-        check(await pg.evaluate(secs) == 1 and (await pg.evaluate(undisc, "recipes")).startswith("121 more recipes"), "finding something shows just its section")
+        check(await pg.evaluate(secs) == 1 and (await pg.evaluate(undisc, "recipes")).startswith("124 more recipes"), "finding something shows just its section")
         await pg.evaluate("delete progress['r-a-simple-broken-bow']; paint()")
         await pg.click("#tabQuests")
         await pg.reload()

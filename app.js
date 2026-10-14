@@ -230,7 +230,7 @@ function buildColl(c) {
     ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore" data-id="${id}" data-status="${c.status}" data-gate="${id}">
       <button class="mark" type="button" id="m-${id}"><span class="d">${CHECK}</span></button>
       <div><div class="title-row"><span class="name">${esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}${sub ? HINT_BTN : ""}</div>${sub ? `<div class="start spoil">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
-    <p class="sec-undisc"></p><p class="empty">${esc(c.empty)}</p></section>`).join("") + undiscHTML(c.key);
+    <p class="empty">${esc(c.empty)}</p></section>`).join("") + undiscHTML(c.key);
   document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}" data-region="${esc(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
   host.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
   const norm = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -251,11 +251,7 @@ function buildColl(c) {
 }
 function paintColl(c) {
   const ids = c.ids, d = ids.filter(id => stateOf(id) === "done").length;
-  if (FOUND_ONLY.includes(c.key)) {
-    // Sections with nothing found stay hidden; this one line counts what's in them.
-    const left = c.data.reduce((a, r) => { const ri = r.g.flatMap(g => g.i.map(x => x[0])); return a + (ri.some(id => stateOf(id) === "done") ? 0 : ri.length); }, 0);
-    undiscLine(c.key, left, FOUND_NOUN[c.key]);
-  }
+  if (FOUND_ONLY.includes(c.key)) undiscLine(c.key, ids.length - d, FOUND_NOUN[c.key]); // one line for everything still to find
   document.getElementById(c.p + "Done").textContent = d;
   document.getElementById(c.p + "Total").textContent = ids.length;
   document.getElementById(c.p + "Bar").style.width = (100 * d / ids.length) + "%";
@@ -269,7 +265,6 @@ function paintColl(c) {
     });
     const sec = document.getElementById(`${c.key}-${lslug(r.r)}`);
     sec.querySelector(".count").textContent = `${rd} / ${rt}`;
-    sec.querySelector(".sec-undisc").textContent = rt > rd ? `${rt - rd} more to discover` : "";
     if (FOUND_ONLY.includes(c.key)) { const ch = document.querySelector(`[data-jump="${c.key}-${lslug(r.r)}"]`); if (ch) ch.classList.toggle("nofound", !rd); }
     sec.classList.toggle("all-done", rd === rt);
     const a = document.querySelector(`[data-jump="${c.key}-${lslug(r.r)}"]`);
@@ -685,7 +680,7 @@ function buildBosses() {
       <div>
         <div class="title-row"><span class="name">${esc(r.unl || r.n)}</span><span class="status" hidden></span><a class="wiki" href="${w(r.n.replace(/^MOUNT: /, ""))}" target="_blank" rel="noopener">Wiki</a>${HINT_BTN}</div>
         <div class="unl spoil"><span>${r.via || (r.n.startsWith("MOUNT") ? "Mount vestige" : "Vestige")}</span> ${esc(r.n.replace(/^MOUNT: /, ""))}</div>
-      </div></li>`).join("")}</ul><p class="sec-undisc"></p><p class="empty">Everything here is unlocked.</p></section>`).join("") + undiscHTML("recipes");
+      </div></li>`).join("")}</ul><p class="empty">Everything here is unlocked.</p></section>`).join("") + undiscHTML("recipes");
   document.getElementById("rJump").innerHTML = RECIPES.map(g => `<a class="chip" href="#rec-${g.key}" data-rjump="${g.key}">${esc(g.title.replace("Power Level ", "PL "))} <span></span></a>`).join("");
   host.addEventListener("click", (e) => {
     const b = e.target.closest(".mark"); if (b) return cycle(b.closest(".q").dataset.id);
@@ -719,14 +714,13 @@ function paintRecipes() {
     const n = g.items.filter(r => stateOf(r.id) === "done").length;
     const sec = document.getElementById("rec-" + g.key);
     sec.querySelector(".count").textContent = `${n} / ${g.items.length}`;
-    sec.querySelector(".sec-undisc").textContent = g.items.length > n ? `${g.items.length - n} more to discover` : "";
     sec.classList.toggle("all-done", n === g.items.length);
     const a = document.querySelector(`[data-rjump="${g.key}"]`);
     a.querySelector("span").textContent = `${n}/${g.items.length}`;
     a.classList.toggle("full", n === g.items.length);
     a.classList.toggle("nofound", !n);
   });
-  undiscLine("recipes", RECIPES.reduce((t, g) => t + (g.items.some(r => stateOf(r.id) === "done") ? 0 : g.items.length), 0), FOUND_NOUN.recipes);
+  undiscLine("recipes", REC_IDS.length - d, FOUND_NOUN.recipes);
 }
 
 function paint() {

@@ -14,7 +14,7 @@ A completion tracker for **RuneScape: Dragonwilds**. Everything a completionist 
 | Recipes | Every vestige and vault recipe, by its crafting-journal name |
 | Crafting | All 869 recipes in the crafting journal |
 | Building | All 776 building pieces in the build menu (Deluxe Edition pieces excluded) |
-| Mounts | The 17 obtainable terrorbird and carpet variants |
+| Mounts | All 19 obtainable terrorbirds and magic carpets |
 | Urns | All 21 Sanguine Urns, on maps of each region |
 | Burrows | All 19 kebbit burrows, on maps of each region |
 | Map | How many of the world map's 32 regions you've uncovered |

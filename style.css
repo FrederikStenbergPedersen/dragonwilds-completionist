@@ -155,8 +155,6 @@ body:not(.show-all) .q.locked:not(.peek) .name .real, body:not(.show-all) .q.loc
 /* No spoilers on the item-list tabs: only found items (or an exact-name search hit) are listed. */
 body:not(.show-all) .foundonly .q:not(.done):not(.exact) { display: none; }
 body:not(.show-all) .foundonly .lgrp:not(:has(.q.done, .q.exact)) { display: none; }
-.sec-undisc { display: none; }
-body:not(.show-all) .foundonly .sec-undisc:not(:empty) { display: block; text-align: center; font-style: italic; color: var(--cream-dim); font-size: .9rem; margin: 6px 0 2px; }
 .search-note { display: none; font-size: .78rem; color: var(--cream-dim); margin: 6px 0 0; }
 body:not(.show-all) .search-note { display: block; }
 body:not(.show-all) .spoil-tip { display: none; }
