@@ -28,14 +28,41 @@ try { progress = JSON.parse(lsGet(LS_KEY) || "{}") || {}; } catch { progress = {
 const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
 
+/* Spoiler-free by default: anything that gives the answer away (where to go, what you get, maps) sits in .spoil
+   and stays hidden until the item is done or the player taps "Show hint" / "Show map". Peeks are remembered per browser. */
+const PEEK_KEY = "dw-peek";
+let peeks = new Set();
+try { peeks = new Set(JSON.parse(lsGet(PEEK_KEY) || "[]")); } catch { peeks = new Set(); }
+const savePeeks = () => lsSet(PEEK_KEY, JSON.stringify([...peeks]));
+const HINT_BTN = `<button type="button" class="hint-btn" aria-expanded="false">Show hint</button>`;
+function mapGate(key, what, svg) {
+  if (!svg) return "";
+  return `<div class="mapgate" data-gate="map:${key}"><button type="button" class="hint-btn map-btn" aria-expanded="false">Show map</button><span class="gate-note">Shows where ${what}.</span><div class="spoil">${svg}</div></div>`;
+}
+function paintPeeks() {
+  document.querySelectorAll("[data-gate]").forEach(el => {
+    const open = peeks.has(el.dataset.gate);
+    el.classList.toggle("peek", open);
+    const b = el.querySelector(":scope > .hint-btn, :scope .title-row > .hint-btn, :scope .cinfo > .hint-btn");
+    if (b) { b.textContent = (open ? "Hide " : "Show ") + (b.classList.contains("map-btn") ? "map" : "hint"); b.setAttribute("aria-expanded", String(open)); }
+  });
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest(".hint-btn"); if (!b) return;
+  const el = b.closest("[data-gate]"), k = el.dataset.gate;
+  if (peeks.has(k)) peeks.delete(k); else peeks.add(k);
+  savePeeks(); paintPeeks();
+});
+
 function itemHTML(q, kind, step) {
-  const rewards = q.rw.length ? `<div class="rewards">${q.rw.map(r => `<span>${esc(r)}</span>`).join("")}</div>` : "";
+  const rewards = q.rw.length ? `<div class="rewards spoil">${q.rw.map(r => `<span>${esc(r)}</span>`).join("")}</div>` : "";
   const link = q.nowiki ? "" : `<a class="wiki" href="${w(q.wiki || q.n)}" target="_blank" rel="noopener">Wiki</a>`;
-  return `<li class="q ${kind}" data-id="${q.id}">
+  const hasHint = q.start || q.where || q.rw.length || q.boss;
+  return `<li class="q ${kind}" data-id="${q.id}" data-gate="${q.id}">
     <button class="mark" type="button" id="m-${q.id}"><span class="d">${CHECK}</span></button>
     <div>
-      <div class="title-row">${step ? `<span class="step">${step}</span>` : ""}<span class="name">${esc(q.n)}</span><span class="status" hidden></span>${q.boss ? `<span class="boss">${esc(q.boss)}</span>` : ""}${link}</div>
-      <div class="start">${q.where ? `<strong>${esc(q.where)}</strong> · ` : ""}${esc(q.start)}</div>
+      <div class="title-row">${step ? `<span class="step">${step}</span>` : ""}<span class="name">${esc(q.n)}</span><span class="status" hidden></span>${q.boss ? `<span class="boss spoil">${esc(q.boss)}</span>` : ""}${link}${hasHint ? HINT_BTN : ""}</div>
+      <div class="start spoil">${q.where ? `<strong>${esc(q.where)}</strong> · ` : ""}${esc(q.start)}</div>
       ${rewards}
     </div>
   </li>`;
@@ -97,7 +124,7 @@ SKILL_IDS.forEach(id => { BY_ID[id] = { id, n: id }; });
 function buildUrns() {
   const host = document.getElementById("urnMain");
   const urnMap = (g) => { const pts = g.areas.flatMap(([a, n]) => Array.from({ length: n }, (_, i) => { const id = `u-${uslug(a)}-${i + 1}`, L = LANDMARKS[id]; return L && { id, x: L[0], y: L[1], txt: n > 1 ? i + 1 : "", label: a, cls: "urn", click: true, aria: `${a} urn${n > 1 ? " " + (i + 1) : ""}` }; })).filter(Boolean);
-    return pts.length ? mapSVG("urns-" + uslug(g.region), `Map of ${g.region} urns`, pts) : ""; };
+    return pts.length ? mapGate("urns-" + uslug(g.region), `every urn in ${g.region} is`, mapSVG("urns-" + uslug(g.region), `Map of ${g.region} urns`, pts)) : ""; };
   host.innerHTML = URNS.map(g => `<section class="panel" id="urns-${uslug(g.region)}"><div class="sec-head"><h2>${esc(g.region)}</h2><span class="count"></span></div><div class="rule"></div>
     ${urnMap(g)}<ul class="list">${g.areas.map(([a, n]) => `<li class="urn-area" data-area="${uslug(a)}"><div><div class="an">${esc(a)}</div><div class="ac"></div></div>
       <div class="umarks">${Array.from({ length: n }, (_, i) => { const id = `u-${uslug(a)}-${i + 1}`; return `<button class="mark umark" type="button" id="m-${id}" data-id="${id}" aria-label="${esc(a)} urn ${i + 1}"><span class="d">${CHECK}</span></button>`; }).join("")}</div></li>`).join("")}</ul>
@@ -109,9 +136,9 @@ const lslug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/
 function buildColl(c) {
   const host = document.getElementById(c.key + "Main"), gid = (r, g) => `${c.key}-${lslug(r.r + "-" + g.s)}`;
   host.innerHTML = c.data.map(r => `<section class="panel" id="${c.key}-${lslug(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
-    ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore" data-id="${id}" data-status="${c.status}">
+    ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore" data-id="${id}" data-status="${c.status}" data-gate="${id}">
       <button class="mark" type="button" id="m-${id}"><span class="d">${CHECK}</span></button>
-      <div><div class="title-row"><span class="name">${esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}</div>${sub ? `<div class="start">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
+      <div><div class="title-row"><span class="name">${esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}${sub ? HINT_BTN : ""}</div>${sub ? `<div class="start spoil">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
     <p class="empty">${esc(c.empty)}</p></section>`).join("");
   document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
   host.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
@@ -155,12 +182,12 @@ const fmtT = (sec) => { const m = Math.floor(sec / 60), s2 = sec - m * 60; retur
 const MEDALS = [["b", "Bronze", ""], ["s", "Silver", "silver"], ["g", "Gold", "goldm"]];
 function buildAgility() {
   const cm = document.getElementById("courseMap");
-  cm.innerHTML = mapSVG("agility-courses", "Map of agility courses", COURSES.map(c => ({ id: c.id, x: LANDMARKS[c.id][0], y: LANDMARKS[c.id][1], label: c.n, cls: "crs" })), { minSpan: 0 });
+  cm.innerHTML = mapGate("agility-courses", "every course starts", mapSVG("agility-courses", "Map of agility courses", COURSES.map(c => ({ id: c.id, x: LANDMARKS[c.id][0], y: LANDMARKS[c.id][1], label: c.n, cls: "crs" })), { minSpan: 0 }));
   wireMaps(cm);
-  document.getElementById("courseList").innerHTML = COURSES.map(c => `<li class="course" data-cid="${c.id}">
+  document.getElementById("courseList").innerHTML = COURSES.map(c => `<li class="course" data-cid="${c.id}" data-gate="${c.id}">
     <div class="cinfo"><div class="cn">${esc(c.n)}</div><div class="cw">${esc(c.where)}</div>
       <div class="creq">${c.lvl || c.perks.length ? "Needs " + [c.lvl ? `Agility ${c.lvl}` : "", ...c.perks].filter(Boolean).map(esc).join(" · ") : "No requirements"}</div>
-      <div class="crw">Gold reward: <b>${c.cape.map(esc).join("</b> and <b>")}</b> recipe</div>
+      <div class="crw spoil">Gold reward: <b>${c.cape.map(esc).join("</b> and <b>")}</b> recipe</div>${HINT_BTN}
       <div class="cbest"></div></div>
     <div class="medals">${MEDALS.map(([k, nm, cls], i) => `<button type="button" class="medal ${cls}" data-m="${i + 1}" aria-label="${esc(c.n)}: ${nm} medal, ${fmtT(c[k])} or faster"><span class="coin">${nm[0]}</span>${fmtT(c[k])}</button>`).join("")}</div></li>`).join("");
   document.getElementById("courseList").addEventListener("click", (e) => {
@@ -225,7 +252,7 @@ function buildBurrows() {
     const rows = r.b.map((b, i) => { const L = LANDMARKS[b.near];
       return `<li class="q burrow" data-id="${b.id}"><button class="mark" type="button" id="m-${b.id}"><span class="d">${CHECK}</span></button><div><div class="title-row"><span class="name">Burrow ${i + 1}</span><span class="status" hidden></span></div></div></li>`; }).join("");
     return `<section class="panel" id="bur-${lslug(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
-      ${mapSVG("burrows-" + lslug(r.r), `Map of ${r.r} burrows`, r.b.map((b, i) => ({ id: b.id, x: b.x, y: b.y, txt: i + 1, cls: "bur", click: true, aria: `${r.r} burrow ${i + 1}` })))}
+      ${mapGate("burrows-" + lslug(r.r), `every burrow in ${r.r} is`, mapSVG("burrows-" + lslug(r.r), `Map of ${r.r} burrows`, r.b.map((b, i) => ({ id: b.id, x: b.x, y: b.y, txt: i + 1, cls: "bur", click: true, aria: `${r.r} burrow ${i + 1}` }))))}
       <ul class="list">${rows}</ul><p class="empty">Every burrow here is ticked.</p></section>`;
   }).join("");
   wireMaps(host);
@@ -552,11 +579,11 @@ function paintTiers() {
 function buildBosses() {
   const host = document.getElementById("recMain");
   host.innerHTML = RECIPES.map(g => `<section class="panel" id="rec-${g.key}"><div class="sec-head"><h2>${esc(g.title)}</h2><span class="count"></span></div><div class="rule"></div>
-    ${g.intro ? `<p class="unlock">${esc(g.intro)}</p>` : ""}<ul class="list">${g.items.map(r => `<li class="q recipe" data-id="${r.id}">
+    ${g.intro ? `<p class="unlock">${esc(g.intro)}</p>` : ""}<ul class="list">${g.items.map(r => `<li class="q recipe" data-id="${r.id}" data-gate="${r.id}">
       <button class="mark" type="button" id="m-${r.id}"><span class="d">${CHECK}</span></button>
       <div>
-        <div class="title-row"><span class="name">${esc(r.unl || r.n)}</span><span class="status" hidden></span><a class="wiki" href="${w(r.n.replace(/^MOUNT: /, ""))}" target="_blank" rel="noopener">Wiki</a></div>
-        <div class="unl"><span>${r.via || (r.n.startsWith("MOUNT") ? "Mount vestige" : "Vestige")}</span> ${esc(r.n.replace(/^MOUNT: /, ""))}</div>
+        <div class="title-row"><span class="name">${esc(r.unl || r.n)}</span><span class="status" hidden></span><a class="wiki" href="${w(r.n.replace(/^MOUNT: /, ""))}" target="_blank" rel="noopener">Wiki</a>${HINT_BTN}</div>
+        <div class="unl spoil"><span>${r.via || (r.n.startsWith("MOUNT") ? "Mount vestige" : "Vestige")}</span> ${esc(r.n.replace(/^MOUNT: /, ""))}</div>
       </div></li>`).join("")}</ul><p class="empty">Everything here is unlocked.</p></section>`).join("");
   document.getElementById("rJump").innerHTML = RECIPES.map(g => `<a class="chip" href="#rec-${g.key}" data-rjump="${g.key}">${esc(g.title.replace("Power Level ", "PL "))} <span></span></a>`).join("");
   host.addEventListener("click", (e) => {
@@ -637,6 +664,10 @@ function paint() {
   paintMaps();
   paintSkills();
   paintTiers();
+  const allGold = COURSE_IDS.every(id => medalOf(id) >= 3);
+  document.querySelectorAll(".mapgate").forEach(g => g.classList.toggle("done", g.closest("#agCourses") ? allGold : !!g.closest(".all-done")));
+  document.querySelectorAll(".course").forEach(li => li.classList.toggle("done", medalOf(li.dataset.cid) >= 3));
+  paintPeeks();
 }
 
 let bannerTimer = null;

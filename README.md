@@ -25,6 +25,10 @@ A completion tracker for **RuneScape: Dragonwilds**. Everything a completionist 
 
 Three completion tiers sit on top: **Completionist** (every section except skills, each weighted equally), **Completionist+** (every skill at 94) and **Completionist++** (every skill at 99).
 
+## Spoiler-free
+
+The page doesn't give answers away until you ask. Where a quest starts, its rewards and boss, vestige names, lore locations, agility gold rewards and the urn, burrow and course maps all stay hidden behind **Show hint** / **Show map**. They show by themselves once you've ticked the item (or finished the region's urns, burrows or courses). Each reveal is remembered in your browser.
+
 ## Save import
 
 Drop your character save on the page and everything it records is ticked for you. The file is read in your browser and never uploaded.

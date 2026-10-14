@@ -64,6 +64,16 @@ async def main():
         check(not errors, "no script errors on load " + (str(errors) if errors else ""))
         check(await pg.locator(".tab").count() == 14, "14 section rows")
 
+        print("spoiler-free")
+        shown = "[...document.querySelectorAll('.spoil')].filter(e => getComputedStyle(e).display !== 'none' && e.closest('[data-gate]')).length"
+        check(await pg.evaluate(shown) == 0, "no hints or maps showing on a fresh page")
+        await pg.click("[data-id='dragon-slayer'] .hint-btn")
+        boss = await pg.evaluate("getComputedStyle(document.querySelector(\"[data-id='dragon-slayer'] .boss\")).display")
+        check(boss != "none", "Show hint reveals that quest's hint")
+        check(await pg.evaluate(shown) == 3, "and only that quest's (boss, start, rewards)")
+        await pg.click("[data-id='dragon-slayer'] .hint-btn")
+        check(await pg.evaluate(shown) == 0, "Hide hint hides it again")
+
         print("save import")
         await pg.click("#importer > summary")
         await pg.set_input_files("#saveFile", FIXTURE)
