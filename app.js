@@ -59,7 +59,7 @@ function setShowAll(on) {
 }
 // Everything shows by default; "No spoilers" is opt-in.
 document.getElementById("spoilToggle").addEventListener("change", (e) => {
-  setShowAll(!e.target.checked); paint();
+  setShowAll(!e.target.checked); applyFilter(); paint();
   document.querySelectorAll(".searchbar input").forEach(i => i.dispatchEvent(new Event("input")));
 });
 setShowAll(lsGet("dw-spoilers") !== "hidden");
@@ -832,8 +832,13 @@ async function cycle(id) {
 // Only problems are shown; the normal "where your log is saved" statuses (which start with <b>Your log</b>) stay quiet.
 function setSync(html) { const el = document.getElementById("sync"); const ok = html.startsWith("<b>Your log</b>"); el.hidden = ok; el.innerHTML = ok ? "" : html; }
 
+/* "Hide found" has nothing to do on the found-only tabs while No spoilers is on (they already list only what you've found),
+   so it's switched off there and its chips are hidden; the choice still applies on every other tab. */
+var filterTodo = false, curTab = "quests";
+const FOUND_VIEWS = ["bosses", "crafting", "buildings", "mounts", "plants", "fauna", "factions"];
+function applyFilter() { document.body.classList.toggle("hide-done", filterTodo && !(!showAll() && FOUND_VIEWS.includes(curTab))); }
 function setFilter(todo) {
-  document.body.classList.toggle("hide-done", todo);
+  filterTodo = todo; applyFilter();
   document.querySelectorAll(".f-all").forEach(x => x.setAttribute("aria-pressed", String(!todo)));
   document.querySelectorAll(".f-todo").forEach(x => x.setAttribute("aria-pressed", String(todo)));
   lsSet("dw-filter", todo ? "todo" : "all");
@@ -848,9 +853,11 @@ function setTab(t) {
     document.getElementById(view).hidden = k !== t;
     document.getElementById(tab).setAttribute("aria-selected", String(k === t));
   });
+  curTab = t; applyFilter();
   lsSet("dw-tab", t);
 }
 Object.entries(TABS).forEach(([k, [tab]]) => { document.getElementById(tab).onclick = () => setTab(k); });
+FOUND_VIEWS.forEach(k => document.getElementById(TABS[k][1]).classList.add("foundonly-view"));
 
 /* What's new: the changelog panel above the footer, opened from the link by the version badge.
    A dot on the link marks an entry this browser hasn't opened yet. */

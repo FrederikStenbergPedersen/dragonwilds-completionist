@@ -3,6 +3,13 @@
 const CHANGELOG = [
   {
     date: "2026-10-14",
+    title: "Small fix",
+    items: [
+      "Hide found no longer empties the item tabs when No spoilers is on. Those tabs already list only what you've found, so the filter steps aside there.",
+    ],
+  },
+  {
+    date: "2026-10-14",
     title: "Game patch 1.0.1 and No spoilers mode",
     items: [
       "Updated for game patch 1.0.1. The game version the site supports now shows under the title.",

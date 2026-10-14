@@ -164,6 +164,7 @@ body:not(.show-all) .foundonly .lgrp:not(:has(.q.done, .q.exact)) { display: non
 .search-note { display: none; font-size: .78rem; color: var(--cream-dim); margin: 6px 0 0; }
 body:not(.show-all) .search-note { display: block; }
 body:not(.show-all) .spoil-tip { display: none; }
+body:not(.show-all) .foundonly-view .filters .f-all, body:not(.show-all) .foundonly-view .filters .f-todo, body:not(.show-all) .foundonly-view .filters .sep { display: none; }
 body:not(.show-all) .foundonly section:not(:has(.q.done, .q.exact)), body:not(.show-all) .chip.nofound { display: none; }
 .undisc { margin: 8px 0 0; font-size: .86rem; color: var(--cream-dim); }
 .undisc[hidden], .show-all .undisc { display: none; }
