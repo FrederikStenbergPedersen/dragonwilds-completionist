@@ -91,7 +91,10 @@ function regions() {
   return (REG = { ids, of });
 }
 let SEALED = new Set();
-const vis = (ids) => ids.filter(id => !SEALED.has(regions().of[id]));
+// The nameless "N more … waiting" line at the end of each tab, so totals stay honest without naming anything.
+const UNDISC = [["quests", ["quest", "quests"], () => ALL_IDS], ["urns", ["urn", "urns"], () => URN_IDS], ["burrows", ["burrow", "burrows"], () => BURROW_IDS],
+  ["agility", ["agility course", "agility courses"], () => COURSE_IDS], ["lore", ["lore scrap", "lore scraps"], () => LORE_IDS], ["factions", ["enemy", "enemies"], () => COLLS.find(c => c.key === "factions").ids]];
+const undiscHTML = (key) => `<p class="panel undisc" data-undisc="${key}" hidden></p>`;
 function computeSealed() {
   SEALED = new Set();
   if (showAll()) return;
@@ -104,6 +107,12 @@ function paintStory() {
   computeSealed();
   document.querySelectorAll("[data-region]").forEach(el => el.classList.toggle("sealed", SEALED.has(el.dataset.region)));
   COURSES.forEach(c => { const g = document.querySelector(`.mpt[data-mid="${c.id}"]`); if (g) g.classList.toggle("sealed", SEALED.has(c.where)); });
+  UNDISC.forEach(([key, noun, ids]) => {
+    const n = ids().filter(id => SEALED.has(regions().of[id])).length, el = document.querySelector(`[data-undisc="${key}"]`);
+    if (!el) return;
+    el.hidden = !n;
+    el.textContent = `${n} more ${n === 1 ? noun[0] : noun[1]} ${n === 1 ? "is" : "are"} waiting in parts of the story you haven't reached yet.`;
+  });
   const lh = document.querySelector("#lore-brynmoor-ghornfell h2"); if (lh) lh.textContent = SEALED.has("Ghornfell") ? "Brynmoor" : "Brynmoor & Ghornfell";
   SIDE.forEach(sd => lock(sd.items.map(q => q.id), sd.key));
   EXTRA.forEach(q => { if (EXTRA_OPENS[q.id]) lock([q.id], EXTRA_OPENS[q.id]); });
@@ -143,6 +152,7 @@ function build() {
       ${OPENS[s.key] ? `<p class="unlock sgate" data-gate="sec:${s.key}"><span class="spoil">${s.unlock}</span><span class="ph">Opens later in the main story.</span> ${HINT_BTN}</p>` : `<p class="unlock">${s.unlock}</p>`}<ul class="list">${s.items.map(q => itemHTML(q, "secondary")).join("")}</ul><p class="empty">Every quest here is complete.</p></section>`;
   });
 
+  html += undiscHTML("quests");
   html += `<section class="panel" id="extra"><div class="sec-head"><h2>Beyond the Quests</h2><span class="count"></span></div><div class="rule"></div>
     <p class="unlock">Activities, bosses and repeatable content that aren't quests. Not counted in the quest total.</p>
     <ul class="list">${EXTRA.map(q => itemHTML(q, "activity")).join("")}</ul></section>`;
@@ -185,7 +195,7 @@ function buildUrns() {
   host.innerHTML = URNS.map(g => `<section class="panel" id="urns-${uslug(g.region)}" data-region="${esc(g.region)}"><div class="sec-head"><h2>${esc(g.region)}</h2><span class="count"></span></div><div class="rule"></div>
     ${urnMap(g)}<ul class="list">${g.areas.map(([a, n]) => `<li class="urn-area" data-area="${uslug(a)}"><div><div class="an">${esc(a)}</div><div class="ac"></div></div>
       <div class="umarks">${Array.from({ length: n }, (_, i) => { const id = `u-${uslug(a)}-${i + 1}`; return `<button class="mark umark" type="button" id="m-${id}" data-id="${id}" aria-label="${esc(a)} urn ${i + 1}"><span class="d">${CHECK}</span></button>`; }).join("")}</div></li>`).join("")}</ul>
-    <p class="empty">Every urn here is absorbed.</p></section>`).join("");
+    <p class="empty">Every urn here is absorbed.</p></section>`).join("") + undiscHTML("urns");
   wireMaps(host);
   host.addEventListener("click", (e) => { const b = e.target.closest(".umark"); if (b) cycle(b.dataset.id); });
 }
@@ -196,7 +206,7 @@ function buildColl(c) {
     ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore" data-id="${id}" data-status="${c.status}" data-gate="${id}">
       <button class="mark" type="button" id="m-${id}"><span class="d">${CHECK}</span></button>
       <div><div class="title-row"><span class="name">${esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}${sub ? HINT_BTN : ""}</div>${sub ? `<div class="start spoil">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
-    <p class="empty">${esc(c.empty)}</p></section>`).join("");
+    <p class="empty">${esc(c.empty)}</p></section>`).join("") + undiscHTML(c.key);
   document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}" data-region="${esc(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
   host.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
   const norm = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -216,7 +226,7 @@ function buildColl(c) {
   });
 }
 function paintColl(c) {
-  const ids = vis(c.ids), d = ids.filter(id => stateOf(id) === "done").length;
+  const ids = c.ids, d = ids.filter(id => stateOf(id) === "done").length;
   document.getElementById(c.p + "Done").textContent = d;
   document.getElementById(c.p + "Total").textContent = ids.length;
   document.getElementById(c.p + "Bar").style.width = (100 * d / ids.length) + "%";
@@ -247,6 +257,7 @@ function buildAgility() {
       <div class="crw spoil">Gold reward: <b>${c.cape.map(esc).join("</b> and <b>")}</b> recipe</div>${HINT_BTN}
       <div class="cbest"></div></div>
     <div class="medals">${MEDALS.map(([k, nm, cls], i) => `<button type="button" class="medal ${cls}" data-m="${i + 1}" aria-label="${esc(c.n)}: ${nm} medal, ${fmtT(c[k])} or faster"><span class="coin">${nm[0]}</span>${fmtT(c[k])}</button>`).join("")}</div></li>`).join("");
+  document.getElementById("courseList").insertAdjacentHTML("afterend", `<p class="undisc" data-undisc="agility" hidden></p>`);
   document.getElementById("courseList").addEventListener("click", (e) => {
     const b = e.target.closest(".medal"); if (!b || b.disabled) return;
     const id = b.closest(".course").dataset.cid, m = Number(b.dataset.m), p = progress[id] || {}, cur = p.medal || 0;
@@ -311,7 +322,7 @@ function buildBurrows() {
     return `<section class="panel" id="bur-${lslug(r.r)}" data-region="${esc(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
       ${mapGate("burrows-" + lslug(r.r), `every burrow in ${r.r} is`, mapSVG("burrows-" + lslug(r.r), `Map of ${r.r} burrows`, r.b.map((b, i) => ({ id: b.id, x: b.x, y: b.y, txt: i + 1, cls: "bur", click: true, aria: `${r.r} burrow ${i + 1}` }))))}
       <ul class="list">${rows}</ul><p class="empty">Every burrow here is ticked.</p></section>`;
-  }).join("");
+  }).join("") + undiscHTML("burrows");
   wireMaps(host);
   host.addEventListener("click", (e) => { const m = e.target.closest(".mark"); if (m) cycle(m.closest(".q").dataset.id); });
 }
@@ -339,8 +350,8 @@ function paintAgility() {
     li.querySelectorAll(".medal").forEach(b => { const on = Number(b.dataset.m) <= m; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); b.disabled = !canWrite; });
     li.querySelector(".cbest").textContent = best ? `Your best: ${fmtT(best)}${m >= 3 ? "" : ` · ${fmtT(Math.max(0, best - c.g))} off gold`}` : "";
   });
-  const bs = burCount(), bt = burTicked(), bT = vis(BURROW_IDS).length, bc = Math.min(bT, burDone());
-  const ms = medalSum(), oc = vis(COURSE_IDS).length;
+  const bs = burCount(), bt = burTicked(), bT = BURROW_IDS.length, bc = Math.min(bT, burDone());
+  const ms = medalSum(), oc = COURSE_IDS.length;
   document.getElementById("aGold").textContent = ms;
   document.getElementById("aGoldT").textContent = oc * 3;
   document.getElementById("aBur").textContent = bc;
@@ -360,7 +371,7 @@ function paintMap() {
   document.getElementById("mapBar").style.width = (100 * n / MAP_REGIONS) + "%";
 }
 function paintUrns() {
-  const uv = vis(URN_IDS), d = uv.filter(id => stateOf(id) === "done").length;
+  const uv = URN_IDS, d = uv.filter(id => stateOf(id) === "done").length;
   document.getElementById("uDone").textContent = d;
   document.getElementById("uTotal").textContent = uv.length;
   document.getElementById("uBar").style.width = (100 * d / uv.length) + "%";
@@ -606,10 +617,10 @@ const pctText = (v) => { const sh = v >= 1 ? 100 : Math.min(99.9, Math.floor(v *
 function paintTabs() {
   const cnt = (ids) => [ids.filter(id => stateOf(id) === "done").length, ids.length];
   const f = skillFracs(), k = SKILLS.length;
-  const rows = { tabQuests: cnt(vis(ALL_IDS)), tabBosses: cnt(REC_IDS), tabUrns: cnt(vis(URN_IDS)) };
-  COLLS.forEach(c => { rows[c.tab] = cnt(vis(c.ids)); });
+  const rows = { tabQuests: cnt(ALL_IDS), tabBosses: cnt(REC_IDS), tabUrns: cnt(URN_IDS) };
+  COLLS.forEach(c => { rows[c.tab] = cnt(c.ids); });
   Object.entries(rows).forEach(([t, [d, n]]) => setTabProg(t, `${d}/${n}`, d / n));
-  const ag = medalSum(), oc = vis(COURSE_IDS).length * 3, bT = vis(BURROW_IDS).length, bc = Math.min(bT, burDone());
+  const ag = medalSum(), oc = COURSE_IDS.length * 3, bT = BURROW_IDS.length, bc = Math.min(bT, burDone());
   setTabProg("tabAgility", `${ag}/${oc}`, ag / oc);
   setTabProg("tabBurrows", `${bc}/${bT}`, bc / bT);
   const mc = countOf(MAP_ID);
@@ -695,14 +706,13 @@ function paint() {
     b.disabled = !canWrite;
     b.setAttribute("aria-label", `${li.classList.contains("locked") && !li.classList.contains("peek") && !showAll() ? "Undiscovered quest" : BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
   });
-  const qv = vis(ALL_IDS), done = qv.filter(id => stateOf(id) === "done").length;
+  const qv = ALL_IDS, done = qv.filter(id => stateOf(id) === "done").length;
   document.getElementById("qpDone").textContent = done;
   document.getElementById("qpTotal").textContent = qv.length;
   document.getElementById("qpStarted").textContent = qv.filter(id => stateOf(id) === "started").length;
   document.getElementById("overallBar").style.width = (100 * done / qv.length) + "%";
 
-  (window.__groups || []).forEach(([k, , all]) => {
-    const ids = vis(all);
+  (window.__groups || []).forEach(([k, , ids]) => {
     const d = ids.filter(id => stateOf(id) === "done").length;
     const sec = document.getElementById(k);
     sec.querySelector(".count").textContent = `${d} / ${ids.length}`;

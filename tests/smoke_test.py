@@ -77,9 +77,10 @@ async def main():
         check(await pg.evaluate(named, "first-steps") and not await pg.evaluate(named, "getting-started"), "only the first main quest is named on a fresh page")
         hidden = "sel => getComputedStyle(document.querySelector(sel)).display === 'none'"
         check(await pg.evaluate(hidden, "#fellhollow") and await pg.evaluate(hidden, "[data-jump='fellhollow']"), "regions the story hasn't opened are left out, names and all")
-        check((await tabs(pg))["Urns"] == "0/6", "totals only count open regions (Brynmoor's 6 urns)")
+        undisc = "k => document.querySelector(`[data-undisc='${k}']`).textContent"
+        check((await tabs(pg))["Urns"] == "0/21" and (await pg.evaluate(undisc, "urns")).startswith("15 more urns"), "totals stay true, with a nameless line for what's ahead")
         await pg.evaluate("progress['dragon-slayer'] = { state: 'done' }; paint()")
-        check(not await pg.evaluate(hidden, "#fellhollow") and (await tabs(pg))["Urns"] == "0/12", "finishing Dragon Slayer opens Ghornfell and Fellhollow (12 urns)")
+        check(not await pg.evaluate(hidden, "#fellhollow") and (await pg.evaluate(undisc, "urns")).startswith("9 more urns"), "finishing Dragon Slayer opens Ghornfell and Fellhollow")
         await pg.evaluate("delete progress['dragon-slayer']; paint()")
         tert = "getComputedStyle(document.querySelector('li.tertiary')).display"
         check(await pg.evaluate(tert) == "none", "clan quests are left out until Icthlarin's Little Helper starts")
