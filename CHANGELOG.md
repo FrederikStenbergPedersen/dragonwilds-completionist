@@ -2,6 +2,10 @@
 
 What's changed on the site, newest first. The same list is under **What's new** on the page.
 
+## 14 October 2026 · Small fix
+
+- Hide found no longer empties the item tabs when No spoilers is on. Those tabs already list only what you've found, so the filter steps aside there.
+
 ## 14 October 2026 · Game patch 1.0.1 and No spoilers mode
 
 - Updated for game patch 1.0.1. The game version the site supports now shows under the title.

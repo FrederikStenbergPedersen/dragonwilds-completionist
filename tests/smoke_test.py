@@ -123,7 +123,15 @@ async def main():
         await pg.click("[data-id='l-lorescrap-a1'] .hint-btn")
         series = "getComputedStyle(document.querySelector(\"[data-lg='lore-brynmoor-ghornfell-dragon-attack'] .lser .real\")).display"
         check(await pg.evaluate(series) == "none", "lore series names stay hidden until something in them is read")
+        await pg.click("#tabFauna")
+        await pg.evaluate("progress['j-fauna-chicken'] = { state: 'done' }; paint()")
+        await pg.evaluate("setFilter(true)")
+        fn = "[...document.querySelectorAll('#faunaMain .q')].filter(e => getComputedStyle(e).display !== 'none').length"
+        chips = "getComputedStyle(document.querySelector('#view-fauna .f-todo')).display"
+        check(await pg.evaluate(fn) == 1 and await pg.evaluate(chips) == "none", "Hide found steps aside on found-only tabs (no empty sections)")
         await pg.click("#tabQuests")
+        check(await pg.evaluate("document.body.classList.contains('hide-done')"), "Hide found still applies on other tabs")
+        await pg.evaluate("setFilter(false); delete progress['j-fauna-chicken']; paint()")
         await pg.reload()
         await pg.wait_for_timeout(300)
         check(await pg.evaluate(shown) == 0, "No spoilers is remembered after a reload")
