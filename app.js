@@ -829,7 +829,8 @@ async function cycle(id) {
     else setSync("That change didn't save. Check your connection and tap the quest again.");
   } finally { pending.delete(id); }
 }
-function setSync(html) { document.getElementById("sync").innerHTML = html; }
+// Only problems are shown; the normal "where your log is saved" statuses (which start with <b>Your log</b>) stay quiet.
+function setSync(html) { const el = document.getElementById("sync"); const ok = html.startsWith("<b>Your log</b>"); el.hidden = ok; el.innerHTML = ok ? "" : html; }
 
 function setFilter(todo) {
   document.body.classList.toggle("hide-done", todo);

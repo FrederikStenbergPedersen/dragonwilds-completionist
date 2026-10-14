@@ -82,7 +82,7 @@ h1 {
 .bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--flame), var(--gold-hi)); box-shadow: 0 0 12px rgba(240,122,44,.5); transition: width .5s ease; }
 .summary .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: .85rem; color: var(--cream-dim); border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px; }
 .meta .k { display: inline-flex; align-items: center; gap: 6px; }
-.sync b { color: var(--gold); font-weight: 600; }
+.sync-alert { margin: 12px auto 0; max-width: 54ch; text-align: center; font-size: .86rem; color: #ffd9bf; background: rgba(184,82,31,.25); border: 1px solid rgba(240,122,44,.45); border-radius: 8px; padding: 8px 12px; }
 
 /* ---------- filter bar ---------- */
 .filters { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-top: 14px; padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: rgba(13, 20, 29, 0.94); }

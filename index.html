@@ -21,6 +21,7 @@
     <div class="spoilrow"><label class="switch"><input type="checkbox" id="spoilToggle" role="switch"><span class="track" aria-hidden="true"></span><span class="sw-label">No spoilers</span></label><span id="spoilNote"></span></div>
     <div class="ornament" aria-hidden="true"><i></i></div>
   </header>
+  <p class="sync-alert" id="sync" role="status" hidden></p>
 
   <section class="panel tiers" aria-label="Overall completion">
     <div class="tier" data-tier="0"><div class="tname">Completionist</div><div class="tdesc">Every section except skills, weighted equally</div><div class="tbar"><i></i></div><div class="tpct">0%</div></div>
@@ -71,7 +72,6 @@
     <div class="bar"><i id="overallBar"></i></div>
     <div class="meta">
       <span class="k"><span id="qpStarted">0</span>&nbsp;in progress</span>
-      <span class="sync" id="sync">Loading progress…</span>
     </div>
   </div>
 
@@ -131,13 +131,6 @@
       <div class="bar"><i id="lBar"></i></div>
       <div class="meta"><span>Grouped by region and story. The area under each title says roughly where it lies.</span></div>
     </div>
-    <div class="panel tips">
-      <h3>Finding them</h3>
-      <ul>
-        <li>Lore belongs to your character, not the world, so scraps you read in a friend’s world count for you too.</li>
-        <li class="spoil-tip">Statue sagas and songs from Umbral Sands quests aren't lore scraps, so they aren't listed here.</li>
-      </ul>
-    </div>
     <nav class="filters panel" aria-label="Lore filters">
       <button type="button" class="chip f-all" aria-pressed="true">All</button>
       <button type="button" class="chip f-todo" aria-pressed="false">Hide read</button>
@@ -154,7 +147,6 @@
       <div class="lbl">Mounts unlocked</div>
       <div class="bar"><i id="moBar"></i></div>
     </div>
-    <div class="panel tips spoil-tip"><h3>Good to know</h3><ul><li>Terrorbird variants need The Wild Hunt done first, and magic carpets need part of Icthlarin’s Little Helper.</li><li>The plain Terrorbird and Magic Carpet are the quest rewards themselves.</li></ul></div>
     <nav class="filters panel" aria-label="mounts filters">
       <button type="button" class="chip f-all" aria-pressed="true">All</button>
       <button type="button" class="chip f-todo" aria-pressed="false">Hide unlocked</button>
