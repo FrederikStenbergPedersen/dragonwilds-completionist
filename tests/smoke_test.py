@@ -107,6 +107,11 @@ async def main():
         await pg.fill("#crSearch", "rune platebody")
         check(await pg.evaluate(listed) == 1, "a full-name search finds one")
         await pg.fill("#crSearch", "")
+        secs = "[...document.querySelectorAll('#recMain section')].filter(e => getComputedStyle(e).display !== 'none').length"
+        check(await pg.evaluate(secs) == 0 and (await pg.evaluate(undisc, "recipes")).startswith("125 more recipes"), "unfound sections are left out, with one count for the rest")
+        await pg.evaluate("progress['r-a-simple-broken-bow'] = { state: 'done' }; paint()")
+        check(await pg.evaluate(secs) == 1 and (await pg.evaluate(undisc, "recipes")).startswith("121 more recipes"), "finding something shows just its section")
+        await pg.evaluate("delete progress['r-a-simple-broken-bow']; paint()")
         await pg.click("#tabQuests")
         await pg.reload()
         await pg.wait_for_timeout(300)

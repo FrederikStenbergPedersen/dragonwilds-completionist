@@ -32,7 +32,7 @@ Everything shows by default. Turn on the **No spoilers** switch at the top and t
 - Hints (where a quest starts, its rewards and boss, vestige names, lore locations, agility gold rewards) and the urn, burrow and course maps hide behind **Show hint** / **Show map**, and show by themselves once you've ticked the item.
 - Quest names show once the story reaches them; anything further ahead reads "Undiscovered quest".
 - Regions the story hasn't opened are left out of Quests, Urns, Burrows, Lore, Agility and Factions, names included, as are the Icthlarin's clan quests until that quest starts.
-- Recipes, Crafting, Building, Mounts, Gathering and Fauna list only what you've found. Each section says how many are left to discover, and the search finds anything else by its full name.
+- Recipes, Crafting, Building, Mounts, Gathering and Fauna list only what you've found. A section appears once you've found something in it and says how many it has left; one line at the end counts everything in sections you haven't touched. The search finds anything else by its full name.
 
 Totals always count the whole game, so your progress stays honest. The switch and any hints you open are remembered in your browser.
 

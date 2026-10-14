@@ -160,7 +160,7 @@ body:not(.show-all) .foundonly .sec-undisc:not(:empty) { display: block; text-al
 .search-note { display: none; font-size: .78rem; color: var(--cream-dim); margin: 6px 0 0; }
 body:not(.show-all) .search-note { display: block; }
 body:not(.show-all) .spoil-tip { display: none; }
-body:not(.show-all) #mountsMain section:not(:has(.q.done, .q.exact)), body:not(.show-all) .chip.nofound { display: none; }
+body:not(.show-all) .foundonly section:not(:has(.q.done, .q.exact)), body:not(.show-all) .chip.nofound { display: none; }
 .undisc { text-align: center; font-style: italic; color: var(--cream-dim); font-size: .9rem; }
 .undisc[hidden], .show-all .undisc { display: none; }
 .sgate .hint-btn { margin-left: 6px; font-family: inherit; letter-spacing: normal; text-transform: none; font-weight: 400; }
