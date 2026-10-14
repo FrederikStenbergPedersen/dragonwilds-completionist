@@ -12,13 +12,13 @@ A completion tracker for **RuneScape: Dragonwilds**. Everything a completionist 
 | Skills | All 12 skills, with progress to level 94 and 99 by level and by XP |
 | Agility Courses | All 6 courses and 18 medals, with times, requirements and best runs |
 | Recipes | Every vestige and vault recipe, by its crafting-journal name |
-| Crafting | All 865 recipes in the crafting journal |
-| Building | All 771 building pieces in the build menu (Deluxe Edition pieces excluded) |
+| Crafting | All 869 recipes in the crafting journal |
+| Building | All 776 building pieces in the build menu (Deluxe Edition pieces excluded) |
 | Mounts | The 17 obtainable terrorbird and carpet variants |
 | Urns | All 21 Sanguine Urns, on maps of each region |
 | Burrows | All 19 kebbit burrows, on maps of each region |
 | Map | How many of the world map's 32 regions you've uncovered |
-| Lore | All 114 lore scraps, by region and story |
+| Lore | All 117 lore scraps, by region and story |
 | Gathering | All 87 plant, seed and material journal entries |
 | Factions | All 60 enemy journal entries |
 | Fauna | All 69 animal and fish journal entries |
@@ -55,6 +55,7 @@ After a game patch, see [tools/README.md](tools/README.md) to rebuild the data.
 
 - [RuneScape: Dragonwilds Wiki](https://dragonwilds.runescape.wiki/) for quests, recipes, lore and the world map.
 - [RSDWArchive](https://github.com/RSDWArchive/RSDWArchive) game-data exports (patch 1.0.0.5) for names, positions and the internal IDs used by the save import.
+- The installed 1.0.1 game files for what patch 1.0.1 added or removed, until RSDWArchive exports that patch.
 
 ## License
 
