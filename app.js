@@ -16,7 +16,7 @@ const ROMAN = ["I","II","III","IV","V","VI","VII","VIII","IX"];
 const LABEL = { none: "Not started", started: "In progress", done: "Complete" };
 
 let progress = {};
-let db = null, user = null, uid = null, canWrite = true, mode = "local";
+let db = null, user = null, uid = null, canWrite = true, mode = "local", savedIds = [], resetting = false;
 const pending = new Set();
 const LS_KEY = "dw-quest-progress";
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -776,11 +776,12 @@ function drawReset() {
     resetBox.innerHTML = `<span>Clear all of your progress?</span><button class="chip" type="button" id="resetYes">Yes, clear it</button><button class="chip" type="button" id="resetNo">Cancel</button>`;
     document.getElementById("resetNo").onclick = drawReset;
     document.getElementById("resetYes").onclick = async () => {
-      const ids = Object.keys(progress);
       progress = {}; paint(); drawReset();
       if (mode === "local") { lsSet(LS_KEY, "{}"); return; }
-      for (const id of ids) { if (!BUNDLE_OF(id)) { try { await myCol().doc(id).delete(); } catch {} } }
-      for (const c of COLLS) { if (c.key !== "mounts") { try { await myCol().doc("set-" + c.key).delete(); } catch {} } }
+      // Delete every saved document, including leftovers from older save formats.
+      const ids = new Set([...savedIds, ...COLLS.filter(c => c.key !== "mounts").map(c => "set-" + c.key)]);
+      resetting = true;
+      try { for (const id of ids) { try { await myCol().doc(id).delete(); } catch {} } } finally { resetting = false; }
     };
   };
 }
@@ -808,9 +809,13 @@ setSync("<b>Your log</b> · saved in this browser");
   if (cw === false) return;
   mode = "account";
   const localSaved = { ...progress };
-  let first = true;
+  let first = true, migrating = false;
   myCol().onSnapshot(async (snap) => {
     const next = {};
+    savedIds = snap.docs.map(d => d.id);
+    // Old saves kept journal-style entries (lore, gathering, factions...) one document per item; those are now one bundle per section.
+    const legacy = snap.docs.filter(d => BUNDLE_OF(d.id)).map(d => d.id);
+    if (resetting) return;
     snap.docs.forEach(d => {
       const v = d.data(); if (!v) return;
       if (d.id.startsWith("set-")) { const k = d.id.slice(4); if (!pendingB.has(k) && !holdB.has(k) && Array.isArray(v.done)) v.done.forEach(id => { if (BY_ID[id]) next[id] = { state: "done", at: v.at || 0 }; }); return; }
@@ -844,5 +849,12 @@ setSync("<b>Your log</b> · saved in this browser");
     if (mode !== "account") return;
     progress = next;
     paint();
+    if (legacy.length && !migrating) {
+      migrating = true;
+      try {
+        for (const k of new Set(legacy.map(BUNDLE_OF))) await saveBundle(k);
+        for (const id of legacy) await myCol().doc(id).delete();
+      } catch {} finally { migrating = false; }
+    }
   }, () => { setSync("Live sync stopped. Reload the page to reconnect."); });
 })();
