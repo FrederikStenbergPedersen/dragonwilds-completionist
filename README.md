@@ -47,6 +47,10 @@ Kebbit burrows are the one exception: the save only counts how many you've opene
 
 Progress is stored in your browser. Backup codes let you move it to another browser.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md), or **What's new** next to the version badge on the page. To add an entry, put it at the top of `data/changelog.js` (keep it spoiler-free: no boss, region, quest or item names) and run `python3 tools/build_changelog.py` to regenerate `CHANGELOG.md`. The smoke test fails if the two drift apart.
+
 ## Project layout
 
 Plain HTML, CSS and JavaScript with no build step: open `index.html` and it runs.
@@ -55,9 +59,9 @@ Plain HTML, CSS and JavaScript with no build step: open `index.html` and it runs
 index.html        page layout
 style.css         styles
 app.js            behaviour: save import, ticking, maps, progress
-data/             one file per section (quests, recipes, lore, journal, crafting, ...)
+data/             one file per section (quests, recipes, lore, journal, crafting, ...) and the changelog
 maps/             region map images
-tools/            scripts that rebuild data/ from the game files after a patch
+tools/            scripts that rebuild data/ from the game files after a patch, and CHANGELOG.md
 tests/            headless smoke test, run on every push
 ```
 

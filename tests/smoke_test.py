@@ -7,7 +7,8 @@
 Exits non-zero on the first failure. Uses tests/fixtures/sample-character.json,
 a small made-up save (not a real player's).
 """
-import asyncio, functools, http.server, os, socketserver, sys, threading
+import asyncio
+import subprocess, functools, http.server, os, socketserver, sys, threading
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 FIXTURE = os.path.join(ROOT, "tests", "fixtures", "sample-character.json")
@@ -170,6 +171,19 @@ async def main():
         await pg.evaluate("c => { document.getElementById('bkIn').value = c; document.getElementById('bkApply').click(); }", code)
         await pg.wait_for_timeout(300)
         check(await tabs(pg) == before, "backup code restores everything")
+
+        print("changelog")
+        await pg.evaluate("localStorage.removeItem('dw-seen-changelog')")
+        await pg.reload()
+        await pg.wait_for_timeout(300)
+        check(await pg.evaluate("document.querySelectorAll('#clBody .cl-entry').length") >= 2, "What's new lists the changelog")
+        check(await pg.evaluate("document.getElementById('whatsNew').classList.contains('unseen')"), "an unseen entry marks the What's new link")
+        await pg.click("#whatsNew")
+        await pg.wait_for_timeout(200)
+        check(await pg.evaluate("document.getElementById('changelog').open"), "the What's new link opens the changelog")
+        check(not await pg.evaluate("document.getElementById('whatsNew').classList.contains('unseen')"), "opening it clears the mark")
+        md = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "build_changelog.py"), "--check"], capture_output=True, text=True)
+        check(md.returncode == 0, "CHANGELOG.md matches data/changelog.js")
 
         print("layout")
         width = await pg.evaluate("document.documentElement.scrollWidth")

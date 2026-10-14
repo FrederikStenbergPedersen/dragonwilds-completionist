@@ -41,7 +41,8 @@ body {
 /* ---------- header ---------- */
 .masthead { text-align: center; padding-block: 8px 4px; }
 .eyebrow { font-family: var(--font-display); font-weight: 700; letter-spacing: .32em; font-size: .78rem; color: var(--gold); text-transform: uppercase; }
-.gamever { display: inline-block; margin-top: 8px; padding: 3px 10px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: .72rem; font-weight: 600; letter-spacing: .04em; color: var(--cream-dim); }
+.gamever-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 12px; margin-top: 8px; }
+.gamever { display: inline-block; padding: 3px 10px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: .72rem; font-weight: 600; letter-spacing: .04em; color: var(--cream-dim); }
 h1, h2, h3 { margin: 0; text-wrap: balance; }
 h1 {
   font-family: var(--font-display); font-weight: 800; font-size: clamp(2.1rem, 7vw, 3.3rem); line-height: 1.02; letter-spacing: .03em;
@@ -383,6 +384,22 @@ details.craft[open] > summary::before { content: "▾ "; }
 .q.lore .mark { --c: var(--gold); }
 
 .importer { margin-top: 14px; padding: 0; }
+.whatsnew { position: relative; font-size: .78rem; font-weight: 600; color: var(--gold); text-decoration: none; border-bottom: 1px dotted var(--gold); }
+.whatsnew:hover { color: var(--gold-hi); border-color: var(--gold-hi); }
+.whatsnew.unseen::after { content: ""; position: absolute; top: -3px; right: -9px; width: 7px; height: 7px; border-radius: 50%; background: var(--flame); box-shadow: 0 0 6px rgba(240,122,44,.7); }
+.changelog { padding: 0; }
+.changelog > summary { cursor: pointer; list-style: none; padding: 12px 18px; font-weight: 700; color: var(--gold-hi); display: flex; align-items: baseline; gap: 8px; }
+.changelog > summary::-webkit-details-marker { display: none; }
+.changelog > summary::before { content: "▸"; color: var(--gold); }
+.changelog[open] > summary::before { content: "▾"; }
+.changelog > summary span { font-weight: 400; font-size: .85rem; color: var(--cream-dim); }
+#clBody { padding: 0 18px 4px; }
+.cl-entry h3 { font-size: .95rem; color: var(--cream); margin: 10px 0 4px; }
+.cl-entry h3 time { color: var(--gold); }
+.cl-entry ul { margin: 0 0 10px; padding-left: 1.2em; color: var(--cream-dim); }
+.cl-entry li { margin: 3px 0; max-width: 70ch; }
+.cl-more { padding: 0 18px 12px; margin: 0; font-size: .8rem; color: var(--cream-dim); }
+.cl-more a { color: var(--gold); }
 .importer > summary { cursor: pointer; list-style: none; padding: 12px 18px; font-weight: 700; color: var(--gold-hi); display: flex; align-items: center; gap: 10px; }
 .importer > summary::-webkit-details-marker { display: none; }
 .importer > summary::before { content: "▸"; color: var(--gold); }

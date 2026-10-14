@@ -851,6 +851,19 @@ function setTab(t) {
 }
 Object.entries(TABS).forEach(([k, [tab]]) => { document.getElementById(tab).onclick = () => setTab(k); });
 
+/* What's new: the changelog panel above the footer, opened from the link by the version badge.
+   A dot on the link marks an entry this browser hasn't opened yet. */
+function buildChangelog() {
+  const fmtD = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const latest = CHANGELOG[0].date, box = document.getElementById("changelog"), link = document.getElementById("whatsNew");
+  document.getElementById("clLatest").textContent = "· " + fmtD(latest);
+  document.getElementById("clBody").innerHTML = CHANGELOG.map(e => `<section class="cl-entry"><h3><time datetime="${e.date}">${fmtD(e.date)}</time> · ${esc(e.title)}</h3><ul>${e.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul></section>`).join("");
+  const markSeen = () => { lsSet("dw-seen-changelog", latest); link.classList.remove("unseen"); };
+  link.classList.toggle("unseen", (lsGet("dw-seen-changelog") || "") < latest);
+  link.addEventListener("click", (e) => { e.preventDefault(); box.open = true; box.scrollIntoView({ behavior: "smooth", block: "start" }); });
+  box.addEventListener("toggle", () => { if (box.open) markSeen(); });
+}
+
 const resetBox = document.getElementById("resetBox");
 function drawReset() {
   resetBox.innerHTML = `<button class="chip" type="button" id="resetBtn">Reset my progress</button>`;
@@ -874,6 +887,7 @@ buildUrns();
 COLLS.forEach(buildColl);
 buildAgility();
 buildSkills();
+buildChangelog();
 setTab(["#bosses", "#urns", "#lore", "#mounts", "#plants", "#factions", "#fauna", "#buildings", "#map", "#crafting", "#agility", "#burrows", "#skills"].includes(location.hash) ? location.hash.slice(1) : (lsGet("dw-tab") || "quests"));
 setFilter(lsGet("dw-filter") === "todo");
 paint();
