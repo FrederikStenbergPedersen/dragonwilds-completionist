@@ -142,7 +142,7 @@ function itemHTML(q, kind, step) {
   return `<li class="q ${kind}" data-id="${q.id}" data-gate="${q.id}">
     <button class="mark" type="button" id="m-${q.id}"><span class="d">${CHECK}</span></button>
     <div>
-      <div class="title-row">${step ? `<span class="step">${step}</span>` : ""}<span class="name"><span class="real">${esc(q.n)}</span><span class="ph">Undiscovered quest</span></span><span class="status" hidden></span>${q.boss ? `<span class="boss spoil">${esc(q.boss)}</span>` : ""}${link}${hasHint ? HINT_BTN : ""}</div>
+      <div class="title-row">${step ? `<span class="step">${step}</span>` : ""}<span class="name"><span class="real">${esc(q.n)}</span><span class="ph">${kind === "activity" ? "Undiscovered activity" : "Undiscovered quest"}</span></span><span class="status" hidden></span>${q.boss ? `<span class="boss spoil">${esc(q.boss)}</span>` : ""}${link}${hasHint ? HINT_BTN : ""}</div>
       <div class="start spoil">${q.where ? `<strong>${esc(q.where)}</strong> · ` : ""}${esc(q.start)}</div>
       ${rewards}
     </div>
@@ -726,7 +726,7 @@ function paint() {
     st.hidden = s === "none"; st.textContent = li.dataset.status || (li.classList.contains("recipe") ? "Unlocked" : li.classList.contains("burrow") ? "Opened" : LABEL[s]);
     const b = li.querySelector(".mark");
     b.disabled = !canWrite;
-    b.setAttribute("aria-label", `${li.classList.contains("locked") && !li.classList.contains("peek") && !showAll() ? "Undiscovered quest" : BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
+    b.setAttribute("aria-label", `${li.classList.contains("locked") && !li.classList.contains("peek") && !showAll() ? li.querySelector(".name .ph").textContent : BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
   });
   const qv = ALL_IDS, done = qv.filter(id => stateOf(id) === "done").length;
   document.getElementById("qpDone").textContent = done;

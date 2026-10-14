@@ -93,6 +93,8 @@ async def main():
         await pg.evaluate("delete progress['icthlarins-little-helper']; paint()")
         await pg.evaluate("progress['first-steps'] = { state: 'done' }; paint()")
         check(await pg.evaluate(named, "getting-started"), "finishing a main quest names the next one")
+        ph = await pg.evaluate("document.querySelector(\"[data-id='fight-caves-full'] .name .ph\").textContent")
+        check(ph == "Undiscovered activity", f"locked activities say activity, not quest ({ph})")
         await pg.evaluate("delete progress['first-steps']; paint()")
         listed = "[...document.querySelectorAll('#craftingMain .q')].filter(e => getComputedStyle(e).display !== 'none').length"
         await pg.click("#tabCrafting")
