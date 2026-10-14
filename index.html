@@ -15,10 +15,13 @@
 <div class="wrap">
   <header class="masthead">
     <div class="eyebrow">RuneScape · Dragonwilds</div>
+    <div class="gamever-row"><span class="gamever" title="Game patch this tracker is checked against">Supports game version 1.0.1</span><a class="whatsnew" id="whatsNew" href="#changelog">What's new</a></div>
     <h1>Dragonwilds Completionist</h1>
     <p class="sub">Every quest, skill and collectible in Ashenfall. Tap a marker to tick something off.</p>
+    <div class="spoilrow"><label class="switch"><input type="checkbox" id="spoilToggle" role="switch"><span class="track" aria-hidden="true"></span><span class="sw-label">No spoilers</span></label><span id="spoilNote"></span></div>
     <div class="ornament" aria-hidden="true"><i></i></div>
   </header>
+  <p class="sync-alert" id="sync" role="status" hidden></p>
 
   <section class="panel tiers" aria-label="Overall completion">
     <div class="tier" data-tier="0"><div class="tname">Completionist</div><div class="tdesc">Every section except skills, weighted equally</div><div class="tbar"><i></i></div><div class="tpct">0%</div></div>
@@ -69,7 +72,6 @@
     <div class="bar"><i id="overallBar"></i></div>
     <div class="meta">
       <span class="k"><span id="qpStarted">0</span>&nbsp;in progress</span>
-      <span class="sync" id="sync">Loading progress…</span>
     </div>
   </div>
 
@@ -129,13 +131,6 @@
       <div class="bar"><i id="lBar"></i></div>
       <div class="meta"><span>Grouped by region and story. The area under each title says roughly where it lies.</span></div>
     </div>
-    <div class="panel tips">
-      <h3>Finding them</h3>
-      <ul>
-        <li>Lore belongs to your character, not the world, so scraps you read in a friend’s world count for you too.</li>
-        <li>Statue sagas and songs from Umbral Sands quests aren't lore scraps, so they aren't listed here.</li>
-      </ul>
-    </div>
     <nav class="filters panel" aria-label="Lore filters">
       <button type="button" class="chip f-all" aria-pressed="true">All</button>
       <button type="button" class="chip f-todo" aria-pressed="false">Hide read</button>
@@ -152,7 +147,6 @@
       <div class="lbl">Mounts unlocked</div>
       <div class="bar"><i id="moBar"></i></div>
     </div>
-    <div class="panel tips"><h3>Good to know</h3><ul><li>Terrorbird variants need The Wild Hunt done first, and magic carpets need part of Icthlarin’s Little Helper.</li><li>The plain Terrorbird and Magic Carpet come from those quests, so they’re tracked on the Quests tab.</li></ul></div>
     <nav class="filters panel" aria-label="mounts filters">
       <button type="button" class="chip f-all" aria-pressed="true">All</button>
       <button type="button" class="chip f-todo" aria-pressed="false">Hide unlocked</button>
@@ -268,7 +262,7 @@
 
   <div id="view-burrows" role="tabpanel" aria-labelledby="tabBurrows" hidden>
     <div class="panel summary">
-      <div class="big"><span id="aBur">0</span><small>/19</small></div>
+      <div class="big"><span id="aBur">0</span><small>/<span id="aBurT">19</span></small></div>
       <div class="lbl">Kebbit burrows opened</div>
       <div class="bar"><i id="aBurBar"></i></div>
       <div class="meta"><span id="burSave"></span></div>
@@ -302,11 +296,15 @@
     <div id="skillMain" class="panel skills"></div>
   </div>
 
-  <footer class="panel">
-    <p class="foot-src">Data from the <a href="https://dragonwilds.runescape.wiki/" target="_blank" rel="noopener">RuneScape: Dragonwilds Wiki</a> and the game files (via <a href="https://github.com/RSDWArchive/RSDWArchive" target="_blank" rel="noopener">RSDWArchive</a>), checked 11 October 2026 against patch 1.0.0.6. Fan-made, not affiliated with Jagex.</p>
+  <footer class="site-foot">
+    <p class="foot-src">Data from the <a href="https://dragonwilds.runescape.wiki/" target="_blank" rel="noopener">RuneScape: Dragonwilds Wiki</a> and the game files (via <a href="https://github.com/RSDWArchive/RSDWArchive" target="_blank" rel="noopener">RSDWArchive</a>), checked 14 October 2026 against patch 1.0.1. Fan-made, not affiliated with Jagex.</p>
     <p class="foot-gh"><a href="https://github.com/FrederikStenbergPedersen/dragonwilds-completionist" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Open source on GitHub</a> · MIT licence · Spotted something wrong? Open an issue.</p>
-    <div class="confirm-row" id="resetBox"></div>
-    <details class="backup" id="backup">
+    <details class="foot-fold changelog" id="changelog">
+      <summary>What's new <span id="clLatest"></span></summary>
+      <div id="clBody"></div>
+      <p class="cl-more">Also on <a href="https://github.com/FrederikStenbergPedersen/dragonwilds-completionist/blob/main/CHANGELOG.md" target="_blank" rel="noopener">GitHub</a>.</p>
+    </details>
+    <details class="foot-fold backup" id="backup">
       <summary>Back up or move your progress</summary>
       <p>Copy this code to keep a backup or move your ticks to another browser. Everything except which kebbit burrows you ticked can be imported again, so the code mostly protects those.</p>
       <div class="confirm-row"><button type="button" class="chip" id="bkMake">Create backup code</button><button type="button" class="chip" id="bkCopy" hidden>Copy</button></div>
@@ -315,6 +313,7 @@
       <textarea id="bkIn" rows="3" placeholder="Paste a backup code here"></textarea>
       <div class="confirm-row"><button type="button" class="chip" id="bkApply">Restore</button><span id="bkMsg" aria-live="polite"></span></div>
     </details>
+    <div class="confirm-row" id="resetBox"></div>
   </footer>
 </div>
 <div id="bannerHost"></div>
@@ -330,6 +329,7 @@
 <script src="data/maps.js"></script>
 <script src="data/skills.js"></script>
 <script src="data/import.js"></script>
+<script src="data/changelog.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

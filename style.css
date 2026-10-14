@@ -41,6 +41,8 @@ body {
 /* ---------- header ---------- */
 .masthead { text-align: center; padding-block: 8px 4px; }
 .eyebrow { font-family: var(--font-display); font-weight: 700; letter-spacing: .32em; font-size: .78rem; color: var(--gold); text-transform: uppercase; }
+.gamever-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 12px; margin-top: 8px; }
+.gamever { display: inline-block; padding: 3px 10px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: .72rem; font-weight: 600; letter-spacing: .04em; color: var(--cream-dim); }
 h1, h2, h3 { margin: 0; text-wrap: balance; }
 h1 {
   font-family: var(--font-display); font-weight: 800; font-size: clamp(2.1rem, 7vw, 3.3rem); line-height: 1.02; letter-spacing: .03em;
@@ -50,6 +52,15 @@ h1 {
   margin-top: 6px;
 }
 .sub { color: var(--cream-dim); margin: 10px auto 0; max-width: 54ch; }
+.spoilrow { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 10px; margin: 10px auto 0; max-width: 54ch; font-size: .84rem; color: var(--cream-dim); }
+.switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: var(--cream); font-weight: 600; font-size: .88rem; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track { position: relative; width: 38px; height: 22px; border-radius: 999px; background: var(--panel-raised); border: 1px solid var(--line-strong); transition: background .15s, border-color .15s; flex: none; }
+.switch .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--cream-dim); transition: transform .15s, background .15s; }
+.switch input:checked + .track { background: rgba(226,178,92,.25); border-color: var(--gold); }
+.switch input:checked + .track::after { transform: translateX(16px); background: var(--gold-hi); }
+.switch input:focus-visible + .track { outline: 2px solid var(--gold); outline-offset: 2px; }
+#spoilNote:empty { display: none; }
 .ornament { display: flex; align-items: center; gap: 12px; margin: 18px auto 0; max-width: 420px; }
 .ornament::before, .ornament::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line-strong)); }
 .ornament::after { background: linear-gradient(90deg, var(--line-strong), transparent); }
@@ -71,7 +82,7 @@ h1 {
 .bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--flame), var(--gold-hi)); box-shadow: 0 0 12px rgba(240,122,44,.5); transition: width .5s ease; }
 .summary .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: .85rem; color: var(--cream-dim); border-top: 1px solid var(--line); padding-top: 10px; margin-top: 6px; }
 .meta .k { display: inline-flex; align-items: center; gap: 6px; }
-.sync b { color: var(--gold); font-weight: 600; }
+.sync-alert { margin: 12px auto 0; max-width: 54ch; text-align: center; font-size: .86rem; color: #ffd9bf; background: rgba(184,82,31,.25); border: 1px solid rgba(240,122,44,.45); border-radius: 8px; padding: 8px 12px; }
 
 /* ---------- filter bar ---------- */
 .filters { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-top: 14px; padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: rgba(13, 20, 29, 0.94); }
@@ -129,6 +140,37 @@ ol.path, ul.list { list-style: none; margin: 0; padding: 0; }
 .boss { font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #ffd9bf; background: rgba(184,82,31,.35); border: 1px solid rgba(240,122,44,.45); border-radius: 3px; padding: 1px 7px; }
 .wiki { font-size: .8rem; color: var(--cream-dim); text-decoration: none; border-bottom: 1px dotted var(--cream-dim); }
 .wiki:hover { color: var(--gold-hi); border-color: var(--gold-hi); }
+/* Spoiler-free: hints and maps stay hidden until the item is done or the player asks to see them. */
+body:not(.show-all) [data-gate]:not(.peek):not(.done) .spoil { display: none !important; }
+[data-gate].done .hint-btn, [data-gate].done .gate-note, .peek .gate-note, .show-all .hint-btn, .show-all .gate-note { display: none; }
+.hint-btn { font: inherit; font-size: .8rem; color: var(--gold); background: none; border: 0; border-bottom: 1px dotted var(--gold); padding: 0; cursor: pointer; }
+.hint-btn:hover { color: var(--gold-hi); border-color: var(--gold-hi); }
+.hint-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 2px; }
+.course .hint-btn { margin-top: 3px; }
+.mapgate { text-align: center; margin: 6px 0 10px; }
+.ph { display: none; }
+body:not(.show-all) [data-gate]:not(.peek):not(.done) > .ph { display: inline; }
+body:not(.show-all) .q.locked:not(.peek):not(.exact) .name .ph { display: inline; color: var(--cream-dim); font-style: italic; font-weight: 600; }
+body:not(.show-all) .q.locked:not(.peek):not(.exact) .name .real, body:not(.show-all) .q.locked:not(.peek):not(.scrap) .wiki { display: none; }
+body:not(.show-all) .q.exact .name .ph { display: none !important; }
+/* Lore series names stay hidden until something in that series is read or revealed. */
+.lser .ph { display: none; }
+body:not(.show-all) #loreMain .lgrp:not(:has(.q.done, .q.peek, .q.exact)) .lser .real { display: none; }
+body:not(.show-all) #loreMain .lgrp:not(:has(.q.done, .q.peek, .q.exact)) .lser .ph { display: inline; }
+.sealed { display: none !important; }
+/* No spoilers on the item-list tabs: only found items (or an exact-name search hit) are listed. */
+body:not(.show-all) .foundonly .q:not(.done):not(.exact) { display: none; }
+body:not(.show-all) .foundonly .lgrp:not(:has(.q.done, .q.exact)) { display: none; }
+.search-note { display: none; font-size: .78rem; color: var(--cream-dim); margin: 6px 0 0; }
+body:not(.show-all) .search-note { display: block; }
+body:not(.show-all) .spoil-tip { display: none; }
+body:not(.show-all) .foundonly section:not(:has(.q.done, .q.exact)), body:not(.show-all) .chip.nofound { display: none; }
+.undisc { margin: 8px 0 0; font-size: .86rem; color: var(--cream-dim); }
+.undisc[hidden], .show-all .undisc { display: none; }
+.sgate .hint-btn { margin-left: 6px; font-family: inherit; letter-spacing: normal; text-transform: none; font-weight: 400; }
+.mapgate .gate-note { display: block; font-size: .78rem; color: var(--cream-dim); margin-top: 3px; }
+.mapgate.peek .gate-note, .show-all .mapgate .gate-note, .mapgate.done .gate-note { display: none; }
+.mapgate .map-btn { font-size: .86rem; }
 .start { color: var(--cream-dim); font-size: .93rem; margin-top: 2px; }
 .start strong { color: var(--cream); font-weight: 600; }
 .rewards { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
@@ -147,11 +189,11 @@ ol.path, ul.list { list-style: none; margin: 0; padding: 0; }
 .empty { display: none; color: var(--done); padding: 10px 0 8px; }
 .hide-done section.all-done, .hide-done .chip.full { display: none; }
 
-footer { margin-top: 22px; padding: 14px 18px; font-size: .84rem; color: var(--cream-dim); }
+footer.site-foot { margin-top: 34px; padding: 18px 2px 10px; border-top: 1px solid var(--line); font-size: .84rem; color: var(--cream-dim); }
 footer a { color: var(--gold); }
 .foot-src { margin: 0 0 8px; }
-.foot-gh { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
-.foot-gh a { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.foot-gh { margin: 8px 0 0; line-height: 1.6; }
+.foot-gh a { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; vertical-align: bottom; }
 .confirm-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
 :focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 
@@ -342,6 +384,18 @@ details.craft[open] > summary::before { content: "▾ "; }
 .q.lore .mark { --c: var(--gold); }
 
 .importer { margin-top: 14px; padding: 0; }
+.whatsnew { position: relative; font-size: .78rem; font-weight: 600; color: var(--gold); text-decoration: none; border-bottom: 1px dotted var(--gold); }
+.whatsnew:hover { color: var(--gold-hi); border-color: var(--gold-hi); }
+.whatsnew.unseen::after { content: ""; position: absolute; top: -3px; right: -9px; width: 7px; height: 7px; border-radius: 50%; background: var(--flame); box-shadow: 0 0 6px rgba(240,122,44,.7); }
+.foot-fold { margin-top: 12px; }
+.foot-fold > summary { cursor: pointer; color: var(--gold); font-weight: 600; }
+.changelog > summary span { font-weight: 400; color: var(--cream-dim); }
+.cl-entry h3 { font-size: .92rem; color: var(--cream); margin: 12px 0 4px; }
+.cl-entry h3 time { color: var(--gold); }
+.cl-entry ul { margin: 0 0 8px; padding-left: 1.2em; }
+.cl-entry li { margin: 3px 0; max-width: 70ch; }
+.cl-more { margin: 4px 0 0; font-size: .8rem; }
+.cl-more a { color: var(--gold); }
 .importer > summary { cursor: pointer; list-style: none; padding: 12px 18px; font-weight: 700; color: var(--gold-hi); display: flex; align-items: center; gap: 10px; }
 .importer > summary::-webkit-details-marker { display: none; }
 .importer > summary::before { content: "▸"; color: var(--gold); }
@@ -368,8 +422,6 @@ details.craft[open] > summary::before { content: "▾ "; }
 .filebtn.alt { background: var(--panel-raised); color: var(--cream); border: 1px solid var(--line); }
 body.dragging::after { content: "Drop your character file to import"; position: fixed; inset: 12px; z-index: 30; display: grid; place-items: center; border: 2px dashed var(--gold); border-radius: 14px; background: rgba(13,20,29,.85); color: var(--gold-hi); font-family: var(--font-display); font-size: 1.3rem; pointer-events: none; }
 
-.backup { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
-.backup > summary { cursor: pointer; color: var(--gold); font-weight: 600; }
 .backup p { margin: 8px 0; max-width: 62ch; }
 .backup textarea { width: 100%; margin-top: 8px; font: .8rem/1.4 ui-monospace, Consolas, monospace; color: var(--cream); background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 6px; padding: 8px; resize: vertical; }
 .bklbl { display: block; margin-top: 12px; font-size: .74rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }

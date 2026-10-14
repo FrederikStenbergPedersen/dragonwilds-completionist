@@ -16,7 +16,7 @@ const ROMAN = ["I","II","III","IV","V","VI","VII","VIII","IX"];
 const LABEL = { none: "Not started", started: "In progress", done: "Complete" };
 
 let progress = {};
-let db = null, user = null, uid = null, canWrite = true, mode = "local";
+let db = null, user = null, uid = null, canWrite = true, mode = "local", savedIds = [], resetting = false;
 const pending = new Set();
 const LS_KEY = "dw-quest-progress";
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -28,14 +28,132 @@ try { progress = JSON.parse(lsGet(LS_KEY) || "{}") || {}; } catch { progress = {
 const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
 
+/* Spoiler-free by default: anything that gives the answer away (where to go, what you get, maps) sits in .spoil
+   and stays hidden until the item is done or the player taps "Show hint" / "Show map". Peeks are remembered per browser. */
+const PEEK_KEY = "dw-peek";
+let peeks = new Set();
+try { peeks = new Set(JSON.parse(lsGet(PEEK_KEY) || "[]")); } catch { peeks = new Set(); }
+const savePeeks = () => lsSet(PEEK_KEY, JSON.stringify([...peeks]));
+const HINT_BTN = `<button type="button" class="hint-btn" aria-expanded="false">Show hint</button>`;
+function mapGate(key, what, svg) {
+  if (!svg) return "";
+  return `<div class="mapgate" data-gate="map:${key}"><button type="button" class="hint-btn map-btn" aria-expanded="false">Show map</button><span class="gate-note">Shows where ${what}.</span><div class="spoil">${svg}</div></div>`;
+}
+function paintPeeks() {
+  document.querySelectorAll("[data-gate]").forEach(el => {
+    const open = peeks.has(el.dataset.gate);
+    el.classList.toggle("peek", open);
+    const b = el.querySelector(":scope > .hint-btn, :scope .title-row > .hint-btn, :scope .cinfo > .hint-btn");
+    if (b) { b.textContent = (open ? "Hide " : "Show ") + (b.classList.contains("map-btn") ? "map" : "hint"); b.setAttribute("aria-expanded", String(open)); }
+  });
+}
+// "Show everything": one switch for players who don't mind spoilers. Remembered per browser.
+const showAll = () => document.body.classList.contains("show-all");
+function setShowAll(on) {
+  document.body.classList.toggle("show-all", on);
+  document.getElementById("spoilToggle").checked = !on;
+  document.getElementById("spoilNote").textContent = on ? "" : "Hints, maps and anything you haven't reached yet are hidden.";
+  // The search boxes' example names are spoilers too.
+  document.querySelectorAll(".searchbar input").forEach(i => { i.dataset.ph = i.dataset.ph || i.placeholder; i.placeholder = on ? i.dataset.ph : "Type a full name"; });
+  lsSet("dw-spoilers", on ? "shown" : "hidden");
+}
+// Everything shows by default; "No spoilers" is opt-in.
+document.getElementById("spoilToggle").addEventListener("change", (e) => {
+  setShowAll(!e.target.checked); paint();
+  document.querySelectorAll(".searchbar input").forEach(i => i.dispatchEvent(new Event("input")));
+});
+setShowAll(lsGet("dw-spoilers") !== "hidden");
+/* No spoilers on the item-list tabs (recipes, crafting, building, mounts, gathering, fauna): only what you've found is listed,
+   a search finds anything else only by its full name, and each section says how many are left to discover. */
+const FOUND_ONLY = ["mounts", "plants", "buildings", "fauna", "crafting", "factions"];
+const normQ = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+function searchHit(li, q, text, names) {
+  if (!q) { li.classList.remove("exact"); return true; }
+  const loose = normQ(text).includes(q), exact = names.some(n => normQ(n) === q);
+  const foundOnly = !!li.closest(".foundonly, #loreMain") && !showAll() && !li.classList.contains("done");
+  li.classList.toggle("exact", foundOnly && exact);
+  return foundOnly ? exact : loose;
+}
+const FOUND_NOUN = { recipes: ["recipe", "recipes"], crafting: ["crafting recipe", "crafting recipes"], buildings: ["building piece", "building pieces"],
+  mounts: ["mount", "mounts"], factions: ["enemy", "enemies"], plants: ["plant, seed or material", "plants, seeds and materials"], fauna: ["animal or fish", "animals and fish"] };
+function undiscLine(key, n, noun) {
+  const el = document.querySelector(`[data-undisc="${key}"]`); if (!el) return;
+  el.hidden = !n;
+  el.textContent = `${n} more ${n === 1 ? noun[0] : noun[1]} to discover.`;
+}
+const SEARCH_NOTE = `<p class="search-note">No spoilers is on: type an item's full name to find one you haven't found yet.</p>`;
+document.addEventListener("click", (e) => {
+  const b = e.target.closest(".hint-btn"); if (!b) return;
+  const el = b.closest("[data-gate]"), k = el.dataset.gate;
+  if (peeks.has(k)) peeks.delete(k); else peeks.add(k);
+  savePeeks(); paint();
+});
+
+/* Story gates: which main-story quest opens each part of the quest list. [quest id, "started" | "done"]. */
+const OPENS = { ghornfell: ["dragon-slayer", "started"], fellhollow: ["dragon-slayer", "done"], dowdun: ["withering-heights", "done"], umbral: ["black-knights-fortress", "done"], tertiary: ["icthlarins-little-helper", "started"],
+  "icthlarin-done": ["icthlarins-little-helper", "done"], scorned: ["regicide", "started"] };
+// Beyond the Quests: which story gate each activity sits behind (missing = open from the start).
+const EXTRA_OPENS = { "x-marks-the-spot": "fellhollow", "fight-caves-full": "icthlarin-done", "nightmare-crucible": "icthlarin-done", "scorned-raid": "scorned" };
+const reached = (id, need) => { const s = stateOf(id); return need === "started" ? s !== "none" : s === "done"; };
+const isOpen = (key) => !OPENS[key] || reached(...OPENS[key]);
+/* Regions (and region-specific groups) the story hasn't opened are left out entirely, names and all,
+   and totals only count what's visible. A region with anything already ticked always shows. */
+const REGION_KEY = { "Ghornfell": "ghornfell", "Fractured Plains": "ghornfell", "Stormtouched Highlands": "ghornfell", "Fellhollow": "fellhollow",
+  "Dowdun Reach": "dowdun", "Black Knights": "dowdun", "Umbral Sands": "umbral", "Kalphites": "umbral", "KotHaar": "umbral",
+  "Scorned Wilderness": "scorned", "Clan quests": "tertiary" };
+let REG = null;
+function regions() {
+  if (REG) return REG;
+  const ids = {}, of = {}, add = (r, id) => { if (REGION_KEY[r]) { (ids[r] = ids[r] || []).push(id); of[id] = r; } };
+  SIDE.forEach(sd => sd.items.forEach(q => add(sd.region, q.id)));
+  TERT.forEach(c => c.items.forEach(t => add("Clan quests", t.id)));
+  URN_LIST.forEach(u => add(u.region, u.id));
+  BURROW_LIST.forEach(b => add(b.reg, b.id));
+  COLLS.forEach(c => c.list.forEach(x => add(x.reg, x.id)));
+  COURSES.forEach(c => add(c.where, c.id));
+  return (REG = { ids, of });
+}
+let SEALED = new Set();
+// The nameless "N more … waiting" line at the end of each tab, so totals stay honest without naming anything.
+const UNDISC = [["quests", ["quest", "quests"], () => ALL_IDS], ["urns", ["urn", "urns"], () => URN_IDS], ["burrows", ["burrow", "burrows"], () => BURROW_IDS],
+  ["agility", ["agility course", "agility courses"], () => COURSE_IDS], ["lore", ["lore scrap", "lore scraps"], () => LORE_IDS]];
+const UNDISC_VIEW = { quests: "view-quests", urns: "view-urns", burrows: "view-burrows", agility: "view-agility", lore: "view-lore", recipes: "view-bosses",
+  mounts: "view-mounts", plants: "view-plants", buildings: "view-buildings", fauna: "view-fauna", crafting: "view-crafting", factions: "view-factions" };
+Object.entries(UNDISC_VIEW).forEach(([k, v]) => document.querySelector(`#${v} .summary`).insertAdjacentHTML("beforeend", `<p class="undisc" data-undisc="${k}" hidden></p>`));
+function computeSealed() {
+  SEALED = new Set();
+  if (showAll()) return;
+  Object.entries(regions().ids).forEach(([r, ids]) => { if (!isOpen(REGION_KEY[r]) && ids.every(id => stateOf(id) === "none")) SEALED.add(r); });
+}
+function paintStory() {
+  // Main story: a quest's name shows once it's started, done, or the next one in line.
+  MAIN.forEach((q, i) => document.querySelector(`[data-id="${q.id}"]`).classList.toggle("locked", i > 0 && stateOf(MAIN[i - 1].id) !== "done" && stateOf(q.id) === "none"));
+  const lock = (ids, key) => ids.forEach(id => document.querySelector(`[data-id="${id}"]`).classList.toggle("locked", !isOpen(key) && stateOf(id) === "none"));
+  computeSealed();
+  document.querySelectorAll("[data-region]").forEach(el => el.classList.toggle("sealed", SEALED.has(el.dataset.region)));
+  COURSES.forEach(c => { const g = document.querySelector(`.mpt[data-mid="${c.id}"]`); if (g) g.classList.toggle("sealed", SEALED.has(c.where)); });
+  UNDISC.forEach(([key, noun, ids]) => {
+    const n = ids().filter(id => SEALED.has(regions().of[id])).length, el = document.querySelector(`[data-undisc="${key}"]`);
+    if (!el) return;
+    el.hidden = !n;
+    el.textContent = `${n} more ${n === 1 ? noun[0] : noun[1]} in parts of the story you haven't reached yet.`;
+  });
+  const lh = document.querySelector("#lore-brynmoor-ghornfell h2"); if (lh) lh.textContent = SEALED.has("Ghornfell") ? "Brynmoor" : "Brynmoor & Ghornfell";
+  SIDE.forEach(sd => lock(sd.items.map(q => q.id), sd.key));
+  EXTRA.forEach(q => { if (EXTRA_OPENS[q.id]) lock([q.id], EXTRA_OPENS[q.id]); });
+  document.querySelectorAll(".q.scrap").forEach(li => li.classList.toggle("locked", stateOf(li.dataset.id) !== "done"));
+  document.querySelectorAll(".sgate").forEach(el => el.classList.toggle("done", isOpen(el.dataset.gate.slice(4))));
+}
+
 function itemHTML(q, kind, step) {
-  const rewards = q.rw.length ? `<div class="rewards">${q.rw.map(r => `<span>${esc(r)}</span>`).join("")}</div>` : "";
+  const rewards = q.rw.length ? `<div class="rewards spoil">${q.rw.map(r => `<span>${esc(r)}</span>`).join("")}</div>` : "";
   const link = q.nowiki ? "" : `<a class="wiki" href="${w(q.wiki || q.n)}" target="_blank" rel="noopener">Wiki</a>`;
-  return `<li class="q ${kind}" data-id="${q.id}">
+  const hasHint = q.start || q.where || q.rw.length || q.boss;
+  return `<li class="q ${kind}" data-id="${q.id}" data-gate="${q.id}">
     <button class="mark" type="button" id="m-${q.id}"><span class="d">${CHECK}</span></button>
     <div>
-      <div class="title-row">${step ? `<span class="step">${step}</span>` : ""}<span class="name">${esc(q.n)}</span><span class="status" hidden></span>${q.boss ? `<span class="boss">${esc(q.boss)}</span>` : ""}${link}</div>
-      <div class="start">${q.where ? `<strong>${esc(q.where)}</strong> · ` : ""}${esc(q.start)}</div>
+      <div class="title-row">${step ? `<span class="step">${step}</span>` : ""}<span class="name"><span class="real">${esc(q.n)}</span><span class="ph">${kind === "activity" ? "Undiscovered activity" : "Undiscovered quest"}</span></span><span class="status" hidden></span>${q.boss ? `<span class="boss spoil">${esc(q.boss)}</span>` : ""}${link}${hasHint ? HINT_BTN : ""}</div>
+      <div class="start spoil">${q.where ? `<strong>${esc(q.where)}</strong> · ` : ""}${esc(q.start)}</div>
       ${rewards}
     </div>
   </li>`;
@@ -47,7 +165,8 @@ function build() {
   MAIN.forEach((q, i) => {
     html += itemHTML(q, "primary", ROMAN[i]);
     if (q.id === "icthlarins-little-helper") {
-      html += `<li class="tertiary"><h3>Tertiary quests in Icthlarin's Little Helper</h3>`;
+      // The clan quests stay out of sight entirely until Icthlarin's Little Helper is started: even their existence is a spoiler.
+      html += `<li class="tertiary" data-region="Clan quests"><h3>Tertiary quests in Icthlarin's Little Helper</h3>`;
       TERT.forEach(c => { html += `<div class="clan">${esc(c.clan)}</div><ul class="list">${c.items.map(t => itemHTML(t, "tertiary-q")).join("")}</ul>`; });
       html += `</li>`;
     }
@@ -55,8 +174,8 @@ function build() {
   html += `</ol><p class="empty">Main story complete. Kuldra has fallen.</p></section>`;
 
   SIDE.forEach(s => {
-    html += `<section class="panel" id="${s.key}"><div class="sec-head"><h2>${esc(s.region)}</h2><span class="count"></span></div><div class="rule"></div>
-      <p class="unlock">${s.unlock}</p><ul class="list">${s.items.map(q => itemHTML(q, "secondary")).join("")}</ul><p class="empty">Every quest here is complete.</p></section>`;
+    html += `<section class="panel" id="${s.key}" data-region="${esc(s.region)}"><div class="sec-head"><h2>${esc(s.region)}</h2><span class="count"></span></div><div class="rule"></div>
+      ${OPENS[s.key] ? `<p class="unlock sgate" data-gate="sec:${s.key}"><span class="spoil">${s.unlock}</span><span class="ph">Opens later in the main story.</span> ${HINT_BTN}</p>` : `<p class="unlock">${s.unlock}</p>`}<ul class="list">${s.items.map(q => itemHTML(q, "secondary")).join("")}</ul><p class="empty">Every quest here is complete.</p></section>`;
   });
 
   html += `<section class="panel" id="extra"><div class="sec-head"><h2>Beyond the Quests</h2><span class="count"></span></div><div class="rule"></div>
@@ -66,7 +185,7 @@ function build() {
   main.innerHTML = html;
 
   const groups = [["main-story", "Main story", MAIN.map(q => q.id).concat(TERT.flatMap(c => c.items.map(t => t.id)))], ...SIDE.map(s => [s.key, s.region, s.items.map(q => q.id)])];
-  document.getElementById("jump").innerHTML = groups.map(([k, label]) => `<a class="chip" href="#${k}" data-jump="${k}">${esc(label)} <span></span></a>`).join("") + `<a class="chip" href="#extra">Extras <span id="exChip"></span></a>`;
+  document.getElementById("jump").innerHTML = groups.map(([k, label]) => `<a class="chip" href="#${k}" data-jump="${k}" data-region="${esc(label)}">${esc(label)} <span></span></a>`).join("") + `<a class="chip" href="#extra">Extras <span id="exChip"></span></a>`;
   window.__groups = groups;
 
   main.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
@@ -97,8 +216,8 @@ SKILL_IDS.forEach(id => { BY_ID[id] = { id, n: id }; });
 function buildUrns() {
   const host = document.getElementById("urnMain");
   const urnMap = (g) => { const pts = g.areas.flatMap(([a, n]) => Array.from({ length: n }, (_, i) => { const id = `u-${uslug(a)}-${i + 1}`, L = LANDMARKS[id]; return L && { id, x: L[0], y: L[1], txt: n > 1 ? i + 1 : "", label: a, cls: "urn", click: true, aria: `${a} urn${n > 1 ? " " + (i + 1) : ""}` }; })).filter(Boolean);
-    return pts.length ? mapSVG("urns-" + uslug(g.region), `Map of ${g.region} urns`, pts) : ""; };
-  host.innerHTML = URNS.map(g => `<section class="panel" id="urns-${uslug(g.region)}"><div class="sec-head"><h2>${esc(g.region)}</h2><span class="count"></span></div><div class="rule"></div>
+    return pts.length ? mapGate("urns-" + uslug(g.region), `every urn in ${g.region} is`, mapSVG("urns-" + uslug(g.region), `Map of ${g.region} urns`, pts)) : ""; };
+  host.innerHTML = URNS.map(g => `<section class="panel" id="urns-${uslug(g.region)}" data-region="${esc(g.region)}"><div class="sec-head"><h2>${esc(g.region)}</h2><span class="count"></span></div><div class="rule"></div>
     ${urnMap(g)}<ul class="list">${g.areas.map(([a, n]) => `<li class="urn-area" data-area="${uslug(a)}"><div><div class="an">${esc(a)}</div><div class="ac"></div></div>
       <div class="umarks">${Array.from({ length: n }, (_, i) => { const id = `u-${uslug(a)}-${i + 1}`; return `<button class="mark umark" type="button" id="m-${id}" data-id="${id}" aria-label="${esc(a)} urn ${i + 1}"><span class="d">${CHECK}</span></button>`; }).join("")}</div></li>`).join("")}</ul>
     <p class="empty">Every urn here is absorbed.</p></section>`).join("");
@@ -107,13 +226,14 @@ function buildUrns() {
 }
 const lslug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 function buildColl(c) {
-  const host = document.getElementById(c.key + "Main"), gid = (r, g) => `${c.key}-${lslug(r.r + "-" + g.s)}`;
-  host.innerHTML = c.data.map(r => `<section class="panel" id="${c.key}-${lslug(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
-    ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore" data-id="${id}" data-status="${c.status}">
+  const host = document.getElementById(c.key + "Main"), gid = (r, g) => `${c.key}-${lslug(r.r + "-" + g.s)}`, scrap = c.key === "lore";
+  if (FOUND_ONLY.includes(c.key)) { host.classList.add("foundonly"); document.getElementById(c.p + "Search").insertAdjacentHTML("afterend", SEARCH_NOTE); }
+  host.innerHTML = c.data.map(r => `<section class="panel" id="${c.key}-${lslug(r.r)}" data-region="${esc(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
+    ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${scrap ? `<span class="real">${esc(g.s)}</span><span class="ph">Undiscovered story</span>` : esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore${scrap ? " scrap" : ""}" data-id="${id}" data-status="${c.status}" data-gate="${id}">
       <button class="mark" type="button" id="m-${id}"><span class="d">${CHECK}</span></button>
-      <div><div class="title-row"><span class="name">${esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}</div>${sub ? `<div class="start">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
+      <div><div class="title-row"><span class="name">${scrap ? `<span class="real">${esc(n)}</span><span class="ph">Unread lore scrap</span>` : esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}${sub || scrap ? HINT_BTN : ""}</div>${sub ? `<div class="start spoil">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
     <p class="empty">${esc(c.empty)}</p></section>`).join("");
-  document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
+  document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}" data-region="${esc(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
   host.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
   const norm = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   const input = document.getElementById(c.p + "Search");
@@ -123,7 +243,7 @@ function buildColl(c) {
       let rh = 0;
       r.g.forEach(g => {
         let gh = 0;
-        g.i.forEach(([id, n, sub]) => { const ok = !q || norm(`${n} ${sub} ${g.s}`).includes(q); host.querySelector(`[data-id="${id}"]`).classList.toggle("nomatch", !ok); if (ok) gh++; });
+        g.i.forEach(([id, n, sub]) => { const li = host.querySelector(`[data-id="${id}"]`), ok = searchHit(li, q, `${n} ${sub} ${g.s}`, [n]); li.classList.toggle("nomatch", !ok); if (ok) gh++; });
         host.querySelector(`[data-lg="${gid(r, g)}"]`).classList.toggle("nomatch", !gh); rh += gh;
       });
       document.getElementById(`${c.key}-${lslug(r.r)}`).classList.toggle("nomatch", !rh); if (rh) any = true;
@@ -132,10 +252,11 @@ function buildColl(c) {
   });
 }
 function paintColl(c) {
-  const d = c.ids.filter(id => stateOf(id) === "done").length;
+  const ids = c.ids, d = ids.filter(id => stateOf(id) === "done").length;
+  if (FOUND_ONLY.includes(c.key)) undiscLine(c.key, ids.length - d, FOUND_NOUN[c.key]); // one line for everything still to find
   document.getElementById(c.p + "Done").textContent = d;
-  document.getElementById(c.p + "Total").textContent = c.ids.length;
-  document.getElementById(c.p + "Bar").style.width = (100 * d / c.ids.length) + "%";
+  document.getElementById(c.p + "Total").textContent = ids.length;
+  document.getElementById(c.p + "Bar").style.width = (100 * d / ids.length) + "%";
   c.data.forEach(r => {
     let rd = 0, rt = 0;
     r.g.forEach(g => {
@@ -146,6 +267,7 @@ function paintColl(c) {
     });
     const sec = document.getElementById(`${c.key}-${lslug(r.r)}`);
     sec.querySelector(".count").textContent = `${rd} / ${rt}`;
+    if (FOUND_ONLY.includes(c.key)) { const ch = document.querySelector(`[data-jump="${c.key}-${lslug(r.r)}"]`); if (ch) ch.classList.toggle("nofound", !rd); }
     sec.classList.toggle("all-done", rd === rt);
     const a = document.querySelector(`[data-jump="${c.key}-${lslug(r.r)}"]`);
     if (a) { a.querySelector("span").textContent = `${rd}/${rt}`; a.classList.toggle("full", rd === rt); }
@@ -155,12 +277,12 @@ const fmtT = (sec) => { const m = Math.floor(sec / 60), s2 = sec - m * 60; retur
 const MEDALS = [["b", "Bronze", ""], ["s", "Silver", "silver"], ["g", "Gold", "goldm"]];
 function buildAgility() {
   const cm = document.getElementById("courseMap");
-  cm.innerHTML = mapSVG("agility-courses", "Map of agility courses", COURSES.map(c => ({ id: c.id, x: LANDMARKS[c.id][0], y: LANDMARKS[c.id][1], label: c.n, cls: "crs" })), { minSpan: 0 });
+  cm.innerHTML = mapGate("agility-courses", "every course starts", mapSVG("agility-courses", "Map of agility courses", COURSES.map(c => ({ id: c.id, x: LANDMARKS[c.id][0], y: LANDMARKS[c.id][1], label: c.n, cls: "crs" })), { minSpan: 0 }));
   wireMaps(cm);
-  document.getElementById("courseList").innerHTML = COURSES.map(c => `<li class="course" data-cid="${c.id}">
+  document.getElementById("courseList").innerHTML = COURSES.map(c => `<li class="course" data-cid="${c.id}" data-gate="${c.id}" data-region="${esc(c.where)}">
     <div class="cinfo"><div class="cn">${esc(c.n)}</div><div class="cw">${esc(c.where)}</div>
       <div class="creq">${c.lvl || c.perks.length ? "Needs " + [c.lvl ? `Agility ${c.lvl}` : "", ...c.perks].filter(Boolean).map(esc).join(" · ") : "No requirements"}</div>
-      <div class="crw">Gold reward: <b>${c.cape.map(esc).join("</b> and <b>")}</b> recipe</div>
+      <div class="crw spoil">Gold reward: <b>${c.cape.map(esc).join("</b> and <b>")}</b> recipe</div>${HINT_BTN}
       <div class="cbest"></div></div>
     <div class="medals">${MEDALS.map(([k, nm, cls], i) => `<button type="button" class="medal ${cls}" data-m="${i + 1}" aria-label="${esc(c.n)}: ${nm} medal, ${fmtT(c[k])} or faster"><span class="coin">${nm[0]}</span>${fmtT(c[k])}</button>`).join("")}</div></li>`).join("");
   document.getElementById("courseList").addEventListener("click", (e) => {
@@ -224,8 +346,8 @@ function buildBurrows() {
   host.innerHTML = BURROW_MAP.map(r => {
     const rows = r.b.map((b, i) => { const L = LANDMARKS[b.near];
       return `<li class="q burrow" data-id="${b.id}"><button class="mark" type="button" id="m-${b.id}"><span class="d">${CHECK}</span></button><div><div class="title-row"><span class="name">Burrow ${i + 1}</span><span class="status" hidden></span></div></div></li>`; }).join("");
-    return `<section class="panel" id="bur-${lslug(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
-      ${mapSVG("burrows-" + lslug(r.r), `Map of ${r.r} burrows`, r.b.map((b, i) => ({ id: b.id, x: b.x, y: b.y, txt: i + 1, cls: "bur", click: true, aria: `${r.r} burrow ${i + 1}` })))}
+    return `<section class="panel" id="bur-${lslug(r.r)}" data-region="${esc(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
+      ${mapGate("burrows-" + lslug(r.r), `every burrow in ${r.r} is`, mapSVG("burrows-" + lslug(r.r), `Map of ${r.r} burrows`, r.b.map((b, i) => ({ id: b.id, x: b.x, y: b.y, txt: i + 1, cls: "bur", click: true, aria: `${r.r} burrow ${i + 1}` }))))}
       <ul class="list">${rows}</ul><p class="empty">Every burrow here is ticked.</p></section>`;
   }).join("");
   wireMaps(host);
@@ -255,14 +377,15 @@ function paintAgility() {
     li.querySelectorAll(".medal").forEach(b => { const on = Number(b.dataset.m) <= m; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); b.disabled = !canWrite; });
     li.querySelector(".cbest").textContent = best ? `Your best: ${fmtT(best)}${m >= 3 ? "" : ` · ${fmtT(Math.max(0, best - c.g))} off gold`}` : "";
   });
-  const bc = burDone(), bs = burCount(), bt = burTicked();
-  const ms = medalSum();
+  const bs = burCount(), bt = burTicked(), bT = BURROW_IDS.length, bc = Math.min(bT, burDone());
+  const ms = medalSum(), oc = COURSE_IDS.length;
   document.getElementById("aGold").textContent = ms;
-  document.getElementById("aGoldT").textContent = COURSES.length * 3;
+  document.getElementById("aGoldT").textContent = oc * 3;
   document.getElementById("aBur").textContent = bc;
-  document.getElementById("aGoldBar").style.width = (100 * ms / (COURSES.length * 3)) + "%";
-  document.getElementById("aBurBar").style.width = (100 * bc / BURROWS) + "%";
-  const ci = document.querySelector("#agCourses .count"); ci.textContent = `${gold} / ${COURSES.length} gold`;
+  document.getElementById("aBurT").textContent = bT;
+  document.getElementById("aGoldBar").style.width = (100 * ms / (oc * 3)) + "%";
+  document.getElementById("aBurBar").style.width = (100 * bc / bT) + "%";
+  const ci = document.querySelector("#agCourses .count"); ci.textContent = `${gold} / ${oc} gold`;
   document.getElementById("burSave").textContent = (progress[BUR_ID] ? `Opened in game: ${bs} · ` : "") + `Ticked on the maps: ${bt}` + (bs > bt ? ` · ${bs - bt} still to tick` : "");
   BURROW_MAP.forEach(r => {
     const d = r.b.filter(b => stateOf(b.id) === "done").length, sec = document.getElementById("bur-" + lslug(r.r));
@@ -275,10 +398,10 @@ function paintMap() {
   document.getElementById("mapBar").style.width = (100 * n / MAP_REGIONS) + "%";
 }
 function paintUrns() {
-  const d = URN_IDS.filter(id => stateOf(id) === "done").length;
+  const uv = URN_IDS, d = uv.filter(id => stateOf(id) === "done").length;
   document.getElementById("uDone").textContent = d;
-  document.getElementById("uTotal").textContent = URN_IDS.length;
-  document.getElementById("uBar").style.width = (100 * d / URN_IDS.length) + "%";
+  document.getElementById("uTotal").textContent = uv.length;
+  document.getElementById("uBar").style.width = (100 * d / uv.length) + "%";
   document.getElementById("uHp").textContent = `+${d * 10}`;
   document.querySelectorAll(".umark").forEach(b => {
     const on = stateOf(b.dataset.id) === "done";
@@ -524,9 +647,9 @@ function paintTabs() {
   const rows = { tabQuests: cnt(ALL_IDS), tabBosses: cnt(REC_IDS), tabUrns: cnt(URN_IDS) };
   COLLS.forEach(c => { rows[c.tab] = cnt(c.ids); });
   Object.entries(rows).forEach(([t, [d, n]]) => setTabProg(t, `${d}/${n}`, d / n));
-  const ag = medalSum(), bc = burDone();
-  setTabProg("tabAgility", `${ag}/${COURSE_IDS.length * 3}`, ag / (COURSE_IDS.length * 3));
-  setTabProg("tabBurrows", `${bc}/${BURROWS}`, bc / BURROWS);
+  const ag = medalSum(), oc = COURSE_IDS.length * 3, bT = BURROW_IDS.length, bc = Math.min(bT, burDone());
+  setTabProg("tabAgility", `${ag}/${oc}`, ag / oc);
+  setTabProg("tabBurrows", `${bc}/${bT}`, bc / bT);
   const mc = countOf(MAP_ID);
   setTabProg("tabMap", `${mc}/${MAP_REGIONS}`, mc / MAP_REGIONS);
   setTabProg("tabSkills", Math.floor(100 * f.x94 / k) + "%", f.x94 / k);
@@ -551,12 +674,13 @@ function paintTiers() {
 }
 function buildBosses() {
   const host = document.getElementById("recMain");
+  host.classList.add("foundonly"); document.getElementById("rSearch").insertAdjacentHTML("afterend", SEARCH_NOTE);
   host.innerHTML = RECIPES.map(g => `<section class="panel" id="rec-${g.key}"><div class="sec-head"><h2>${esc(g.title)}</h2><span class="count"></span></div><div class="rule"></div>
-    ${g.intro ? `<p class="unlock">${esc(g.intro)}</p>` : ""}<ul class="list">${g.items.map(r => `<li class="q recipe" data-id="${r.id}">
+    ${g.intro ? `<p class="unlock">${esc(g.intro)}</p>` : ""}<ul class="list">${g.items.map(r => `<li class="q recipe" data-id="${r.id}" data-gate="${r.id}">
       <button class="mark" type="button" id="m-${r.id}"><span class="d">${CHECK}</span></button>
       <div>
-        <div class="title-row"><span class="name">${esc(r.unl || r.n)}</span><span class="status" hidden></span><a class="wiki" href="${w(r.n.replace(/^MOUNT: /, ""))}" target="_blank" rel="noopener">Wiki</a></div>
-        <div class="unl"><span>${r.via || (r.n.startsWith("MOUNT") ? "Mount vestige" : "Vestige")}</span> ${esc(r.n.replace(/^MOUNT: /, ""))}</div>
+        <div class="title-row"><span class="name">${esc(r.unl || r.n)}</span><span class="status" hidden></span><a class="wiki" href="${w(r.n.replace(/^MOUNT: /, ""))}" target="_blank" rel="noopener">Wiki</a>${HINT_BTN}</div>
+        <div class="unl spoil"><span>${r.via || (r.n.startsWith("MOUNT") ? "Mount vestige" : "Vestige")}</span> ${esc(r.n.replace(/^MOUNT: /, ""))}</div>
       </div></li>`).join("")}</ul><p class="empty">Everything here is unlocked.</p></section>`).join("");
   document.getElementById("rJump").innerHTML = RECIPES.map(g => `<a class="chip" href="#rec-${g.key}" data-rjump="${g.key}">${esc(g.title.replace("Power Level ", "PL "))} <span></span></a>`).join("");
   host.addEventListener("click", (e) => {
@@ -572,7 +696,7 @@ function buildBosses() {
       let hits = 0;
       g.items.forEach(r => {
         const li = host.querySelector(`[data-id="${r.id}"]`);
-        const ok = !q || norm(`${r.unl || ""} ${r.n}`).includes(q);
+        const ok = searchHit(li, q, `${r.unl || ""} ${r.n}`, [r.unl || r.n, r.n.replace(/^MOUNT: /, "")]);
         li.classList.toggle("nomatch", !ok);
         if (ok) hits++;
       });
@@ -595,10 +719,13 @@ function paintRecipes() {
     const a = document.querySelector(`[data-rjump="${g.key}"]`);
     a.querySelector("span").textContent = `${n}/${g.items.length}`;
     a.classList.toggle("full", n === g.items.length);
+    a.classList.toggle("nofound", !n);
   });
+  undiscLine("recipes", REC_IDS.length - d, FOUND_NOUN.recipes);
 }
 
 function paint() {
+  paintStory();
   document.querySelectorAll(".q").forEach(li => {
     const id = li.dataset.id, s = stateOf(id);
     li.classList.toggle("started", s === "started");
@@ -607,13 +734,13 @@ function paint() {
     st.hidden = s === "none"; st.textContent = li.dataset.status || (li.classList.contains("recipe") ? "Unlocked" : li.classList.contains("burrow") ? "Opened" : LABEL[s]);
     const b = li.querySelector(".mark");
     b.disabled = !canWrite;
-    b.setAttribute("aria-label", `${BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
+    b.setAttribute("aria-label", `${li.classList.contains("locked") && !li.classList.contains("peek") && !li.classList.contains("exact") && !showAll() ? li.querySelector(".name .ph").textContent : BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
   });
-  const done = ALL_IDS.filter(id => stateOf(id) === "done").length;
+  const qv = ALL_IDS, done = qv.filter(id => stateOf(id) === "done").length;
   document.getElementById("qpDone").textContent = done;
-  document.getElementById("qpTotal").textContent = ALL_IDS.length;
-  document.getElementById("qpStarted").textContent = ALL_IDS.filter(id => stateOf(id) === "started").length;
-  document.getElementById("overallBar").style.width = (100 * done / ALL_IDS.length) + "%";
+  document.getElementById("qpTotal").textContent = qv.length;
+  document.getElementById("qpStarted").textContent = qv.filter(id => stateOf(id) === "started").length;
+  document.getElementById("overallBar").style.width = (100 * done / qv.length) + "%";
 
   (window.__groups || []).forEach(([k, , ids]) => {
     const d = ids.filter(id => stateOf(id) === "done").length;
@@ -637,6 +764,10 @@ function paint() {
   paintMaps();
   paintSkills();
   paintTiers();
+  const allGold = COURSE_IDS.every(id => medalOf(id) >= 3);
+  document.querySelectorAll(".mapgate").forEach(g => g.classList.toggle("done", g.closest("#agCourses") ? allGold : !!g.closest(".all-done")));
+  document.querySelectorAll(".course").forEach(li => li.classList.toggle("done", medalOf(li.dataset.cid) >= 3));
+  paintPeeks();
 }
 
 let bannerTimer = null;
@@ -698,7 +829,8 @@ async function cycle(id) {
     else setSync("That change didn't save. Check your connection and tap the quest again.");
   } finally { pending.delete(id); }
 }
-function setSync(html) { document.getElementById("sync").innerHTML = html; }
+// Only problems are shown; the normal "where your log is saved" statuses (which start with <b>Your log</b>) stay quiet.
+function setSync(html) { const el = document.getElementById("sync"); const ok = html.startsWith("<b>Your log</b>"); el.hidden = ok; el.innerHTML = ok ? "" : html; }
 
 function setFilter(todo) {
   document.body.classList.toggle("hide-done", todo);
@@ -720,6 +852,19 @@ function setTab(t) {
 }
 Object.entries(TABS).forEach(([k, [tab]]) => { document.getElementById(tab).onclick = () => setTab(k); });
 
+/* What's new: the changelog panel above the footer, opened from the link by the version badge.
+   A dot on the link marks an entry this browser hasn't opened yet. */
+function buildChangelog() {
+  const fmtD = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const latest = CHANGELOG[0].date, box = document.getElementById("changelog"), link = document.getElementById("whatsNew");
+  document.getElementById("clLatest").textContent = "· " + fmtD(latest);
+  document.getElementById("clBody").innerHTML = CHANGELOG.map(e => `<section class="cl-entry"><h3><time datetime="${e.date}">${fmtD(e.date)}</time> · ${esc(e.title)}</h3><ul>${e.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul></section>`).join("");
+  const markSeen = () => { lsSet("dw-seen-changelog", latest); link.classList.remove("unseen"); };
+  link.classList.toggle("unseen", (lsGet("dw-seen-changelog") || "") < latest);
+  link.addEventListener("click", (e) => { e.preventDefault(); box.open = true; box.scrollIntoView({ behavior: "smooth", block: "start" }); });
+  box.addEventListener("toggle", () => { if (box.open) markSeen(); });
+}
+
 const resetBox = document.getElementById("resetBox");
 function drawReset() {
   resetBox.innerHTML = `<button class="chip" type="button" id="resetBtn">Reset my progress</button>`;
@@ -727,11 +872,12 @@ function drawReset() {
     resetBox.innerHTML = `<span>Clear all of your progress?</span><button class="chip" type="button" id="resetYes">Yes, clear it</button><button class="chip" type="button" id="resetNo">Cancel</button>`;
     document.getElementById("resetNo").onclick = drawReset;
     document.getElementById("resetYes").onclick = async () => {
-      const ids = Object.keys(progress);
       progress = {}; paint(); drawReset();
       if (mode === "local") { lsSet(LS_KEY, "{}"); return; }
-      for (const id of ids) { if (!BUNDLE_OF(id)) { try { await myCol().doc(id).delete(); } catch {} } }
-      for (const c of COLLS) { if (c.key !== "mounts") { try { await myCol().doc("set-" + c.key).delete(); } catch {} } }
+      // Delete every saved document, including leftovers from older save formats.
+      const ids = new Set([...savedIds, ...COLLS.filter(c => c.key !== "mounts").map(c => "set-" + c.key)]);
+      resetting = true;
+      try { for (const id of ids) { try { await myCol().doc(id).delete(); } catch {} } } finally { resetting = false; }
     };
   };
 }
@@ -742,6 +888,7 @@ buildUrns();
 COLLS.forEach(buildColl);
 buildAgility();
 buildSkills();
+buildChangelog();
 setTab(["#bosses", "#urns", "#lore", "#mounts", "#plants", "#factions", "#fauna", "#buildings", "#map", "#crafting", "#agility", "#burrows", "#skills"].includes(location.hash) ? location.hash.slice(1) : (lsGet("dw-tab") || "quests"));
 setFilter(lsGet("dw-filter") === "todo");
 paint();
@@ -759,9 +906,13 @@ setSync("<b>Your log</b> · saved in this browser");
   if (cw === false) return;
   mode = "account";
   const localSaved = { ...progress };
-  let first = true;
+  let first = true, migrating = false;
   myCol().onSnapshot(async (snap) => {
     const next = {};
+    savedIds = snap.docs.map(d => d.id);
+    // Old saves kept journal-style entries (lore, gathering, factions...) one document per item; those are now one bundle per section.
+    const legacy = snap.docs.filter(d => BUNDLE_OF(d.id)).map(d => d.id);
+    if (resetting) return;
     snap.docs.forEach(d => {
       const v = d.data(); if (!v) return;
       if (d.id.startsWith("set-")) { const k = d.id.slice(4); if (!pendingB.has(k) && !holdB.has(k) && Array.isArray(v.done)) v.done.forEach(id => { if (BY_ID[id]) next[id] = { state: "done", at: v.at || 0 }; }); return; }
@@ -795,5 +946,12 @@ setSync("<b>Your log</b> · saved in this browser");
     if (mode !== "account") return;
     progress = next;
     paint();
+    if (legacy.length && !migrating) {
+      migrating = true;
+      try {
+        for (const k of new Set(legacy.map(BUNDLE_OF))) await saveBundle(k);
+        for (const id of legacy) await myCol().doc(id).delete();
+      } catch {} finally { migrating = false; }
+    }
   }, () => { setSync("Live sync stopped. Reload the page to reconnect."); });
 })();
