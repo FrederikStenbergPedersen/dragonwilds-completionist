@@ -75,8 +75,12 @@ async def main():
         check(await pg.evaluate(shown) == 0, "Hide hint hides it again")
         named = "id => getComputedStyle(document.querySelector(`[data-id='${id}'] .name .real`)).display !== 'none'"
         check(await pg.evaluate(named, "first-steps") and not await pg.evaluate(named, "getting-started"), "only the first main quest is named on a fresh page")
-        unlock = "document.querySelector('#fellhollow .unlock').innerText"
-        check("Dragon Slayer" not in await pg.evaluate(unlock), "region unlock lines don't name later quests")
+        hidden = "sel => getComputedStyle(document.querySelector(sel)).display === 'none'"
+        check(await pg.evaluate(hidden, "#fellhollow") and await pg.evaluate(hidden, "[data-jump='fellhollow']"), "regions the story hasn't opened are left out, names and all")
+        check((await tabs(pg))["Urns"] == "0/6", "totals only count open regions (Brynmoor's 6 urns)")
+        await pg.evaluate("progress['dragon-slayer'] = { state: 'done' }; paint()")
+        check(not await pg.evaluate(hidden, "#fellhollow") and (await tabs(pg))["Urns"] == "0/12", "finishing Dragon Slayer opens Ghornfell and Fellhollow (12 urns)")
+        await pg.evaluate("delete progress['dragon-slayer']; paint()")
         tert = "getComputedStyle(document.querySelector('li.tertiary')).display"
         check(await pg.evaluate(tert) == "none", "clan quests are left out until Icthlarin's Little Helper starts")
         await pg.evaluate("progress['icthlarins-little-helper'] = { state: 'started' }; paint()")
@@ -93,6 +97,8 @@ async def main():
         check(await pg.evaluate(shown) == total, "Show everything is remembered after a reload")
         await pg.click("#spoilToggle")
         check(await pg.evaluate(shown) == 0, "Hide spoilers hides them again")
+        # The rest checks full totals, so turn Show everything back on.
+        await pg.click("#spoilToggle")
 
         print("save import")
         await pg.click("#importer > summary")

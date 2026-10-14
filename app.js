@@ -73,11 +73,38 @@ const OPENS = { ghornfell: ["dragon-slayer", "started"], fellhollow: ["dragon-sl
 const EXTRA_OPENS = { "x-marks-the-spot": "fellhollow", "fight-caves-full": "icthlarin-done", "nightmare-crucible": "icthlarin-done", "scorned-raid": "scorned" };
 const reached = (id, need) => { const s = stateOf(id); return need === "started" ? s !== "none" : s === "done"; };
 const isOpen = (key) => !OPENS[key] || reached(...OPENS[key]);
+/* Regions (and region-specific groups) the story hasn't opened are left out entirely, names and all,
+   and totals only count what's visible. A region with anything already ticked always shows. */
+const REGION_KEY = { "Ghornfell": "ghornfell", "Fractured Plains": "ghornfell", "Stormtouched Highlands": "ghornfell", "Fellhollow": "fellhollow",
+  "Dowdun Reach": "dowdun", "Black Knights": "dowdun", "Umbral Sands": "umbral", "Kalphites": "umbral", "KotHaar": "umbral",
+  "Scorned Wilderness": "scorned", "Clan quests": "tertiary" };
+let REG = null;
+function regions() {
+  if (REG) return REG;
+  const ids = {}, of = {}, add = (r, id) => { if (REGION_KEY[r]) { (ids[r] = ids[r] || []).push(id); of[id] = r; } };
+  SIDE.forEach(sd => sd.items.forEach(q => add(sd.region, q.id)));
+  TERT.forEach(c => c.items.forEach(t => add("Clan quests", t.id)));
+  URN_LIST.forEach(u => add(u.region, u.id));
+  BURROW_LIST.forEach(b => add(b.reg, b.id));
+  COLLS.forEach(c => c.list.forEach(x => add(x.reg, x.id)));
+  COURSES.forEach(c => add(c.where, c.id));
+  return (REG = { ids, of });
+}
+let SEALED = new Set();
+const vis = (ids) => ids.filter(id => !SEALED.has(regions().of[id]));
+function computeSealed() {
+  SEALED = new Set();
+  if (showAll()) return;
+  Object.entries(regions().ids).forEach(([r, ids]) => { if (!isOpen(REGION_KEY[r]) && ids.every(id => stateOf(id) === "none")) SEALED.add(r); });
+}
 function paintStory() {
   // Main story: a quest's name shows once it's started, done, or the next one in line.
   MAIN.forEach((q, i) => document.querySelector(`[data-id="${q.id}"]`).classList.toggle("locked", i > 0 && stateOf(MAIN[i - 1].id) !== "done" && stateOf(q.id) === "none"));
   const lock = (ids, key) => ids.forEach(id => document.querySelector(`[data-id="${id}"]`).classList.toggle("locked", !isOpen(key) && stateOf(id) === "none"));
-  document.querySelector("li.tertiary").classList.toggle("sealed", !isOpen("tertiary") && TERT.every(c => c.items.every(t => stateOf(t.id) === "none")));
+  computeSealed();
+  document.querySelectorAll("[data-region]").forEach(el => el.classList.toggle("sealed", SEALED.has(el.dataset.region)));
+  COURSES.forEach(c => { const g = document.querySelector(`.mpt[data-mid="${c.id}"]`); if (g) g.classList.toggle("sealed", SEALED.has(c.where)); });
+  const lh = document.querySelector("#lore-brynmoor-ghornfell h2"); if (lh) lh.textContent = SEALED.has("Ghornfell") ? "Brynmoor" : "Brynmoor & Ghornfell";
   SIDE.forEach(sd => lock(sd.items.map(q => q.id), sd.key));
   EXTRA.forEach(q => { if (EXTRA_OPENS[q.id]) lock([q.id], EXTRA_OPENS[q.id]); });
   document.querySelectorAll(".sgate").forEach(el => el.classList.toggle("done", isOpen(el.dataset.gate.slice(4))));
@@ -104,7 +131,7 @@ function build() {
     html += itemHTML(q, "primary", ROMAN[i]);
     if (q.id === "icthlarins-little-helper") {
       // The clan quests stay out of sight entirely until Icthlarin's Little Helper is started: even their existence is a spoiler.
-      html += `<li class="tertiary"><h3>Tertiary quests in Icthlarin's Little Helper</h3>`;
+      html += `<li class="tertiary" data-region="Clan quests"><h3>Tertiary quests in Icthlarin's Little Helper</h3>`;
       TERT.forEach(c => { html += `<div class="clan">${esc(c.clan)}</div><ul class="list">${c.items.map(t => itemHTML(t, "tertiary-q")).join("")}</ul>`; });
       html += `</li>`;
     }
@@ -112,7 +139,7 @@ function build() {
   html += `</ol><p class="empty">Main story complete. Kuldra has fallen.</p></section>`;
 
   SIDE.forEach(s => {
-    html += `<section class="panel" id="${s.key}"><div class="sec-head"><h2>${esc(s.region)}</h2><span class="count"></span></div><div class="rule"></div>
+    html += `<section class="panel" id="${s.key}" data-region="${esc(s.region)}"><div class="sec-head"><h2>${esc(s.region)}</h2><span class="count"></span></div><div class="rule"></div>
       ${OPENS[s.key] ? `<p class="unlock sgate" data-gate="sec:${s.key}"><span class="spoil">${s.unlock}</span><span class="ph">Opens later in the main story.</span> ${HINT_BTN}</p>` : `<p class="unlock">${s.unlock}</p>`}<ul class="list">${s.items.map(q => itemHTML(q, "secondary")).join("")}</ul><p class="empty">Every quest here is complete.</p></section>`;
   });
 
@@ -123,7 +150,7 @@ function build() {
   main.innerHTML = html;
 
   const groups = [["main-story", "Main story", MAIN.map(q => q.id).concat(TERT.flatMap(c => c.items.map(t => t.id)))], ...SIDE.map(s => [s.key, s.region, s.items.map(q => q.id)])];
-  document.getElementById("jump").innerHTML = groups.map(([k, label]) => `<a class="chip" href="#${k}" data-jump="${k}">${esc(label)} <span></span></a>`).join("") + `<a class="chip" href="#extra">Extras <span id="exChip"></span></a>`;
+  document.getElementById("jump").innerHTML = groups.map(([k, label]) => `<a class="chip" href="#${k}" data-jump="${k}" data-region="${esc(label)}">${esc(label)} <span></span></a>`).join("") + `<a class="chip" href="#extra">Extras <span id="exChip"></span></a>`;
   window.__groups = groups;
 
   main.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
@@ -155,7 +182,7 @@ function buildUrns() {
   const host = document.getElementById("urnMain");
   const urnMap = (g) => { const pts = g.areas.flatMap(([a, n]) => Array.from({ length: n }, (_, i) => { const id = `u-${uslug(a)}-${i + 1}`, L = LANDMARKS[id]; return L && { id, x: L[0], y: L[1], txt: n > 1 ? i + 1 : "", label: a, cls: "urn", click: true, aria: `${a} urn${n > 1 ? " " + (i + 1) : ""}` }; })).filter(Boolean);
     return pts.length ? mapGate("urns-" + uslug(g.region), `every urn in ${g.region} is`, mapSVG("urns-" + uslug(g.region), `Map of ${g.region} urns`, pts)) : ""; };
-  host.innerHTML = URNS.map(g => `<section class="panel" id="urns-${uslug(g.region)}"><div class="sec-head"><h2>${esc(g.region)}</h2><span class="count"></span></div><div class="rule"></div>
+  host.innerHTML = URNS.map(g => `<section class="panel" id="urns-${uslug(g.region)}" data-region="${esc(g.region)}"><div class="sec-head"><h2>${esc(g.region)}</h2><span class="count"></span></div><div class="rule"></div>
     ${urnMap(g)}<ul class="list">${g.areas.map(([a, n]) => `<li class="urn-area" data-area="${uslug(a)}"><div><div class="an">${esc(a)}</div><div class="ac"></div></div>
       <div class="umarks">${Array.from({ length: n }, (_, i) => { const id = `u-${uslug(a)}-${i + 1}`; return `<button class="mark umark" type="button" id="m-${id}" data-id="${id}" aria-label="${esc(a)} urn ${i + 1}"><span class="d">${CHECK}</span></button>`; }).join("")}</div></li>`).join("")}</ul>
     <p class="empty">Every urn here is absorbed.</p></section>`).join("");
@@ -165,12 +192,12 @@ function buildUrns() {
 const lslug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 function buildColl(c) {
   const host = document.getElementById(c.key + "Main"), gid = (r, g) => `${c.key}-${lslug(r.r + "-" + g.s)}`;
-  host.innerHTML = c.data.map(r => `<section class="panel" id="${c.key}-${lslug(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
+  host.innerHTML = c.data.map(r => `<section class="panel" id="${c.key}-${lslug(r.r)}" data-region="${esc(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
     ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore" data-id="${id}" data-status="${c.status}" data-gate="${id}">
       <button class="mark" type="button" id="m-${id}"><span class="d">${CHECK}</span></button>
       <div><div class="title-row"><span class="name">${esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}${sub ? HINT_BTN : ""}</div>${sub ? `<div class="start spoil">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
     <p class="empty">${esc(c.empty)}</p></section>`).join("");
-  document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
+  document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}" data-region="${esc(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
   host.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
   const norm = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   const input = document.getElementById(c.p + "Search");
@@ -189,10 +216,10 @@ function buildColl(c) {
   });
 }
 function paintColl(c) {
-  const d = c.ids.filter(id => stateOf(id) === "done").length;
+  const ids = vis(c.ids), d = ids.filter(id => stateOf(id) === "done").length;
   document.getElementById(c.p + "Done").textContent = d;
-  document.getElementById(c.p + "Total").textContent = c.ids.length;
-  document.getElementById(c.p + "Bar").style.width = (100 * d / c.ids.length) + "%";
+  document.getElementById(c.p + "Total").textContent = ids.length;
+  document.getElementById(c.p + "Bar").style.width = (100 * d / ids.length) + "%";
   c.data.forEach(r => {
     let rd = 0, rt = 0;
     r.g.forEach(g => {
@@ -214,7 +241,7 @@ function buildAgility() {
   const cm = document.getElementById("courseMap");
   cm.innerHTML = mapGate("agility-courses", "every course starts", mapSVG("agility-courses", "Map of agility courses", COURSES.map(c => ({ id: c.id, x: LANDMARKS[c.id][0], y: LANDMARKS[c.id][1], label: c.n, cls: "crs" })), { minSpan: 0 }));
   wireMaps(cm);
-  document.getElementById("courseList").innerHTML = COURSES.map(c => `<li class="course" data-cid="${c.id}" data-gate="${c.id}">
+  document.getElementById("courseList").innerHTML = COURSES.map(c => `<li class="course" data-cid="${c.id}" data-gate="${c.id}" data-region="${esc(c.where)}">
     <div class="cinfo"><div class="cn">${esc(c.n)}</div><div class="cw">${esc(c.where)}</div>
       <div class="creq">${c.lvl || c.perks.length ? "Needs " + [c.lvl ? `Agility ${c.lvl}` : "", ...c.perks].filter(Boolean).map(esc).join(" · ") : "No requirements"}</div>
       <div class="crw spoil">Gold reward: <b>${c.cape.map(esc).join("</b> and <b>")}</b> recipe</div>${HINT_BTN}
@@ -281,7 +308,7 @@ function buildBurrows() {
   host.innerHTML = BURROW_MAP.map(r => {
     const rows = r.b.map((b, i) => { const L = LANDMARKS[b.near];
       return `<li class="q burrow" data-id="${b.id}"><button class="mark" type="button" id="m-${b.id}"><span class="d">${CHECK}</span></button><div><div class="title-row"><span class="name">Burrow ${i + 1}</span><span class="status" hidden></span></div></div></li>`; }).join("");
-    return `<section class="panel" id="bur-${lslug(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
+    return `<section class="panel" id="bur-${lslug(r.r)}" data-region="${esc(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
       ${mapGate("burrows-" + lslug(r.r), `every burrow in ${r.r} is`, mapSVG("burrows-" + lslug(r.r), `Map of ${r.r} burrows`, r.b.map((b, i) => ({ id: b.id, x: b.x, y: b.y, txt: i + 1, cls: "bur", click: true, aria: `${r.r} burrow ${i + 1}` }))))}
       <ul class="list">${rows}</ul><p class="empty">Every burrow here is ticked.</p></section>`;
   }).join("");
@@ -312,14 +339,15 @@ function paintAgility() {
     li.querySelectorAll(".medal").forEach(b => { const on = Number(b.dataset.m) <= m; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); b.disabled = !canWrite; });
     li.querySelector(".cbest").textContent = best ? `Your best: ${fmtT(best)}${m >= 3 ? "" : ` · ${fmtT(Math.max(0, best - c.g))} off gold`}` : "";
   });
-  const bc = burDone(), bs = burCount(), bt = burTicked();
-  const ms = medalSum();
+  const bs = burCount(), bt = burTicked(), bT = vis(BURROW_IDS).length, bc = Math.min(bT, burDone());
+  const ms = medalSum(), oc = vis(COURSE_IDS).length;
   document.getElementById("aGold").textContent = ms;
-  document.getElementById("aGoldT").textContent = COURSES.length * 3;
+  document.getElementById("aGoldT").textContent = oc * 3;
   document.getElementById("aBur").textContent = bc;
-  document.getElementById("aGoldBar").style.width = (100 * ms / (COURSES.length * 3)) + "%";
-  document.getElementById("aBurBar").style.width = (100 * bc / BURROWS) + "%";
-  const ci = document.querySelector("#agCourses .count"); ci.textContent = `${gold} / ${COURSES.length} gold`;
+  document.getElementById("aBurT").textContent = bT;
+  document.getElementById("aGoldBar").style.width = (100 * ms / (oc * 3)) + "%";
+  document.getElementById("aBurBar").style.width = (100 * bc / bT) + "%";
+  const ci = document.querySelector("#agCourses .count"); ci.textContent = `${gold} / ${oc} gold`;
   document.getElementById("burSave").textContent = (progress[BUR_ID] ? `Opened in game: ${bs} · ` : "") + `Ticked on the maps: ${bt}` + (bs > bt ? ` · ${bs - bt} still to tick` : "");
   BURROW_MAP.forEach(r => {
     const d = r.b.filter(b => stateOf(b.id) === "done").length, sec = document.getElementById("bur-" + lslug(r.r));
@@ -332,10 +360,10 @@ function paintMap() {
   document.getElementById("mapBar").style.width = (100 * n / MAP_REGIONS) + "%";
 }
 function paintUrns() {
-  const d = URN_IDS.filter(id => stateOf(id) === "done").length;
+  const uv = vis(URN_IDS), d = uv.filter(id => stateOf(id) === "done").length;
   document.getElementById("uDone").textContent = d;
-  document.getElementById("uTotal").textContent = URN_IDS.length;
-  document.getElementById("uBar").style.width = (100 * d / URN_IDS.length) + "%";
+  document.getElementById("uTotal").textContent = uv.length;
+  document.getElementById("uBar").style.width = (100 * d / uv.length) + "%";
   document.getElementById("uHp").textContent = `+${d * 10}`;
   document.querySelectorAll(".umark").forEach(b => {
     const on = stateOf(b.dataset.id) === "done";
@@ -578,12 +606,12 @@ const pctText = (v) => { const sh = v >= 1 ? 100 : Math.min(99.9, Math.floor(v *
 function paintTabs() {
   const cnt = (ids) => [ids.filter(id => stateOf(id) === "done").length, ids.length];
   const f = skillFracs(), k = SKILLS.length;
-  const rows = { tabQuests: cnt(ALL_IDS), tabBosses: cnt(REC_IDS), tabUrns: cnt(URN_IDS) };
-  COLLS.forEach(c => { rows[c.tab] = cnt(c.ids); });
+  const rows = { tabQuests: cnt(vis(ALL_IDS)), tabBosses: cnt(REC_IDS), tabUrns: cnt(vis(URN_IDS)) };
+  COLLS.forEach(c => { rows[c.tab] = cnt(vis(c.ids)); });
   Object.entries(rows).forEach(([t, [d, n]]) => setTabProg(t, `${d}/${n}`, d / n));
-  const ag = medalSum(), bc = burDone();
-  setTabProg("tabAgility", `${ag}/${COURSE_IDS.length * 3}`, ag / (COURSE_IDS.length * 3));
-  setTabProg("tabBurrows", `${bc}/${BURROWS}`, bc / BURROWS);
+  const ag = medalSum(), oc = vis(COURSE_IDS).length * 3, bT = vis(BURROW_IDS).length, bc = Math.min(bT, burDone());
+  setTabProg("tabAgility", `${ag}/${oc}`, ag / oc);
+  setTabProg("tabBurrows", `${bc}/${bT}`, bc / bT);
   const mc = countOf(MAP_ID);
   setTabProg("tabMap", `${mc}/${MAP_REGIONS}`, mc / MAP_REGIONS);
   setTabProg("tabSkills", Math.floor(100 * f.x94 / k) + "%", f.x94 / k);
@@ -667,13 +695,14 @@ function paint() {
     b.disabled = !canWrite;
     b.setAttribute("aria-label", `${li.classList.contains("locked") && !li.classList.contains("peek") && !showAll() ? "Undiscovered quest" : BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
   });
-  const done = ALL_IDS.filter(id => stateOf(id) === "done").length;
+  const qv = vis(ALL_IDS), done = qv.filter(id => stateOf(id) === "done").length;
   document.getElementById("qpDone").textContent = done;
-  document.getElementById("qpTotal").textContent = ALL_IDS.length;
-  document.getElementById("qpStarted").textContent = ALL_IDS.filter(id => stateOf(id) === "started").length;
-  document.getElementById("overallBar").style.width = (100 * done / ALL_IDS.length) + "%";
+  document.getElementById("qpTotal").textContent = qv.length;
+  document.getElementById("qpStarted").textContent = qv.filter(id => stateOf(id) === "started").length;
+  document.getElementById("overallBar").style.width = (100 * done / qv.length) + "%";
 
-  (window.__groups || []).forEach(([k, , ids]) => {
+  (window.__groups || []).forEach(([k, , all]) => {
+    const ids = vis(all);
     const d = ids.filter(id => stateOf(id) === "done").length;
     const sec = document.getElementById(k);
     sec.querySelector(".count").textContent = `${d} / ${ids.length}`;

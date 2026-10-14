@@ -27,7 +27,7 @@ Three completion tiers sit on top: **Completionist** (every section except skill
 
 ## Spoiler-free
 
-The page doesn't give answers away until you ask. Where a quest starts, its rewards and boss, vestige names, lore locations, agility gold rewards and the urn, burrow and course maps all stay hidden behind **Show hint** / **Show map**. They show by themselves once you've ticked the item (or finished the region's urns, burrows or courses). Quest names only show once the story reaches them: the next main-story quest, and the side quests of regions the story has opened. Anything further ahead reads "Undiscovered quest", and the Icthlarin's clan quests stay out of sight until that quest starts. Each reveal is remembered in your browser.
+The page doesn't give answers away until you ask. Where a quest starts, its rewards and boss, vestige names, lore locations, agility gold rewards and the urn, burrow and course maps all stay hidden behind **Show hint** / **Show map**. They show by themselves once you've ticked the item (or finished the region's urns, burrows or courses). Quest names only show once the story reaches them: the next main-story quest, and the side quests of regions the story has opened. Anything further ahead reads "Undiscovered quest". Regions the story hasn't opened yet (and their urns, burrows, lore, agility courses and region-specific enemies) are left out entirely, names included, and the totals only count what you can see. The same goes for the Icthlarin's clan quests until that quest starts. Each reveal is remembered in your browser.
 
 Don't mind spoilers? **Show everything** at the top of the page reveals it all, and the page remembers that choice.
 

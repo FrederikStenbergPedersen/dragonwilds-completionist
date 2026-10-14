@@ -144,9 +144,10 @@ body:not(.show-all) [data-gate]:not(.peek):not(.done) .spoil { display: none !im
 body:not(.show-all) [data-gate]:not(.peek):not(.done) > .ph { display: inline; }
 body:not(.show-all) .q.locked:not(.peek) .name .ph { display: inline; color: var(--cream-dim); font-style: italic; font-weight: 600; }
 body:not(.show-all) .q.locked:not(.peek) .name .real, body:not(.show-all) .q.locked:not(.peek) .wiki { display: none; }
-body:not(.show-all) .tertiary.sealed { display: none; }
+.sealed { display: none !important; }
 .sgate .hint-btn { margin-left: 6px; font-family: inherit; letter-spacing: normal; text-transform: none; font-weight: 400; }
 .mapgate .gate-note { display: block; font-size: .78rem; color: var(--cream-dim); margin-top: 3px; }
+.mapgate.peek .gate-note, .show-all .mapgate .gate-note, .mapgate.done .gate-note { display: none; }
 .mapgate .map-btn { font-size: .86rem; }
 .start { color: var(--cream-dim); font-size: .93rem; margin-top: 2px; }
 .start strong { color: var(--cream); font-weight: 600; }
