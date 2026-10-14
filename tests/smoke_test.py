@@ -77,9 +77,22 @@ async def main():
         check(await pg.evaluate(named, "first-steps") and not await pg.evaluate(named, "getting-started"), "only the first main quest is named on a fresh page")
         unlock = "document.querySelector('#fellhollow .unlock').innerText"
         check("Dragon Slayer" not in await pg.evaluate(unlock), "region unlock lines don't name later quests")
+        tert = "getComputedStyle(document.querySelector('li.tertiary')).display"
+        check(await pg.evaluate(tert) == "none", "clan quests are left out until Icthlarin's Little Helper starts")
+        await pg.evaluate("progress['icthlarins-little-helper'] = { state: 'started' }; paint()")
+        check(await pg.evaluate(tert) != "none", "starting Icthlarin's Little Helper shows the clan quests")
+        await pg.evaluate("delete progress['icthlarins-little-helper']; paint()")
         await pg.evaluate("progress['first-steps'] = { state: 'done' }; paint()")
         check(await pg.evaluate(named, "getting-started"), "finishing a main quest names the next one")
         await pg.evaluate("delete progress['first-steps']; paint()")
+        total = await pg.evaluate("document.querySelectorAll('[data-gate] .spoil').length")
+        await pg.click("#spoilToggle")
+        check(await pg.evaluate(shown) == total and await pg.evaluate(named, "getting-started"), "Show everything reveals every hint, map and name")
+        await pg.reload()
+        await pg.wait_for_timeout(300)
+        check(await pg.evaluate(shown) == total, "Show everything is remembered after a reload")
+        await pg.click("#spoilToggle")
+        check(await pg.evaluate(shown) == 0, "Hide spoilers hides them again")
 
         print("save import")
         await pg.click("#importer > summary")

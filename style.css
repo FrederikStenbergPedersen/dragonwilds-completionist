@@ -51,6 +51,8 @@ h1 {
   margin-top: 6px;
 }
 .sub { color: var(--cream-dim); margin: 10px auto 0; max-width: 54ch; }
+.spoilrow { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 10px; margin: 10px auto 0; max-width: 54ch; font-size: .84rem; color: var(--cream-dim); }
+.spoilrow .chip[aria-pressed="true"] { color: var(--gold-hi); border-color: var(--gold); }
 .ornament { display: flex; align-items: center; gap: 12px; margin: 18px auto 0; max-width: 420px; }
 .ornament::before, .ornament::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line-strong)); }
 .ornament::after { background: linear-gradient(90deg, var(--line-strong), transparent); }
@@ -131,17 +133,18 @@ ol.path, ul.list { list-style: none; margin: 0; padding: 0; }
 .wiki { font-size: .8rem; color: var(--cream-dim); text-decoration: none; border-bottom: 1px dotted var(--cream-dim); }
 .wiki:hover { color: var(--gold-hi); border-color: var(--gold-hi); }
 /* Spoiler-free: hints and maps stay hidden until the item is done or the player asks to see them. */
-[data-gate]:not(.peek):not(.done) .spoil { display: none !important; }
-[data-gate].done .hint-btn, [data-gate].done .gate-note, .peek .gate-note { display: none; }
+body:not(.show-all) [data-gate]:not(.peek):not(.done) .spoil { display: none !important; }
+[data-gate].done .hint-btn, [data-gate].done .gate-note, .peek .gate-note, .show-all .hint-btn, .show-all .gate-note { display: none; }
 .hint-btn { font: inherit; font-size: .8rem; color: var(--gold); background: none; border: 0; border-bottom: 1px dotted var(--gold); padding: 0; cursor: pointer; }
 .hint-btn:hover { color: var(--gold-hi); border-color: var(--gold-hi); }
 .hint-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 2px; }
 .course .hint-btn { margin-top: 3px; }
 .mapgate { text-align: center; margin: 6px 0 10px; }
 .ph { display: none; }
-[data-gate]:not(.peek):not(.done) > .ph { display: inline; }
-.q.locked:not(.peek) .name .ph { display: inline; color: var(--cream-dim); font-style: italic; font-weight: 600; }
-.q.locked:not(.peek) .name .real, .q.locked:not(.peek) .wiki { display: none; }
+body:not(.show-all) [data-gate]:not(.peek):not(.done) > .ph { display: inline; }
+body:not(.show-all) .q.locked:not(.peek) .name .ph { display: inline; color: var(--cream-dim); font-style: italic; font-weight: 600; }
+body:not(.show-all) .q.locked:not(.peek) .name .real, body:not(.show-all) .q.locked:not(.peek) .wiki { display: none; }
+body:not(.show-all) .tertiary.sealed { display: none; }
 .sgate .hint-btn { margin-left: 6px; font-family: inherit; letter-spacing: normal; text-transform: none; font-weight: 400; }
 .mapgate .gate-note { display: block; font-size: .78rem; color: var(--cream-dim); margin-top: 3px; }
 .mapgate .map-btn { font-size: .86rem; }

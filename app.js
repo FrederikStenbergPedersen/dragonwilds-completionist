@@ -47,6 +47,18 @@ function paintPeeks() {
     if (b) { b.textContent = (open ? "Hide " : "Show ") + (b.classList.contains("map-btn") ? "map" : "hint"); b.setAttribute("aria-expanded", String(open)); }
   });
 }
+// "Show everything": one switch for players who don't mind spoilers. Remembered per browser.
+const showAll = () => document.body.classList.contains("show-all");
+function setShowAll(on) {
+  document.body.classList.toggle("show-all", on);
+  const b = document.getElementById("spoilToggle");
+  b.textContent = on ? "Hide spoilers" : "Show everything";
+  b.setAttribute("aria-pressed", String(on));
+  document.getElementById("spoilNote").textContent = on ? "Showing everything, spoilers included." : "Hints, maps and quest names stay hidden until you reach them.";
+  lsSet("dw-spoilers", on ? "shown" : "hidden");
+}
+document.getElementById("spoilToggle").onclick = () => { setShowAll(!showAll()); paint(); };
+setShowAll(lsGet("dw-spoilers") === "shown");
 document.addEventListener("click", (e) => {
   const b = e.target.closest(".hint-btn"); if (!b) return;
   const el = b.closest("[data-gate]"), k = el.dataset.gate;
@@ -65,7 +77,7 @@ function paintStory() {
   // Main story: a quest's name shows once it's started, done, or the next one in line.
   MAIN.forEach((q, i) => document.querySelector(`[data-id="${q.id}"]`).classList.toggle("locked", i > 0 && stateOf(MAIN[i - 1].id) !== "done" && stateOf(q.id) === "none"));
   const lock = (ids, key) => ids.forEach(id => document.querySelector(`[data-id="${id}"]`).classList.toggle("locked", !isOpen(key) && stateOf(id) === "none"));
-  lock(TERT.flatMap(c => c.items.map(t => t.id)), "tertiary");
+  document.querySelector("li.tertiary").classList.toggle("sealed", !isOpen("tertiary") && TERT.every(c => c.items.every(t => stateOf(t.id) === "none")));
   SIDE.forEach(sd => lock(sd.items.map(q => q.id), sd.key));
   EXTRA.forEach(q => { if (EXTRA_OPENS[q.id]) lock([q.id], EXTRA_OPENS[q.id]); });
   document.querySelectorAll(".sgate").forEach(el => el.classList.toggle("done", isOpen(el.dataset.gate.slice(4))));
@@ -91,8 +103,9 @@ function build() {
   MAIN.forEach((q, i) => {
     html += itemHTML(q, "primary", ROMAN[i]);
     if (q.id === "icthlarins-little-helper") {
-      html += `<li class="tertiary"><h3 data-gate="sec:tertiary" class="sgate"><span class="spoil">Tertiary quests in Icthlarin's Little Helper</span><span class="ph">Clan quests later in the main story</span>${HINT_BTN}</h3>`;
-      TERT.forEach(c => { html += `<div class="clan sgate" data-gate="sec:tertiary"><span class="spoil">${esc(c.clan)}</span><span class="ph">Undiscovered clan</span></div><ul class="list">${c.items.map(t => itemHTML(t, "tertiary-q")).join("")}</ul>`; });
+      // The clan quests stay out of sight entirely until Icthlarin's Little Helper is started: even their existence is a spoiler.
+      html += `<li class="tertiary"><h3>Tertiary quests in Icthlarin's Little Helper</h3>`;
+      TERT.forEach(c => { html += `<div class="clan">${esc(c.clan)}</div><ul class="list">${c.items.map(t => itemHTML(t, "tertiary-q")).join("")}</ul>`; });
       html += `</li>`;
     }
   });
@@ -652,7 +665,7 @@ function paint() {
     st.hidden = s === "none"; st.textContent = li.dataset.status || (li.classList.contains("recipe") ? "Unlocked" : li.classList.contains("burrow") ? "Opened" : LABEL[s]);
     const b = li.querySelector(".mark");
     b.disabled = !canWrite;
-    b.setAttribute("aria-label", `${li.classList.contains("locked") && !li.classList.contains("peek") ? "Undiscovered quest" : BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
+    b.setAttribute("aria-label", `${li.classList.contains("locked") && !li.classList.contains("peek") && !showAll() ? "Undiscovered quest" : BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
   });
   const done = ALL_IDS.filter(id => stateOf(id) === "done").length;
   document.getElementById("qpDone").textContent = done;
