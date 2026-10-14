@@ -117,7 +117,9 @@ let SEALED = new Set();
 // The nameless "N more … waiting" line at the end of each tab, so totals stay honest without naming anything.
 const UNDISC = [["quests", ["quest", "quests"], () => ALL_IDS], ["urns", ["urn", "urns"], () => URN_IDS], ["burrows", ["burrow", "burrows"], () => BURROW_IDS],
   ["agility", ["agility course", "agility courses"], () => COURSE_IDS], ["lore", ["lore scrap", "lore scraps"], () => LORE_IDS]];
-const undiscHTML = (key) => `<p class="panel undisc" data-undisc="${key}" hidden></p>`;
+const UNDISC_VIEW = { quests: "view-quests", urns: "view-urns", burrows: "view-burrows", agility: "view-agility", lore: "view-lore", recipes: "view-bosses",
+  mounts: "view-mounts", plants: "view-plants", buildings: "view-buildings", fauna: "view-fauna", crafting: "view-crafting", factions: "view-factions" };
+Object.entries(UNDISC_VIEW).forEach(([k, v]) => document.querySelector(`#${v} .summary`).insertAdjacentHTML("beforeend", `<p class="undisc" data-undisc="${k}" hidden></p>`));
 function computeSealed() {
   SEALED = new Set();
   if (showAll()) return;
@@ -134,7 +136,7 @@ function paintStory() {
     const n = ids().filter(id => SEALED.has(regions().of[id])).length, el = document.querySelector(`[data-undisc="${key}"]`);
     if (!el) return;
     el.hidden = !n;
-    el.textContent = `${n} more ${n === 1 ? noun[0] : noun[1]} ${n === 1 ? "is" : "are"} waiting in parts of the story you haven't reached yet.`;
+    el.textContent = `${n} more ${n === 1 ? noun[0] : noun[1]} in parts of the story you haven't reached yet.`;
   });
   const lh = document.querySelector("#lore-brynmoor-ghornfell h2"); if (lh) lh.textContent = SEALED.has("Ghornfell") ? "Brynmoor" : "Brynmoor & Ghornfell";
   SIDE.forEach(sd => lock(sd.items.map(q => q.id), sd.key));
@@ -176,7 +178,6 @@ function build() {
       ${OPENS[s.key] ? `<p class="unlock sgate" data-gate="sec:${s.key}"><span class="spoil">${s.unlock}</span><span class="ph">Opens later in the main story.</span> ${HINT_BTN}</p>` : `<p class="unlock">${s.unlock}</p>`}<ul class="list">${s.items.map(q => itemHTML(q, "secondary")).join("")}</ul><p class="empty">Every quest here is complete.</p></section>`;
   });
 
-  html += undiscHTML("quests");
   html += `<section class="panel" id="extra"><div class="sec-head"><h2>Beyond the Quests</h2><span class="count"></span></div><div class="rule"></div>
     <p class="unlock">Activities, bosses and repeatable content that aren't quests. Not counted in the quest total.</p>
     <ul class="list">${EXTRA.map(q => itemHTML(q, "activity")).join("")}</ul></section>`;
@@ -219,7 +220,7 @@ function buildUrns() {
   host.innerHTML = URNS.map(g => `<section class="panel" id="urns-${uslug(g.region)}" data-region="${esc(g.region)}"><div class="sec-head"><h2>${esc(g.region)}</h2><span class="count"></span></div><div class="rule"></div>
     ${urnMap(g)}<ul class="list">${g.areas.map(([a, n]) => `<li class="urn-area" data-area="${uslug(a)}"><div><div class="an">${esc(a)}</div><div class="ac"></div></div>
       <div class="umarks">${Array.from({ length: n }, (_, i) => { const id = `u-${uslug(a)}-${i + 1}`; return `<button class="mark umark" type="button" id="m-${id}" data-id="${id}" aria-label="${esc(a)} urn ${i + 1}"><span class="d">${CHECK}</span></button>`; }).join("")}</div></li>`).join("")}</ul>
-    <p class="empty">Every urn here is absorbed.</p></section>`).join("") + undiscHTML("urns");
+    <p class="empty">Every urn here is absorbed.</p></section>`).join("");
   wireMaps(host);
   host.addEventListener("click", (e) => { const b = e.target.closest(".umark"); if (b) cycle(b.dataset.id); });
 }
@@ -231,7 +232,7 @@ function buildColl(c) {
     ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${scrap ? `<span class="real">${esc(g.s)}</span><span class="ph">Undiscovered story</span>` : esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore${scrap ? " scrap" : ""}" data-id="${id}" data-status="${c.status}" data-gate="${id}">
       <button class="mark" type="button" id="m-${id}"><span class="d">${CHECK}</span></button>
       <div><div class="title-row"><span class="name">${scrap ? `<span class="real">${esc(n)}</span><span class="ph">Unread lore scrap</span>` : esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}${sub || scrap ? HINT_BTN : ""}</div>${sub ? `<div class="start spoil">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
-    <p class="empty">${esc(c.empty)}</p></section>`).join("") + undiscHTML(c.key);
+    <p class="empty">${esc(c.empty)}</p></section>`).join("");
   document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}" data-region="${esc(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
   host.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
   const norm = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -284,7 +285,6 @@ function buildAgility() {
       <div class="crw spoil">Gold reward: <b>${c.cape.map(esc).join("</b> and <b>")}</b> recipe</div>${HINT_BTN}
       <div class="cbest"></div></div>
     <div class="medals">${MEDALS.map(([k, nm, cls], i) => `<button type="button" class="medal ${cls}" data-m="${i + 1}" aria-label="${esc(c.n)}: ${nm} medal, ${fmtT(c[k])} or faster"><span class="coin">${nm[0]}</span>${fmtT(c[k])}</button>`).join("")}</div></li>`).join("");
-  document.getElementById("courseList").insertAdjacentHTML("afterend", `<p class="undisc" data-undisc="agility" hidden></p>`);
   document.getElementById("courseList").addEventListener("click", (e) => {
     const b = e.target.closest(".medal"); if (!b || b.disabled) return;
     const id = b.closest(".course").dataset.cid, m = Number(b.dataset.m), p = progress[id] || {}, cur = p.medal || 0;
@@ -349,7 +349,7 @@ function buildBurrows() {
     return `<section class="panel" id="bur-${lslug(r.r)}" data-region="${esc(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
       ${mapGate("burrows-" + lslug(r.r), `every burrow in ${r.r} is`, mapSVG("burrows-" + lslug(r.r), `Map of ${r.r} burrows`, r.b.map((b, i) => ({ id: b.id, x: b.x, y: b.y, txt: i + 1, cls: "bur", click: true, aria: `${r.r} burrow ${i + 1}` }))))}
       <ul class="list">${rows}</ul><p class="empty">Every burrow here is ticked.</p></section>`;
-  }).join("") + undiscHTML("burrows");
+  }).join("");
   wireMaps(host);
   host.addEventListener("click", (e) => { const m = e.target.closest(".mark"); if (m) cycle(m.closest(".q").dataset.id); });
 }
@@ -681,7 +681,7 @@ function buildBosses() {
       <div>
         <div class="title-row"><span class="name">${esc(r.unl || r.n)}</span><span class="status" hidden></span><a class="wiki" href="${w(r.n.replace(/^MOUNT: /, ""))}" target="_blank" rel="noopener">Wiki</a>${HINT_BTN}</div>
         <div class="unl spoil"><span>${r.via || (r.n.startsWith("MOUNT") ? "Mount vestige" : "Vestige")}</span> ${esc(r.n.replace(/^MOUNT: /, ""))}</div>
-      </div></li>`).join("")}</ul><p class="empty">Everything here is unlocked.</p></section>`).join("") + undiscHTML("recipes");
+      </div></li>`).join("")}</ul><p class="empty">Everything here is unlocked.</p></section>`).join("");
   document.getElementById("rJump").innerHTML = RECIPES.map(g => `<a class="chip" href="#rec-${g.key}" data-rjump="${g.key}">${esc(g.title.replace("Power Level ", "PL "))} <span></span></a>`).join("");
   host.addEventListener("click", (e) => {
     const b = e.target.closest(".mark"); if (b) return cycle(b.closest(".q").dataset.id);
