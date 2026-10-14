@@ -138,6 +138,11 @@ ol.path, ul.list { list-style: none; margin: 0; padding: 0; }
 .hint-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 2px; }
 .course .hint-btn { margin-top: 3px; }
 .mapgate { text-align: center; margin: 6px 0 10px; }
+.ph { display: none; }
+[data-gate]:not(.peek):not(.done) > .ph { display: inline; }
+.q.locked:not(.peek) .name .ph { display: inline; color: var(--cream-dim); font-style: italic; font-weight: 600; }
+.q.locked:not(.peek) .name .real, .q.locked:not(.peek) .wiki { display: none; }
+.sgate .hint-btn { margin-left: 6px; font-family: inherit; letter-spacing: normal; text-transform: none; font-weight: 400; }
 .mapgate .gate-note { display: block; font-size: .78rem; color: var(--cream-dim); margin-top: 3px; }
 .mapgate .map-btn { font-size: .86rem; }
 .start { color: var(--cream-dim); font-size: .93rem; margin-top: 2px; }

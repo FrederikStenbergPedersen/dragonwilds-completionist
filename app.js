@@ -51,8 +51,25 @@ document.addEventListener("click", (e) => {
   const b = e.target.closest(".hint-btn"); if (!b) return;
   const el = b.closest("[data-gate]"), k = el.dataset.gate;
   if (peeks.has(k)) peeks.delete(k); else peeks.add(k);
-  savePeeks(); paintPeeks();
+  savePeeks(); paint();
 });
+
+/* Story gates: which main-story quest opens each part of the quest list. [quest id, "started" | "done"]. */
+const OPENS = { ghornfell: ["dragon-slayer", "started"], fellhollow: ["dragon-slayer", "done"], dowdun: ["withering-heights", "done"], umbral: ["black-knights-fortress", "done"], tertiary: ["icthlarins-little-helper", "started"],
+  "icthlarin-done": ["icthlarins-little-helper", "done"], scorned: ["regicide", "started"] };
+// Beyond the Quests: which story gate each activity sits behind (missing = open from the start).
+const EXTRA_OPENS = { "x-marks-the-spot": "fellhollow", "fight-caves-full": "icthlarin-done", "nightmare-crucible": "icthlarin-done", "scorned-raid": "scorned" };
+const reached = (id, need) => { const s = stateOf(id); return need === "started" ? s !== "none" : s === "done"; };
+const isOpen = (key) => !OPENS[key] || reached(...OPENS[key]);
+function paintStory() {
+  // Main story: a quest's name shows once it's started, done, or the next one in line.
+  MAIN.forEach((q, i) => document.querySelector(`[data-id="${q.id}"]`).classList.toggle("locked", i > 0 && stateOf(MAIN[i - 1].id) !== "done" && stateOf(q.id) === "none"));
+  const lock = (ids, key) => ids.forEach(id => document.querySelector(`[data-id="${id}"]`).classList.toggle("locked", !isOpen(key) && stateOf(id) === "none"));
+  lock(TERT.flatMap(c => c.items.map(t => t.id)), "tertiary");
+  SIDE.forEach(sd => lock(sd.items.map(q => q.id), sd.key));
+  EXTRA.forEach(q => { if (EXTRA_OPENS[q.id]) lock([q.id], EXTRA_OPENS[q.id]); });
+  document.querySelectorAll(".sgate").forEach(el => el.classList.toggle("done", isOpen(el.dataset.gate.slice(4))));
+}
 
 function itemHTML(q, kind, step) {
   const rewards = q.rw.length ? `<div class="rewards spoil">${q.rw.map(r => `<span>${esc(r)}</span>`).join("")}</div>` : "";
@@ -61,7 +78,7 @@ function itemHTML(q, kind, step) {
   return `<li class="q ${kind}" data-id="${q.id}" data-gate="${q.id}">
     <button class="mark" type="button" id="m-${q.id}"><span class="d">${CHECK}</span></button>
     <div>
-      <div class="title-row">${step ? `<span class="step">${step}</span>` : ""}<span class="name">${esc(q.n)}</span><span class="status" hidden></span>${q.boss ? `<span class="boss spoil">${esc(q.boss)}</span>` : ""}${link}${hasHint ? HINT_BTN : ""}</div>
+      <div class="title-row">${step ? `<span class="step">${step}</span>` : ""}<span class="name"><span class="real">${esc(q.n)}</span><span class="ph">Undiscovered quest</span></span><span class="status" hidden></span>${q.boss ? `<span class="boss spoil">${esc(q.boss)}</span>` : ""}${link}${hasHint ? HINT_BTN : ""}</div>
       <div class="start spoil">${q.where ? `<strong>${esc(q.where)}</strong> · ` : ""}${esc(q.start)}</div>
       ${rewards}
     </div>
@@ -74,8 +91,8 @@ function build() {
   MAIN.forEach((q, i) => {
     html += itemHTML(q, "primary", ROMAN[i]);
     if (q.id === "icthlarins-little-helper") {
-      html += `<li class="tertiary"><h3>Tertiary quests in Icthlarin's Little Helper</h3>`;
-      TERT.forEach(c => { html += `<div class="clan">${esc(c.clan)}</div><ul class="list">${c.items.map(t => itemHTML(t, "tertiary-q")).join("")}</ul>`; });
+      html += `<li class="tertiary"><h3 data-gate="sec:tertiary" class="sgate"><span class="spoil">Tertiary quests in Icthlarin's Little Helper</span><span class="ph">Clan quests later in the main story</span>${HINT_BTN}</h3>`;
+      TERT.forEach(c => { html += `<div class="clan sgate" data-gate="sec:tertiary"><span class="spoil">${esc(c.clan)}</span><span class="ph">Undiscovered clan</span></div><ul class="list">${c.items.map(t => itemHTML(t, "tertiary-q")).join("")}</ul>`; });
       html += `</li>`;
     }
   });
@@ -83,7 +100,7 @@ function build() {
 
   SIDE.forEach(s => {
     html += `<section class="panel" id="${s.key}"><div class="sec-head"><h2>${esc(s.region)}</h2><span class="count"></span></div><div class="rule"></div>
-      <p class="unlock">${s.unlock}</p><ul class="list">${s.items.map(q => itemHTML(q, "secondary")).join("")}</ul><p class="empty">Every quest here is complete.</p></section>`;
+      ${OPENS[s.key] ? `<p class="unlock sgate" data-gate="sec:${s.key}"><span class="spoil">${s.unlock}</span><span class="ph">Opens later in the main story.</span> ${HINT_BTN}</p>` : `<p class="unlock">${s.unlock}</p>`}<ul class="list">${s.items.map(q => itemHTML(q, "secondary")).join("")}</ul><p class="empty">Every quest here is complete.</p></section>`;
   });
 
   html += `<section class="panel" id="extra"><div class="sec-head"><h2>Beyond the Quests</h2><span class="count"></span></div><div class="rule"></div>
@@ -626,6 +643,7 @@ function paintRecipes() {
 }
 
 function paint() {
+  paintStory();
   document.querySelectorAll(".q").forEach(li => {
     const id = li.dataset.id, s = stateOf(id);
     li.classList.toggle("started", s === "started");
@@ -634,7 +652,7 @@ function paint() {
     st.hidden = s === "none"; st.textContent = li.dataset.status || (li.classList.contains("recipe") ? "Unlocked" : li.classList.contains("burrow") ? "Opened" : LABEL[s]);
     const b = li.querySelector(".mark");
     b.disabled = !canWrite;
-    b.setAttribute("aria-label", `${BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
+    b.setAttribute("aria-label", `${li.classList.contains("locked") && !li.classList.contains("peek") ? "Undiscovered quest" : BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
   });
   const done = ALL_IDS.filter(id => stateOf(id) === "done").length;
   document.getElementById("qpDone").textContent = done;

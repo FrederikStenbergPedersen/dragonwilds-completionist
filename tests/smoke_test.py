@@ -73,6 +73,13 @@ async def main():
         check(await pg.evaluate(shown) == 3, "and only that quest's (boss, start, rewards)")
         await pg.click("[data-id='dragon-slayer'] .hint-btn")
         check(await pg.evaluate(shown) == 0, "Hide hint hides it again")
+        named = "id => getComputedStyle(document.querySelector(`[data-id='${id}'] .name .real`)).display !== 'none'"
+        check(await pg.evaluate(named, "first-steps") and not await pg.evaluate(named, "getting-started"), "only the first main quest is named on a fresh page")
+        unlock = "document.querySelector('#fellhollow .unlock').innerText"
+        check("Dragon Slayer" not in await pg.evaluate(unlock), "region unlock lines don't name later quests")
+        await pg.evaluate("progress['first-steps'] = { state: 'done' }; paint()")
+        check(await pg.evaluate(named, "getting-started"), "finishing a main quest names the next one")
+        await pg.evaluate("delete progress['first-steps']; paint()")
 
         print("save import")
         await pg.click("#importer > summary")
