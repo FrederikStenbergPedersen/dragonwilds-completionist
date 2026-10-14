@@ -11,6 +11,7 @@ const CHANGELOG = [
       "Removed a crafting recipe the game has retired.",
       "New No spoilers switch under the title. It hides hints, maps, quest names and regions you haven't reached, and the item tabs only list what you've found. Totals still count the whole game, and Show hint reveals anything early.",
       "Fixed Reset leaving some lore, gathering and factions ticks behind, and unticking those not sticking.",
+      "Tidier page: What's new in the footer, fewer boxes, and remaining counts shown with each tab's stats.",
     ],
   },
   {
