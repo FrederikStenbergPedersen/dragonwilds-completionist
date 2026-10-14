@@ -51,14 +51,30 @@ function paintPeeks() {
 const showAll = () => document.body.classList.contains("show-all");
 function setShowAll(on) {
   document.body.classList.toggle("show-all", on);
-  const b = document.getElementById("spoilToggle");
-  b.textContent = on ? "Hide spoilers" : "Show everything";
-  b.setAttribute("aria-pressed", String(on));
-  document.getElementById("spoilNote").textContent = on ? "Showing everything, spoilers included." : "Hints, maps and quest names stay hidden until you reach them.";
+  document.getElementById("spoilToggle").checked = !on;
+  document.getElementById("spoilNote").textContent = on ? "" : "Hints, maps and anything you haven't reached yet are hidden.";
+  // The search boxes' example names are spoilers too.
+  document.querySelectorAll(".searchbar input").forEach(i => { i.dataset.ph = i.dataset.ph || i.placeholder; i.placeholder = on ? i.dataset.ph : ["lSearch", "faSearch"].includes(i.id) ? "Type a name" : "Type a full name"; });
   lsSet("dw-spoilers", on ? "shown" : "hidden");
 }
-document.getElementById("spoilToggle").onclick = () => { setShowAll(!showAll()); paint(); };
-setShowAll(lsGet("dw-spoilers") === "shown");
+// Everything shows by default; "No spoilers" is opt-in.
+document.getElementById("spoilToggle").addEventListener("change", (e) => {
+  setShowAll(!e.target.checked); paint();
+  document.querySelectorAll(".searchbar input").forEach(i => i.dispatchEvent(new Event("input")));
+});
+setShowAll(lsGet("dw-spoilers") !== "hidden");
+/* No spoilers on the item-list tabs (recipes, crafting, building, mounts, gathering, fauna): only what you've found is listed,
+   a search finds anything else only by its full name, and each section says how many are left to discover. */
+const FOUND_ONLY = ["mounts", "plants", "buildings", "fauna", "crafting"];
+const normQ = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+function searchHit(li, q, text, names) {
+  if (!q) { li.classList.remove("exact"); return true; }
+  const loose = normQ(text).includes(q), exact = names.some(n => normQ(n) === q);
+  const foundOnly = !!li.closest(".foundonly") && !showAll() && !li.classList.contains("done");
+  li.classList.toggle("exact", foundOnly && exact);
+  return foundOnly ? exact : loose;
+}
+const SEARCH_NOTE = `<p class="search-note">No spoilers is on: type an item's full name to find one you haven't found yet.</p>`;
 document.addEventListener("click", (e) => {
   const b = e.target.closest(".hint-btn"); if (!b) return;
   const el = b.closest("[data-gate]"), k = el.dataset.gate;
@@ -202,11 +218,12 @@ function buildUrns() {
 const lslug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 function buildColl(c) {
   const host = document.getElementById(c.key + "Main"), gid = (r, g) => `${c.key}-${lslug(r.r + "-" + g.s)}`;
+  if (FOUND_ONLY.includes(c.key)) { host.classList.add("foundonly"); document.getElementById(c.p + "Search").insertAdjacentHTML("afterend", SEARCH_NOTE); }
   host.innerHTML = c.data.map(r => `<section class="panel" id="${c.key}-${lslug(r.r)}" data-region="${esc(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
     ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore" data-id="${id}" data-status="${c.status}" data-gate="${id}">
       <button class="mark" type="button" id="m-${id}"><span class="d">${CHECK}</span></button>
       <div><div class="title-row"><span class="name">${esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}${sub ? HINT_BTN : ""}</div>${sub ? `<div class="start spoil">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
-    <p class="empty">${esc(c.empty)}</p></section>`).join("") + undiscHTML(c.key);
+    <p class="sec-undisc"></p><p class="empty">${esc(c.empty)}</p></section>`).join("") + undiscHTML(c.key);
   document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}" data-region="${esc(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
   host.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
   const norm = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -217,7 +234,7 @@ function buildColl(c) {
       let rh = 0;
       r.g.forEach(g => {
         let gh = 0;
-        g.i.forEach(([id, n, sub]) => { const ok = !q || norm(`${n} ${sub} ${g.s}`).includes(q); host.querySelector(`[data-id="${id}"]`).classList.toggle("nomatch", !ok); if (ok) gh++; });
+        g.i.forEach(([id, n, sub]) => { const li = host.querySelector(`[data-id="${id}"]`), ok = searchHit(li, q, `${n} ${sub} ${g.s}`, [n]); li.classList.toggle("nomatch", !ok); if (ok) gh++; });
         host.querySelector(`[data-lg="${gid(r, g)}"]`).classList.toggle("nomatch", !gh); rh += gh;
       });
       document.getElementById(`${c.key}-${lslug(r.r)}`).classList.toggle("nomatch", !rh); if (rh) any = true;
@@ -227,6 +244,7 @@ function buildColl(c) {
 }
 function paintColl(c) {
   const ids = c.ids, d = ids.filter(id => stateOf(id) === "done").length;
+  if (c.key === "mounts") { const el = document.querySelector('[data-undisc="mounts"]'); el.hidden = d === ids.length; el.textContent = `${ids.length - d} more ${ids.length - d === 1 ? "mount" : "mounts"} to discover.`; }
   document.getElementById(c.p + "Done").textContent = d;
   document.getElementById(c.p + "Total").textContent = ids.length;
   document.getElementById(c.p + "Bar").style.width = (100 * d / ids.length) + "%";
@@ -240,6 +258,8 @@ function paintColl(c) {
     });
     const sec = document.getElementById(`${c.key}-${lslug(r.r)}`);
     sec.querySelector(".count").textContent = `${rd} / ${rt}`;
+    sec.querySelector(".sec-undisc").textContent = rt > rd ? `${rt - rd} more to discover` : "";
+    if (c.key === "mounts") { sec.classList.toggle("nofound", !rd); const ch = document.querySelector(`[data-jump="${c.key}-${lslug(r.r)}"]`); if (ch) ch.classList.toggle("nofound", !rd); }
     sec.classList.toggle("all-done", rd === rt);
     const a = document.querySelector(`[data-jump="${c.key}-${lslug(r.r)}"]`);
     if (a) { a.querySelector("span").textContent = `${rd}/${rt}`; a.classList.toggle("full", rd === rt); }
@@ -647,13 +667,14 @@ function paintTiers() {
 }
 function buildBosses() {
   const host = document.getElementById("recMain");
+  host.classList.add("foundonly"); document.getElementById("rSearch").insertAdjacentHTML("afterend", SEARCH_NOTE);
   host.innerHTML = RECIPES.map(g => `<section class="panel" id="rec-${g.key}"><div class="sec-head"><h2>${esc(g.title)}</h2><span class="count"></span></div><div class="rule"></div>
     ${g.intro ? `<p class="unlock">${esc(g.intro)}</p>` : ""}<ul class="list">${g.items.map(r => `<li class="q recipe" data-id="${r.id}" data-gate="${r.id}">
       <button class="mark" type="button" id="m-${r.id}"><span class="d">${CHECK}</span></button>
       <div>
         <div class="title-row"><span class="name">${esc(r.unl || r.n)}</span><span class="status" hidden></span><a class="wiki" href="${w(r.n.replace(/^MOUNT: /, ""))}" target="_blank" rel="noopener">Wiki</a>${HINT_BTN}</div>
         <div class="unl spoil"><span>${r.via || (r.n.startsWith("MOUNT") ? "Mount vestige" : "Vestige")}</span> ${esc(r.n.replace(/^MOUNT: /, ""))}</div>
-      </div></li>`).join("")}</ul><p class="empty">Everything here is unlocked.</p></section>`).join("");
+      </div></li>`).join("")}</ul><p class="sec-undisc"></p><p class="empty">Everything here is unlocked.</p></section>`).join("");
   document.getElementById("rJump").innerHTML = RECIPES.map(g => `<a class="chip" href="#rec-${g.key}" data-rjump="${g.key}">${esc(g.title.replace("Power Level ", "PL "))} <span></span></a>`).join("");
   host.addEventListener("click", (e) => {
     const b = e.target.closest(".mark"); if (b) return cycle(b.closest(".q").dataset.id);
@@ -668,7 +689,7 @@ function buildBosses() {
       let hits = 0;
       g.items.forEach(r => {
         const li = host.querySelector(`[data-id="${r.id}"]`);
-        const ok = !q || norm(`${r.unl || ""} ${r.n}`).includes(q);
+        const ok = searchHit(li, q, `${r.unl || ""} ${r.n}`, [r.unl || r.n, r.n.replace(/^MOUNT: /, "")]);
         li.classList.toggle("nomatch", !ok);
         if (ok) hits++;
       });
@@ -687,6 +708,7 @@ function paintRecipes() {
     const n = g.items.filter(r => stateOf(r.id) === "done").length;
     const sec = document.getElementById("rec-" + g.key);
     sec.querySelector(".count").textContent = `${n} / ${g.items.length}`;
+    sec.querySelector(".sec-undisc").textContent = g.items.length > n ? `${g.items.length - n} more to discover` : "";
     sec.classList.toggle("all-done", n === g.items.length);
     const a = document.querySelector(`[data-rjump="${g.key}"]`);
     a.querySelector("span").textContent = `${n}/${g.items.length}`;

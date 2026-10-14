@@ -18,7 +18,7 @@
     <div class="gamever" title="Game patch this tracker is checked against">Supports game version 1.0.1</div>
     <h1>Dragonwilds Completionist</h1>
     <p class="sub">Every quest, skill and collectible in Ashenfall. Tap a marker to tick something off.</p>
-    <div class="spoilrow"><span id="spoilNote">Hints, maps and quest names stay hidden until you reach them.</span> <button type="button" class="chip" id="spoilToggle" aria-pressed="false">Show everything</button></div>
+    <div class="spoilrow"><label class="switch"><input type="checkbox" id="spoilToggle" role="switch"><span class="track" aria-hidden="true"></span><span class="sw-label">No spoilers</span></label><span id="spoilNote"></span></div>
     <div class="ornament" aria-hidden="true"><i></i></div>
   </header>
 
@@ -135,7 +135,7 @@
       <h3>Finding them</h3>
       <ul>
         <li>Lore belongs to your character, not the world, so scraps you read in a friend’s world count for you too.</li>
-        <li>Statue sagas and songs from Umbral Sands quests aren't lore scraps, so they aren't listed here.</li>
+        <li class="spoil-tip">Statue sagas and songs from Umbral Sands quests aren't lore scraps, so they aren't listed here.</li>
       </ul>
     </div>
     <nav class="filters panel" aria-label="Lore filters">
@@ -154,7 +154,7 @@
       <div class="lbl">Mounts unlocked</div>
       <div class="bar"><i id="moBar"></i></div>
     </div>
-    <div class="panel tips"><h3>Good to know</h3><ul><li>Terrorbird variants need The Wild Hunt done first, and magic carpets need part of Icthlarin’s Little Helper.</li><li>The plain Terrorbird and Magic Carpet come from those quests, so they’re tracked on the Quests tab.</li></ul></div>
+    <div class="panel tips spoil-tip"><h3>Good to know</h3><ul><li>Terrorbird variants need The Wild Hunt done first, and magic carpets need part of Icthlarin’s Little Helper.</li><li>The plain Terrorbird and Magic Carpet come from those quests, so they’re tracked on the Quests tab.</li></ul></div>
     <nav class="filters panel" aria-label="mounts filters">
       <button type="button" class="chip f-all" aria-pressed="true">All</button>
       <button type="button" class="chip f-todo" aria-pressed="false">Hide unlocked</button>

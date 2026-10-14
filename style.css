@@ -52,7 +52,14 @@ h1 {
 }
 .sub { color: var(--cream-dim); margin: 10px auto 0; max-width: 54ch; }
 .spoilrow { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 10px; margin: 10px auto 0; max-width: 54ch; font-size: .84rem; color: var(--cream-dim); }
-.spoilrow .chip[aria-pressed="true"] { color: var(--gold-hi); border-color: var(--gold); }
+.switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: var(--cream); font-weight: 600; font-size: .88rem; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track { position: relative; width: 38px; height: 22px; border-radius: 999px; background: var(--panel-raised); border: 1px solid var(--line-strong); transition: background .15s, border-color .15s; flex: none; }
+.switch .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--cream-dim); transition: transform .15s, background .15s; }
+.switch input:checked + .track { background: rgba(226,178,92,.25); border-color: var(--gold); }
+.switch input:checked + .track::after { transform: translateX(16px); background: var(--gold-hi); }
+.switch input:focus-visible + .track { outline: 2px solid var(--gold); outline-offset: 2px; }
+#spoilNote:empty { display: none; }
 .ornament { display: flex; align-items: center; gap: 12px; margin: 18px auto 0; max-width: 420px; }
 .ornament::before, .ornament::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line-strong)); }
 .ornament::after { background: linear-gradient(90deg, var(--line-strong), transparent); }
@@ -145,6 +152,15 @@ body:not(.show-all) [data-gate]:not(.peek):not(.done) > .ph { display: inline; }
 body:not(.show-all) .q.locked:not(.peek) .name .ph { display: inline; color: var(--cream-dim); font-style: italic; font-weight: 600; }
 body:not(.show-all) .q.locked:not(.peek) .name .real, body:not(.show-all) .q.locked:not(.peek) .wiki { display: none; }
 .sealed { display: none !important; }
+/* No spoilers on the item-list tabs: only found items (or an exact-name search hit) are listed. */
+body:not(.show-all) .foundonly .q:not(.done):not(.exact) { display: none; }
+body:not(.show-all) .foundonly .lgrp:not(:has(.q.done, .q.exact)) { display: none; }
+.sec-undisc { display: none; }
+body:not(.show-all) .foundonly .sec-undisc:not(:empty) { display: block; text-align: center; font-style: italic; color: var(--cream-dim); font-size: .9rem; margin: 6px 0 2px; }
+.search-note { display: none; font-size: .78rem; color: var(--cream-dim); margin: 6px 0 0; }
+body:not(.show-all) .search-note { display: block; }
+body:not(.show-all) .spoil-tip { display: none; }
+body:not(.show-all) #mountsMain section:not(:has(.q.done, .q.exact)), body:not(.show-all) .chip.nofound { display: none; }
 .undisc { text-align: center; font-style: italic; color: var(--cream-dim); font-size: .9rem; }
 .undisc[hidden], .show-all .undisc { display: none; }
 .sgate .hint-btn { margin-left: 6px; font-family: inherit; letter-spacing: normal; text-transform: none; font-weight: 400; }

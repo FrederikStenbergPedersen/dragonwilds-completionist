@@ -64,17 +64,21 @@ async def main():
         check(not errors, "no script errors on load " + (str(errors) if errors else ""))
         check(await pg.locator(".tab").count() == 14, "14 section rows")
 
-        print("spoiler-free")
+        print("no spoilers")
         shown = "[...document.querySelectorAll('.spoil')].filter(e => getComputedStyle(e).display !== 'none' && e.closest('[data-gate]')).length"
-        check(await pg.evaluate(shown) == 0, "no hints or maps showing on a fresh page")
+        total = await pg.evaluate("document.querySelectorAll('[data-gate] .spoil').length")
+        named = "id => getComputedStyle(document.querySelector(`[data-id='${id}'] .name .real`)).display !== 'none'"
+        check(await pg.evaluate(shown) == total and await pg.evaluate(named, "getting-started"), "everything shows by default")
+        await pg.click("label.switch")
+        check(await pg.evaluate("document.getElementById('spoilToggle').checked"), "the No spoilers switch turns on")
+        check(await pg.evaluate(shown) == 0, "no hints or maps showing with No spoilers on")
         await pg.click("[data-id='dragon-slayer'] .hint-btn")
         boss = await pg.evaluate("getComputedStyle(document.querySelector(\"[data-id='dragon-slayer'] .boss\")).display")
         check(boss != "none", "Show hint reveals that quest's hint")
         check(await pg.evaluate(shown) == 3, "and only that quest's (boss, start, rewards)")
         await pg.click("[data-id='dragon-slayer'] .hint-btn")
         check(await pg.evaluate(shown) == 0, "Hide hint hides it again")
-        named = "id => getComputedStyle(document.querySelector(`[data-id='${id}'] .name .real`)).display !== 'none'"
-        check(await pg.evaluate(named, "first-steps") and not await pg.evaluate(named, "getting-started"), "only the first main quest is named on a fresh page")
+        check(await pg.evaluate(named, "first-steps") and not await pg.evaluate(named, "getting-started"), "only the first main quest is named")
         hidden = "sel => getComputedStyle(document.querySelector(sel)).display === 'none'"
         check(await pg.evaluate(hidden, "#fellhollow") and await pg.evaluate(hidden, "[data-jump='fellhollow']"), "regions the story hasn't opened are left out, names and all")
         undisc = "k => document.querySelector(`[data-undisc='${k}']`).textContent"
@@ -90,16 +94,23 @@ async def main():
         await pg.evaluate("progress['first-steps'] = { state: 'done' }; paint()")
         check(await pg.evaluate(named, "getting-started"), "finishing a main quest names the next one")
         await pg.evaluate("delete progress['first-steps']; paint()")
-        total = await pg.evaluate("document.querySelectorAll('[data-gate] .spoil').length")
-        await pg.click("#spoilToggle")
-        check(await pg.evaluate(shown) == total and await pg.evaluate(named, "getting-started"), "Show everything reveals every hint, map and name")
+        listed = "[...document.querySelectorAll('#craftingMain .q')].filter(e => getComputedStyle(e).display !== 'none').length"
+        await pg.click("#tabCrafting")
+        check(await pg.evaluate(listed) == 0, "item tabs list nothing you haven't found")
+        await pg.evaluate("progress['c-tools-bucket-compost'] = { state: 'done' }; paint()")
+        check(await pg.evaluate(listed) == 1, "a found item is listed")
+        await pg.evaluate("delete progress['c-tools-bucket-compost']; paint()")
+        await pg.fill("#crSearch", "rune")
+        check(await pg.evaluate(listed) == 0, "a partial search doesn't list unfound items")
+        await pg.fill("#crSearch", "rune platebody")
+        check(await pg.evaluate(listed) == 1, "a full-name search finds one")
+        await pg.fill("#crSearch", "")
+        await pg.click("#tabQuests")
         await pg.reload()
         await pg.wait_for_timeout(300)
-        check(await pg.evaluate(shown) == total, "Show everything is remembered after a reload")
-        await pg.click("#spoilToggle")
-        check(await pg.evaluate(shown) == 0, "Hide spoilers hides them again")
-        # The rest checks full totals, so turn Show everything back on.
-        await pg.click("#spoilToggle")
+        check(await pg.evaluate(shown) == 0, "No spoilers is remembered after a reload")
+        await pg.click("label.switch")
+        check(await pg.evaluate(shown) == total and await pg.evaluate(listed) > 0, "turning it off shows everything again")
 
         print("save import")
         await pg.click("#importer > summary")

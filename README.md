@@ -25,11 +25,16 @@ A completion tracker for **RuneScape: Dragonwilds**. Everything a completionist 
 
 Three completion tiers sit on top: **Completionist** (every section except skills, each weighted equally), **Completionist+** (every skill at 94) and **Completionist++** (every skill at 99).
 
-## Spoiler-free
+## No spoilers
 
-The page doesn't give answers away until you ask. Where a quest starts, its rewards and boss, vestige names, lore locations, agility gold rewards and the urn, burrow and course maps all stay hidden behind **Show hint** / **Show map**. They show by themselves once you've ticked the item (or finished the region's urns, burrows or courses). Quest names only show once the story reaches them: the next main-story quest, and the side quests of regions the story has opened. Anything further ahead reads "Undiscovered quest". Regions the story hasn't opened yet (and their urns, burrows, lore, agility courses and region-specific enemies) are left out entirely, names included. Totals still count the whole game, and each tab ends with a nameless line such as "33 more quests are waiting in parts of the story you haven't reached yet." The same goes for the Icthlarin's clan quests until that quest starts. Each reveal is remembered in your browser.
+Everything shows by default. Turn on the **No spoilers** switch at the top and the page only shows what you've reached:
 
-Don't mind spoilers? **Show everything** at the top of the page reveals it all, and the page remembers that choice.
+- Hints (where a quest starts, its rewards and boss, vestige names, lore locations, agility gold rewards) and the urn, burrow and course maps hide behind **Show hint** / **Show map**, and show by themselves once you've ticked the item.
+- Quest names show once the story reaches them; anything further ahead reads "Undiscovered quest".
+- Regions the story hasn't opened are left out of Quests, Urns, Burrows, Lore, Agility and Factions, names included, as are the Icthlarin's clan quests until that quest starts.
+- Recipes, Crafting, Building, Mounts, Gathering and Fauna list only what you've found. Each section says how many are left to discover, and the search finds anything else by its full name.
+
+Totals always count the whole game, so your progress stays honest. The switch and any hints you open are remembered in your browser.
 
 ## Save import
 
