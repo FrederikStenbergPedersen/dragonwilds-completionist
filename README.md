@@ -12,8 +12,8 @@ A completion tracker for **RuneScape: Dragonwilds**. Everything a completionist 
 | Skills | All 12 skills, with progress to level 94 and 99 by level and by XP |
 | Agility Courses | All 6 courses and 18 medals, with times, requirements and best runs |
 | Recipes | Every vestige and vault recipe, by its crafting-journal name |
-| Crafting | All 865 recipes in the crafting journal |
-| Building | All 771 building pieces in the build menu (Deluxe Edition pieces excluded) |
+| Crafting | All 866 recipes in the crafting journal |
+| Building | All 772 building pieces in the build menu (Deluxe Edition pieces excluded) |
 | Mounts | The 17 obtainable terrorbird and carpet variants |
 | Urns | All 21 Sanguine Urns, on maps of each region |
 | Burrows | All 19 kebbit burrows, on maps of each region |

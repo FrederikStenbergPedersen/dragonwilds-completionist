@@ -41,6 +41,7 @@ body {
 /* ---------- header ---------- */
 .masthead { text-align: center; padding-block: 8px 4px; }
 .eyebrow { font-family: var(--font-display); font-weight: 700; letter-spacing: .32em; font-size: .78rem; color: var(--gold); text-transform: uppercase; }
+.gamever { display: inline-block; margin-top: 8px; padding: 3px 10px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: .72rem; font-weight: 600; letter-spacing: .04em; color: var(--cream-dim); }
 h1, h2, h3 { margin: 0; text-wrap: balance; }
 h1 {
   font-family: var(--font-display); font-weight: 800; font-size: clamp(2.1rem, 7vw, 3.3rem); line-height: 1.02; letter-spacing: .03em;

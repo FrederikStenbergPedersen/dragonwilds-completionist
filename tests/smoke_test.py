@@ -14,7 +14,7 @@ FIXTURE = os.path.join(ROOT, "tests", "fixtures", "sample-character.json")
 
 # What the sample save should produce in each section's progress row.
 EXPECT_TABS = {
-    "Quests": "3/47", "Recipes": "2/125", "Crafting": "5/865", "Building": "6/771", "Mounts": "1/17", "Urns": "2/21",
+    "Quests": "3/47", "Recipes": "2/125", "Crafting": "5/866", "Building": "6/772", "Mounts": "1/17", "Urns": "2/21",
     "Burrows": "4/19", "Map": "10/32", "Lore": "3/114", "Gathering": "3/87", "Factions": "2/60", "Fauna": "2/69",
     "Agility Courses": "5/18",
 }
