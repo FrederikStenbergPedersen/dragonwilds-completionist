@@ -54,7 +54,7 @@ function setShowAll(on) {
   document.getElementById("spoilToggle").checked = !on;
   document.getElementById("spoilNote").textContent = on ? "" : "Hints, maps and anything you haven't reached yet are hidden.";
   // The search boxes' example names are spoilers too.
-  document.querySelectorAll(".searchbar input").forEach(i => { i.dataset.ph = i.dataset.ph || i.placeholder; i.placeholder = on ? i.dataset.ph : ["lSearch", "faSearch"].includes(i.id) ? "Type a name" : "Type a full name"; });
+  document.querySelectorAll(".searchbar input").forEach(i => { i.dataset.ph = i.dataset.ph || i.placeholder; i.placeholder = on ? i.dataset.ph : "Type a full name"; });
   lsSet("dw-spoilers", on ? "shown" : "hidden");
 }
 // Everything shows by default; "No spoilers" is opt-in.
@@ -65,17 +65,17 @@ document.getElementById("spoilToggle").addEventListener("change", (e) => {
 setShowAll(lsGet("dw-spoilers") !== "hidden");
 /* No spoilers on the item-list tabs (recipes, crafting, building, mounts, gathering, fauna): only what you've found is listed,
    a search finds anything else only by its full name, and each section says how many are left to discover. */
-const FOUND_ONLY = ["mounts", "plants", "buildings", "fauna", "crafting"];
+const FOUND_ONLY = ["mounts", "plants", "buildings", "fauna", "crafting", "factions"];
 const normQ = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 function searchHit(li, q, text, names) {
   if (!q) { li.classList.remove("exact"); return true; }
   const loose = normQ(text).includes(q), exact = names.some(n => normQ(n) === q);
-  const foundOnly = !!li.closest(".foundonly") && !showAll() && !li.classList.contains("done");
+  const foundOnly = !!li.closest(".foundonly, #loreMain") && !showAll() && !li.classList.contains("done");
   li.classList.toggle("exact", foundOnly && exact);
   return foundOnly ? exact : loose;
 }
 const FOUND_NOUN = { recipes: ["recipe", "recipes"], crafting: ["crafting recipe", "crafting recipes"], buildings: ["building piece", "building pieces"],
-  mounts: ["mount", "mounts"], plants: ["plant, seed or material", "plants, seeds and materials"], fauna: ["animal or fish", "animals and fish"] };
+  mounts: ["mount", "mounts"], factions: ["enemy", "enemies"], plants: ["plant, seed or material", "plants, seeds and materials"], fauna: ["animal or fish", "animals and fish"] };
 function undiscLine(key, n, noun) {
   const el = document.querySelector(`[data-undisc="${key}"]`); if (!el) return;
   el.hidden = !n;
@@ -116,7 +116,7 @@ function regions() {
 let SEALED = new Set();
 // The nameless "N more … waiting" line at the end of each tab, so totals stay honest without naming anything.
 const UNDISC = [["quests", ["quest", "quests"], () => ALL_IDS], ["urns", ["urn", "urns"], () => URN_IDS], ["burrows", ["burrow", "burrows"], () => BURROW_IDS],
-  ["agility", ["agility course", "agility courses"], () => COURSE_IDS], ["lore", ["lore scrap", "lore scraps"], () => LORE_IDS], ["factions", ["enemy", "enemies"], () => COLLS.find(c => c.key === "factions").ids]];
+  ["agility", ["agility course", "agility courses"], () => COURSE_IDS], ["lore", ["lore scrap", "lore scraps"], () => LORE_IDS]];
 const undiscHTML = (key) => `<p class="panel undisc" data-undisc="${key}" hidden></p>`;
 function computeSealed() {
   SEALED = new Set();
@@ -139,6 +139,7 @@ function paintStory() {
   const lh = document.querySelector("#lore-brynmoor-ghornfell h2"); if (lh) lh.textContent = SEALED.has("Ghornfell") ? "Brynmoor" : "Brynmoor & Ghornfell";
   SIDE.forEach(sd => lock(sd.items.map(q => q.id), sd.key));
   EXTRA.forEach(q => { if (EXTRA_OPENS[q.id]) lock([q.id], EXTRA_OPENS[q.id]); });
+  document.querySelectorAll(".q.scrap").forEach(li => li.classList.toggle("locked", stateOf(li.dataset.id) !== "done"));
   document.querySelectorAll(".sgate").forEach(el => el.classList.toggle("done", isOpen(el.dataset.gate.slice(4))));
 }
 
@@ -224,12 +225,12 @@ function buildUrns() {
 }
 const lslug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 function buildColl(c) {
-  const host = document.getElementById(c.key + "Main"), gid = (r, g) => `${c.key}-${lslug(r.r + "-" + g.s)}`;
+  const host = document.getElementById(c.key + "Main"), gid = (r, g) => `${c.key}-${lslug(r.r + "-" + g.s)}`, scrap = c.key === "lore";
   if (FOUND_ONLY.includes(c.key)) { host.classList.add("foundonly"); document.getElementById(c.p + "Search").insertAdjacentHTML("afterend", SEARCH_NOTE); }
   host.innerHTML = c.data.map(r => `<section class="panel" id="${c.key}-${lslug(r.r)}" data-region="${esc(r.r)}"><div class="sec-head"><h2>${esc(r.r)}</h2><span class="count"></span></div><div class="rule"></div>
-    ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore" data-id="${id}" data-status="${c.status}" data-gate="${id}">
+    ${r.g.map(g => `<div class="lgrp" data-lg="${gid(r, g)}">${g.s ? `<div class="lser"><span>${scrap ? `<span class="real">${esc(g.s)}</span><span class="ph">Undiscovered story</span>` : esc(g.s)}</span><span class="lc"></span></div>` : ""}<ul class="list">${g.i.map(([id, n, sub, pid, wk]) => `<li class="q lore${scrap ? " scrap" : ""}" data-id="${id}" data-status="${c.status}" data-gate="${id}">
       <button class="mark" type="button" id="m-${id}"><span class="d">${CHECK}</span></button>
-      <div><div class="title-row"><span class="name">${esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}${sub ? HINT_BTN : ""}</div>${sub ? `<div class="start spoil">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
+      <div><div class="title-row"><span class="name">${scrap ? `<span class="real">${esc(n)}</span><span class="ph">Unread lore scrap</span>` : esc(n)}</span><span class="status" hidden></span>${c.noWiki ? "" : `<a class="wiki" href="${w(wk || n)}" target="_blank" rel="noopener">Wiki</a>`}${sub || scrap ? HINT_BTN : ""}</div>${sub ? `<div class="start spoil">${esc(sub)}</div>` : ""}</div></li>`).join("")}</ul></div>`).join("")}
     <p class="empty">${esc(c.empty)}</p></section>`).join("") + undiscHTML(c.key);
   document.getElementById(c.p + "Jump").innerHTML = c.data.length > 1 ? c.data.map(r => `<a class="chip" href="#${c.key}-${lslug(r.r)}" data-jump="${c.key}-${lslug(r.r)}" data-region="${esc(r.r)}">${esc((c.short || {})[r.r] || r.r)} <span></span></a>`).join("") : "";
   host.addEventListener("click", (e) => { const b = e.target.closest(".mark"); if (b) cycle(b.closest(".q").dataset.id); });
@@ -733,7 +734,7 @@ function paint() {
     st.hidden = s === "none"; st.textContent = li.dataset.status || (li.classList.contains("recipe") ? "Unlocked" : li.classList.contains("burrow") ? "Opened" : LABEL[s]);
     const b = li.querySelector(".mark");
     b.disabled = !canWrite;
-    b.setAttribute("aria-label", `${li.classList.contains("locked") && !li.classList.contains("peek") && !showAll() ? li.querySelector(".name .ph").textContent : BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
+    b.setAttribute("aria-label", `${li.classList.contains("locked") && !li.classList.contains("peek") && !li.classList.contains("exact") && !showAll() ? li.querySelector(".name .ph").textContent : BY_ID[id].n}: ${LABEL[s]}.${canWrite ? " Change status." : ""}`);
   });
   const qv = ALL_IDS, done = qv.filter(id => stateOf(id) === "done").length;
   document.getElementById("qpDone").textContent = done;

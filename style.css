@@ -149,8 +149,13 @@ body:not(.show-all) [data-gate]:not(.peek):not(.done) .spoil { display: none !im
 .mapgate { text-align: center; margin: 6px 0 10px; }
 .ph { display: none; }
 body:not(.show-all) [data-gate]:not(.peek):not(.done) > .ph { display: inline; }
-body:not(.show-all) .q.locked:not(.peek) .name .ph { display: inline; color: var(--cream-dim); font-style: italic; font-weight: 600; }
-body:not(.show-all) .q.locked:not(.peek) .name .real, body:not(.show-all) .q.locked:not(.peek) .wiki { display: none; }
+body:not(.show-all) .q.locked:not(.peek):not(.exact) .name .ph { display: inline; color: var(--cream-dim); font-style: italic; font-weight: 600; }
+body:not(.show-all) .q.locked:not(.peek):not(.exact) .name .real, body:not(.show-all) .q.locked:not(.peek):not(.scrap) .wiki { display: none; }
+body:not(.show-all) .q.exact .name .ph { display: none !important; }
+/* Lore series names stay hidden until something in that series is read or revealed. */
+.lser .ph { display: none; }
+body:not(.show-all) #loreMain .lgrp:not(:has(.q.done, .q.peek, .q.exact)) .lser .real { display: none; }
+body:not(.show-all) #loreMain .lgrp:not(:has(.q.done, .q.peek, .q.exact)) .lser .ph { display: inline; }
 .sealed { display: none !important; }
 /* No spoilers on the item-list tabs: only found items (or an exact-name search hit) are listed. */
 body:not(.show-all) .foundonly .q:not(.done):not(.exact) { display: none; }

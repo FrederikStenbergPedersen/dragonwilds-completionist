@@ -112,6 +112,16 @@ async def main():
         await pg.evaluate("progress['r-a-simple-broken-bow'] = { state: 'done' }; paint()")
         check(await pg.evaluate(secs) == 1 and (await pg.evaluate(undisc, "recipes")).startswith("124 more recipes"), "finding something shows just its section")
         await pg.evaluate("delete progress['r-a-simple-broken-bow']; paint()")
+        fac = "[...document.querySelectorAll('#factionsMain .q')].filter(e => getComputedStyle(e).display !== 'none').length"
+        check(await pg.evaluate(fac) == 0 and (await pg.evaluate(undisc, "factions")).startswith("60 more enemies"), "Factions lists only defeated enemies (no boss names up front)")
+        scrap = "sel => { const li = document.querySelector(\"[data-id='l-lorescrap-a1']\"); const v = e => getComputedStyle(li.querySelector(e)).display !== 'none'; return [v('.name .real'), v('.name .ph'), v('.wiki')]; }"
+        check(await pg.evaluate(scrap, "") == [False, True, True], "unread lore scraps hide their title but keep the Wiki link")
+        await pg.click("#tabLore")
+        await pg.click("[data-id='l-lorescrap-a1'] .hint-btn")
+        check((await pg.evaluate(scrap, ""))[0], "Show hint reveals a scrap's title")
+        await pg.click("[data-id='l-lorescrap-a1'] .hint-btn")
+        series = "getComputedStyle(document.querySelector(\"[data-lg='lore-brynmoor-ghornfell-dragon-attack'] .lser .real\")).display"
+        check(await pg.evaluate(series) == "none", "lore series names stay hidden until something in them is read")
         await pg.click("#tabQuests")
         await pg.reload()
         await pg.wait_for_timeout(300)
